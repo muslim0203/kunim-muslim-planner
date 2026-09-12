@@ -78,9 +78,7 @@ async def client(
 
 
 async def register_and_login(client: AsyncClient, email: str, password: str = PASSWORD) -> dict:
-    await client.post(
-        "/auth/register", json={"email": email, "password": password, "locale": "en"}
-    )
+    await client.post("/auth/register", json={"email": email, "password": password, "locale": "en"})
     response = await client.post(
         "/auth/login", json={"email": email, "password": password, "device_id": "device-a"}
     )
@@ -156,12 +154,8 @@ async def test_patch_updates_allowed_fields(client: AsyncClient) -> None:
 
 async def test_partial_patch_preserves_untouched_fields(client: AsyncClient) -> None:
     tokens = await register_and_login(client, "profile-partial@example.com")
-    await client.patch(
-        "/users/me", headers=auth_header(tokens), json={"display_name": "First"}
-    )
-    second = await client.patch(
-        "/users/me", headers=auth_header(tokens), json={"birth_year": 2000}
-    )
+    await client.patch("/users/me", headers=auth_header(tokens), json={"display_name": "First"})
+    second = await client.patch("/users/me", headers=auth_header(tokens), json={"birth_year": 2000})
     assert second.status_code == 200, second.text
     body = second.json()
     # birth_year changed, but display_name from the earlier PATCH survives.
@@ -172,9 +166,7 @@ async def test_partial_patch_preserves_untouched_fields(client: AsyncClient) -> 
 @pytest.mark.parametrize("locale", ["fr", "xx", "EN", ""])
 async def test_patch_rejects_invalid_locale(client: AsyncClient, locale: str) -> None:
     tokens = await register_and_login(client, f"locale-{locale or 'empty'}@example.com")
-    response = await client.patch(
-        "/users/me", headers=auth_header(tokens), json={"locale": locale}
-    )
+    response = await client.patch("/users/me", headers=auth_header(tokens), json={"locale": locale})
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "validation_error"
 
@@ -182,16 +174,12 @@ async def test_patch_rejects_invalid_locale(client: AsyncClient, locale: str) ->
 @pytest.mark.parametrize("locale", ["uz", "uz_Cyrl", "ru", "en"])
 async def test_patch_accepts_every_supported_locale(client: AsyncClient, locale: str) -> None:
     tokens = await register_and_login(client, f"locale-ok-{locale}@example.com")
-    response = await client.patch(
-        "/users/me", headers=auth_header(tokens), json={"locale": locale}
-    )
+    response = await client.patch("/users/me", headers=auth_header(tokens), json={"locale": locale})
     assert response.status_code == 200, response.text
     assert response.json()["locale"] == locale
 
 
-@pytest.mark.parametrize(
-    "timezone", ["Not/AZone", "Mars/OlympusMons", "gibberish", "UTC+5"]
-)
+@pytest.mark.parametrize("timezone", ["Not/AZone", "Mars/OlympusMons", "gibberish", "UTC+5"])
 async def test_patch_rejects_invalid_timezone(client: AsyncClient, timezone: str) -> None:
     tokens = await register_and_login(client, f"tz-{abs(hash(timezone))}@example.com")
     response = await client.patch(
@@ -204,9 +192,7 @@ async def test_patch_rejects_invalid_timezone(client: AsyncClient, timezone: str
 async def test_patch_rejects_null_locale_and_timezone(client: AsyncClient) -> None:
     """These columns are non-nullable; an explicit `null` must not slip through."""
     tokens = await register_and_login(client, "profile-null@example.com")
-    response = await client.patch(
-        "/users/me", headers=auth_header(tokens), json={"locale": None}
-    )
+    response = await client.patch("/users/me", headers=auth_header(tokens), json={"locale": None})
     assert response.status_code == 422
 
 
@@ -217,9 +203,7 @@ async def test_user_cannot_see_or_modify_another_users_profile(client: AsyncClie
     tokens_a = await register_and_login(client, "profile-a@example.com")
     tokens_b = await register_and_login(client, "profile-b@example.com")
 
-    await client.patch(
-        "/users/me", headers=auth_header(tokens_a), json={"display_name": "Alice"}
-    )
+    await client.patch("/users/me", headers=auth_header(tokens_a), json={"display_name": "Alice"})
 
     # There is no endpoint parameterised by another user's id; the only way
     # to prove isolation is that each token's own profile is independent.

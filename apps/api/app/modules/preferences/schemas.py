@@ -24,6 +24,14 @@ from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic_core import PydanticCustomError
+
+# `PydanticCustomError`, not a bare `ValueError`, in both validators below:
+# pydantic puts a plain `ValueError`'s exception object itself into the
+# error's `ctx`, which `app.core.errors.validation_exception_handler` (not
+# owned by this module) then fails to JSON-serialise. `PydanticCustomError`'s
+# `ctx` only ever holds the plain values passed in here, so it always
+# serialises.
 
 
 def _validate_iana_timezone(value: str | None) -> str | None:
@@ -32,7 +40,9 @@ def _validate_iana_timezone(value: str | None) -> str | None:
     try:
         ZoneInfo(value)
     except (ZoneInfoNotFoundError, ValueError, KeyError) as exc:
-        raise ValueError(f"Unknown IANA timezone: {value!r}") from exc
+        raise PydanticCustomError(
+            "invalid_timezone", "Unknown IANA timezone: '{value}'", {"value": value}
+        ) from exc
     return value
 
 
@@ -41,7 +51,11 @@ _HHMM_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 def _validate_hh_mm(value: str) -> str:
     if not _HHMM_RE.match(value):
-        raise ValueError(f"Expected a 24-hour 'HH:MM' time, got {value!r}")
+        raise PydanticCustomError(
+            "invalid_time",
+            "Expected a 24-hour 'HH:MM' time, got '{value}'",
+            {"value": value},
+        )
     return value
 
 

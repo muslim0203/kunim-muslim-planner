@@ -25,6 +25,12 @@ dependencies = [
     "structlog",
     "sqladmin",
     "jinja2",
+    # Required for `zoneinfo.ZoneInfo` (profile/preferences timezone
+    # validation, app/modules/profile, app/modules/preferences) to resolve
+    # IANA zones on systems with no OS-level tz database -- notably Windows,
+    # and some minimal Linux container images. Harmless where the system
+    # database already exists.
+    "tzdata",
 ]
 
 [project.optional-dependencies]

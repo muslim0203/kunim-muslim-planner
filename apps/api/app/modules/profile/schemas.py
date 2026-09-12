@@ -113,5 +113,7 @@ class ProfileUpdate(BaseModel):
         if isinstance(data, dict):
             for key in ("locale", "timezone"):
                 if key in data and data[key] is None:
-                    raise ValueError(f"{key} cannot be null")
+                    raise PydanticCustomError(
+                        "null_not_allowed", "'{key}' cannot be null", {"key": key}
+                    )
         return data

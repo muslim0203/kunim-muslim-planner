@@ -73,14 +73,21 @@ def upgrade() -> None:
             ondelete="CASCADE",
         ),
     )
-    # Unique: exactly one (non-deleted, and in practice any) row per user;
-    # also satisfies the ADR's "(user_id, server_version) unique" rule, since
-    # user_id alone being unique is strictly stronger for a one-row table.
-    op.create_index(op.f("ix_preferences_user_id"), "preferences", ["user_id"], unique=True)
+    # Unique only among *live* rows (partial index): a soft-deleted row must
+    # never block inserting a fresh one for the same user. Also satisfies the
+    # ADR's "(user_id, server_version) unique" rule, since user_id alone being
+    # unique among live rows is strictly stronger for a one-row-per-user table.
+    op.create_index(
+        "ix_preferences_user_id_active",
+        "preferences",
+        ["user_id"],
+        unique=True,
+        postgresql_where=sa.text("deleted_at IS NULL"),
+    )
 
 
 def downgrade() -> None:
-    op.drop_index(op.f("ix_preferences_user_id"), table_name="preferences")
+    op.drop_index("ix_preferences_user_id_active", table_name="preferences")
     op.drop_table("preferences")
 
     op.drop_column("users", "avatar_url")

@@ -6,6 +6,7 @@ they live here rather than in `tests/conftest.py`).
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 
@@ -76,9 +77,7 @@ async def client(
 
 
 async def register_and_login(client: AsyncClient, email: str, password: str = PASSWORD) -> dict:
-    await client.post(
-        "/auth/register", json={"email": email, "password": password, "locale": "en"}
-    )
+    await client.post("/auth/register", json={"email": email, "password": password, "locale": "en"})
     response = await client.post(
         "/auth/login", json={"email": email, "password": password, "device_id": "device-a"}
     )
@@ -388,7 +387,9 @@ async def test_soft_deleted_row_is_not_returned(
 
     async with session_factory() as session:
         row = (
-            await session.execute(select(Preferences).where(Preferences.id == original["id"]))
+            await session.execute(
+                select(Preferences).where(Preferences.id == uuid.UUID(original["id"]))
+            )
         ).scalar_one()
         row.deleted_at = datetime.now(UTC)
         await session.commit()

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import JSON, ForeignKey
+from sqlalchemy import JSON, ForeignKey, Index, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -39,9 +39,23 @@ class Preferences(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
     """
 
     __tablename__ = "preferences"
+    __table_args__ = (
+        # Unique only among *live* rows: a soft-deleted row must not block
+        # `service.get_or_create` from inserting a fresh one for the same
+        # user (see `test_soft_deleted_row_is_not_returned`). A plain
+        # table-wide unique constraint on `user_id` would make the first
+        # soft-delete of a user's preferences permanent.
+        Index(
+            "ix_preferences_user_id_active",
+            "user_id",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
+            sqlite_where=text("deleted_at IS NULL"),
+        ),
+    )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
 
     prayer_settings: Mapped[dict] = mapped_column(_JSONType, nullable=False)
