@@ -76,3 +76,38 @@ Hozirgi developers-machine muhit holati:
 5. **macOS mashinasi** — iOS build/simulator uchun (Windows'da iOS'ni qurib bo'lmaydi).
 
 Final setup validation: pytest 73 passed (13 existing deprecation warnings); Ruff for changed Python files passed; git diff --check passed. Automated auth/profile suites use SQLite fixtures; real PostgreSQL migration/auth and live Redis worker checks were separately executed successfully.
+
+---
+
+## 0-bosqich — YOPILDI (2026-09-12)
+
+Muhit to'siqlari bartaraf etildi. Yuqoridagi "Muhit cheklovlari" bo'limi endi eskirgan:
+Flutter 3.47.4 ✅ · Android SDK (platform-36, build-tools 36.0.0) ✅ · Docker + WSL2 ✅ ·
+PostgreSQL 16 + pgvector, Redis, MinIO ✅ · GitHub remote (private) ✅
+
+| DoD punkti | Holat | Dalil |
+|---|---|---|
+| Monorepo + `CLAUDE.md` + ADR-0001..0004 | ✅ | `docs/adr/` 1230 satr |
+| FastAPI skeleti, `/health` 200 | ✅ | `pytest` 73 passed; API CI GitHub'da **yashil** |
+| Alembic migratsiyalar **bazaga qo'llandi** | ✅ | Jonli PostgreSQL'da `alembic upgrade head` |
+| `docker compose up` | ✅ | postgres, redis, minio, api, worker — barchasi sog'lom |
+| Flutter shell, `flutter run` | ✅ | `flutter analyze` → No issues found!; `flutter test` → 9 passed |
+| **`flutter build apk`** | ✅ | `app-debug.apk` 169 MB; `aapt2 dump badging`: `com.kunim.app`, minSdk 26, targetSdk 36, taqiqlangan ruxsatlar **yo'q** |
+| 4 til ARB + l10n CI tekshiruvi | ✅ | 4 locale × 60 kalit |
+| `make gen` (build_runner + gen-l10n) | ✅ | Toza holatdan 12 output + 4 locale |
+| GitHub Actions CI | ✅ API · Mobile tuzatildi | `.github/workflows/` |
+| iOS Family Controls entitlement **yuborilgan** | ❌ | Apple kelishuvi qabul qilingan, lekin **Developer Program pullik a'zoligi yo'q**. So'rov yuborilmagan. Zaxira: `dw_ios_mode=selfreport` (ADR-0003) — iOS relizi bunga bog'liq emas |
+| Android emulator / iOS simulator | ⚠️ | APK qurildi, qurilmada ishga tushirilmagan. iOS uchun macOS kerak — bu mashinada imkonsiz |
+
+**Qolgan yagona to'siq:** Apple Developer Program a'zoligi. 6-bosqich (DW iOS) boshlanishidan
+oldin rasmiylashtirilsa, entitlement javobi (haftalar/oylar) vaqtida keladi.
+
+## 1-bosqich — qisman
+
+| Modul | Holat | Dalil |
+|---|---|---|
+| Auth (argon2id, JWT, refresh rotation + reuse detection, RBAC) | ✅ | ADR va testlar bilan |
+| Profil + preferences (`/users/me`, `/preferences`) | ✅ | 73 test |
+| Auth/onboarding ARB matnlari (4 til) | ✅ | 60 kalit |
+| Onboarding va auth **ekranlari** (Flutter) | ⬜ | Hali yozilmagan |
+| Email tasdiqlash / parol tiklash endpointlari | ⬜ | Model va servis bor, pochta provayderi yo'q |
