@@ -1,32 +1,78 @@
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:kunim/app/app.dart';
 import 'package:kunim/app/l10n/gen/app_localizations.dart';
+import 'package:kunim/core/db/app_database.dart';
+import 'package:kunim/core/sync/sync_triggers.dart';
 
-// NOTE: this test cannot be executed on this machine (Flutter is not
-// installed here — see apps/mobile/README.md). It is written to be
-// correct against the Phase-0 skeleton and should be run with
-// `flutter test` once Flutter is available.
 void main() {
-  testWidgets('launches to the Home placeholder with 5 nav destinations',
-      (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: KunimApp()));
-    await tester.pumpAndSettle();
+  late AppDatabase db;
+
+  setUp(() {
+    // Home now reads real providers, so the app needs a database. An
+    // in-memory one keeps the smoke test hermetic.
+    db = AppDatabase.withExecutor(NativeDatabase.memory());
+  });
+
+  tearDown(() async {
+    await db.close();
+  });
+
+  testWidgets('launches to the Home screen with 5 nav destinations', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          // The real provider calls scheduler.start(), which arms a 5-minute
+          // timer and a connectivity listener; a widget test then fails with
+          // "A Timer is still pending". Hand it a scheduler nobody starts.
+          syncTriggerSchedulerProvider.overrideWithValue(
+            SyncTriggerScheduler(runSync: ({bool force = false}) async {}),
+          ),
+        ],
+        child: const KunimApp(),
+      ),
+    );
+    // Not pumpAndSettle: a CircularProgressIndicator animates forever, so
+    // pumpAndSettle would time out if any section were still loading.
+    // Bounded pumps let the Drift streams deliver their first (empty) value.
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
 
     final BuildContext context = tester.element(find.byType(Scaffold).first);
     final l10n = AppLocalizations.of(context);
 
-    // The Home branch is the initial location, so its localized title
-    // should appear both in the app bar and the bottom navigation bar.
-    expect(find.text(l10n.navHome), findsWidgets);
-
     // All five bottom-nav destinations are present.
     expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.text(l10n.navHome), findsOneWidget);
     expect(find.text(l10n.navDay), findsOneWidget);
     expect(find.text(l10n.navStats), findsOneWidget);
     expect(find.text(l10n.navAi), findsOneWidget);
     expect(find.text(l10n.navSettings), findsOneWidget);
+
+    // Home renders its three phase-2 blocks. With an empty database each
+    // one shows its empty state rather than a spinner or an error.
+    expect(find.text(l10n.homeTopThree), findsOneWidget);
+    expect(find.text(l10n.homeTodaysPlan), findsOneWidget);
+    expect(find.text(l10n.homeTodaysHabits), findsOneWidget);
+    expect(find.text(l10n.homeChooseTopThree), findsOneWidget);
+    expect(find.text(l10n.homeNothingPlanned), findsOneWidget);
+    expect(find.text(l10n.habitEmptyState), findsOneWidget);
+
+    // Unmount so ProviderScope disposes the Drift stream subscriptions.
+    // Closing them schedules zero-duration timers inside drift's
+    // StreamQueryStore.markAsClosed; the binding fails the test with
+    // "A Timer is still pending" unless they are allowed to fire, so pump
+    // a few more frames after the tree is gone.
+    await tester.pumpWidget(const SizedBox.shrink());
+    for (var i = 0; i < 3; i++) {
+      await tester.pump(Duration.zero);
+    }
   });
 }
