@@ -4,9 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'color_schemes.dart';
 import 'tokens.dart';
 
-/// Current [ThemeMode] selection. Defaults to following the system setting;
-/// Phase 1 wires this to `preferences` (synced) instead of a bare provider.
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
+/// Current [ThemeMode] selection. Defaults to following the system setting.
+///
+/// Riverpod 3 removed `StateProvider`, so this is a plain [Notifier]. Phase 1
+/// replaces the in-memory default with the synced `preferences.ui.theme` value.
+class ThemeModeNotifier extends Notifier<ThemeMode> {
+  @override
+  ThemeMode build() => ThemeMode.system;
+
+  void set(ThemeMode mode) => state = mode;
+}
+
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
+  ThemeModeNotifier.new,
+);
 
 /// Material 3 theming for KUNIM, light and dark variants.
 abstract final class KunimTheme {

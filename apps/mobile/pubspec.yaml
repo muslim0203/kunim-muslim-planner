@@ -18,43 +18,43 @@ dependencies:
     sdk: flutter
 
   # State management (ADR-001)
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
+  flutter_riverpod: ^3.1.0
+  riverpod_annotation: ^4.0.0
 
   # Routing
-  go_router: ^14.1.1
+  go_router: ^18.0.1
 
   # Local DB (offline-first source of truth)
   drift: ^2.18.0
   drift_flutter: ^0.2.0
-  sqlcipher_flutter_libs: ^0.6.4
+  sqlcipher_flutter_libs: ^0.7.0+eol
 
   # Immutable models / DTOs
-  freezed_annotation: ^2.4.4
+  freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0
 
   # HTTP
   dio: ^5.4.3+1
-  dio_smart_retry: ^6.0.0
+  dio_smart_retry: ^7.0.1
 
   # i18n
   intl: ^0.20.3
 
   # Secure storage (refresh token, DB key — Phase 1)
-  flutter_secure_storage: ^9.2.2
+  flutter_secure_storage: ^11.1.1
 
   # Prayer times (offline calculation)
-  adhan_dart: ^1.1.2
+  adhan_dart: ^2.0.1
 
   # Notifications (zoned local scheduling for prayer/task reminders)
-  flutter_local_notifications: ^17.2.2
-  timezone: ^0.9.4
-  flutter_timezone: ^1.0.8
+  flutter_local_notifications: ^22.3.0
+  timezone: ^0.11.1
+  flutter_timezone: ^5.1.0
 
   # Misc utilities used from Phase 0
   uuid: ^4.4.0
-  connectivity_plus: ^6.0.3
-  package_info_plus: ^8.0.0
+  connectivity_plus: ^7.3.1
+  package_info_plus: ^10.2.1
   path_provider: ^2.1.3
   flutter_svg: ^2.0.10+1
 
@@ -89,14 +89,14 @@ dev_dependencies:
     sdk: flutter
 
   build_runner: ^2.4.9
-  riverpod_generator: ^2.4.0
+  riverpod_generator: ^4.0.0+1
   drift_dev: ^2.18.0
-  freezed: ^2.5.2
+  freezed: ^3.2.3
   json_serializable: ^6.8.0
 
-  custom_lint: ^0.6.4
-  riverpod_lint: ^2.3.10
-  flutter_lints: ^4.0.0
+  custom_lint: ^0.8.1
+  riverpod_lint: ^3.1.0
+  flutter_lints: ^6.0.0
   mocktail: ^1.0.3
 
 flutter:
