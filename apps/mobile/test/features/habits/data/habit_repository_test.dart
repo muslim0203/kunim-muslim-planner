@@ -51,7 +51,7 @@ void main() {
       final payload = jsonDecode(outbox.single.payload) as Map<String, dynamic>;
       expect(payload['id'], id);
       expect(payload['title'], 'Kunlik Qur\'on');
-      expect(payload['target_count'], 2);
+      expect(payload['target'], 2);
       expect(payload.containsKey('dirty'), isFalse);
 
       expect(localWriteCalls, 1);
@@ -85,7 +85,7 @@ void main() {
       expect(latest.op, 'upsert');
       final payload = jsonDecode(latest.payload) as Map<String, dynamic>;
       expect(payload['title'], 'New title');
-      expect(payload['target_count'], 5);
+      expect(payload['target'], 5);
 
       expect(localWriteCalls, 1);
     });

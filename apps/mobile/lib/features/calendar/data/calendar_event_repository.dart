@@ -16,6 +16,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/db/base_repository.dart';
+import '../../../core/sync/conflict.dart' show toRfc3339Millis;
 
 const _uuid = Uuid();
 
@@ -141,7 +142,7 @@ class CalendarEventRepository extends SyncableRepository {
       entity: 'calendar_events',
       rowId: id,
       op: SyncOp.delete,
-      payload: syncPayload(updated.toJson()),
+      payload: _payloadOf(updated),
       write: () => db.update(db.calendarEvents).replace(updated),
     );
     onLocalWrite?.call();
@@ -158,17 +159,43 @@ class CalendarEventRepository extends SyncableRepository {
   }
 
   Future<CalendarEvent> _persist(CalendarEvent row) async {
+    // See `MilestoneRepository._persist`: `dirty` must be re-armed on every
+    // local write, or a full resync deletes an edit that has not been pushed.
+    final pending = row.copyWith(dirty: true);
     final result = await writeWithOutbox<CalendarEvent>(
       entity: 'calendar_events',
-      rowId: row.id,
+      rowId: pending.id,
       op: SyncOp.upsert,
-      payload: syncPayload(row.toJson()),
+      payload: _payloadOf(pending),
       write: () async {
-        await db.into(db.calendarEvents).insertOnConflictUpdate(row);
-        return row;
+        await db.into(db.calendarEvents).insertOnConflictUpdate(pending);
+        return pending;
       },
     );
     onLocalWrite?.call();
     return result;
   }
+
+  /// The `calendar_events` wire row (ADR-0002 rule 20).
+  ///
+  /// Hand-built snake_case, not Drift's `toJson()` (which emits `startAt`,
+  /// `allDay`, ... and a client-only `dirty`): the server's row schema is
+  /// `extra="forbid"` snake_case, so a camelCase payload is rejected as
+  /// `schema_invalid` on every push.
+  Map<String, dynamic> _payloadOf(CalendarEvent row) => {
+        'id': row.id,
+        'user_id': row.userId,
+        'created_at': toRfc3339Millis(row.createdAt),
+        'updated_at': toRfc3339Millis(row.updatedAt),
+        'deleted_at':
+            row.deletedAt == null ? null : toRfc3339Millis(row.deletedAt!),
+        'server_version': row.serverVersion,
+        'title': row.title,
+        'description': row.description,
+        'start_at': toRfc3339Millis(row.startAt),
+        'end_at': row.endAt == null ? null : toRfc3339Millis(row.endAt!),
+        'all_day': row.allDay,
+        'rrule': row.rrule,
+        'location': row.location,
+      };
 }

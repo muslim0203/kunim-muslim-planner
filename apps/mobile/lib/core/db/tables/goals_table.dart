@@ -30,6 +30,11 @@ class Milestones extends Table with SyncColumns {
   DateTimeColumn get completedAt => dateTime().nullable()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// Same last-write-wins treatment as [Goals.progressPercent] — ADR-0002
+  /// conflict-matrix rule 18 names `progress_percent` for `milestones` too,
+  /// so the column has to exist here or the wire row cannot round-trip.
+  IntColumn get progressPercent => integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
