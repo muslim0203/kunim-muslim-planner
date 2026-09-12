@@ -52,6 +52,19 @@ class Preferences(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
             postgresql_where=text("deleted_at IS NULL"),
             sqlite_where=text("deleted_at IS NULL"),
         ),
+        # ADR rule 3: `(user_id, server_version)` unique, so `/sync/pull` can
+        # paginate by `server_version` without skipping or repeating a row.
+        # `server_version = 0` is excluded because ADR section 1 defines it as
+        # "new row, never allocated" -- a tombstoned row and a freshly
+        # recreated one may both sit at 0, and both are invisible to pull.
+        Index(
+            "uq_preferences_user_id_server_version",
+            "user_id",
+            "server_version",
+            unique=True,
+            postgresql_where=text("server_version > 0"),
+            sqlite_where=text("server_version > 0"),
+        ),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(

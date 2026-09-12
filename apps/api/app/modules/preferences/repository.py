@@ -12,6 +12,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.preferences.models import Preferences
+from app.modules.sync.repository import allocate_server_version
 
 
 class PreferencesRepository:
@@ -34,17 +35,21 @@ class PreferencesRepository:
         return prefs
 
     async def update(self, prefs: Preferences, *, document: dict[str, Any]) -> Preferences:
-        """Persist `document` and bump `server_version` in one atomic UPDATE.
+        """Persist `document` with a freshly allocated `server_version`.
 
-        `server_version = server_version + 1` is a single SQL expression, not
-        a Python read-modify-write, so there is no race even without an
-        explicit row lock -- see `service.py` for why this is correct for
-        this one-row-per-user table specifically.
+        The version comes from the shared per-user counter in
+        `app.modules.sync.repository.allocate_server_version` -- the row-locked
+        `sync_user_state` allocator the ADR mandates -- so this REST write and
+        a `/sync/push` write share one monotonic sequence and a pull cursor can
+        never step over either of them. This replaces the earlier
+        `server_version = server_version + 1` special case, which was only
+        correct because `preferences` has exactly one row per user.
         """
+        version = await allocate_server_version(self._session, prefs.user_id)
         stmt = (
             update(Preferences)
             .where(Preferences.id == prefs.id)
-            .values(server_version=Preferences.server_version + 1, **document)
+            .values(server_version=version, **document)
         )
         await self._session.execute(stmt)
         await self._session.commit()
