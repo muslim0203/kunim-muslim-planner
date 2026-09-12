@@ -28,6 +28,10 @@ class FakeSyncServer implements SyncApi {
   int _versionCounter = 0;
   int? _purgedUpToVersion;
 
+  /// How many times [push] has been called. A permanently-failing outbox must
+  /// not make the engine loop for ever, so tests assert a bound on this.
+  int pushCallCount = 0;
+
   /// `entity:rowId` -> the row's current authoritative state (snake_case,
   /// always carries `server_version`).
   final Map<String, Map<String, dynamic>> _rows = {};
@@ -87,6 +91,7 @@ class FakeSyncServer implements SyncApi {
 
   @override
   Future<SyncPushResponse> push(SyncPushRequest request) async {
+    pushCallCount++;
     if (request.changes.length > maxChangesPerBatch) {
       // A real server would answer HTTP 400 `batch_too_large`; failing
       // loudly here catches an engine that ignores the server-reported
