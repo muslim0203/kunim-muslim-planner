@@ -79,7 +79,8 @@ void main() {
     await db.close();
   });
 
-  test('upgrading from schema v2 adds milestones.progress_percent and keeps data',
+  test(
+      'upgrading from schema v2 adds milestones.progress_percent and keeps data',
       () async {
     // A realistic v2 database: the phase-2 tables as they were *before*
     // `progress_percent` existed on `milestones`, with one row in it.
@@ -149,7 +150,8 @@ void main() {
         reason: 'the new column must default to 0 for pre-existing rows');
 
     // habit_logs data survives the table rebuild that drops the old UNIQUE.
-    final log = await (db.select(db.habitLogs)..where((l) => l.id.equals('hl-1')))
+    final log = await (db.select(db.habitLogs)
+          ..where((l) => l.id.equals('hl-1')))
         .getSingle();
     expect(log.count, 3, reason: 'rows must be copied across the rebuild');
 
