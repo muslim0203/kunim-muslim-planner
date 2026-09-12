@@ -12,6 +12,7 @@ from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.middleware.request_id import RequestIDMiddleware
+from app.modules.auth.router import router as auth_router
 from app.modules.health.router import router as health_router
 
 
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app, settings)
 
     app.include_router(health_router)
+    app.include_router(auth_router)
 
     mount_admin(app, settings)
 

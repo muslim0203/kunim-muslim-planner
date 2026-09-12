@@ -2,7 +2,8 @@
 
 `/health` never touches the database or Redis — it must return 200 even if
 every downstream dependency is unreachable. `/health/ready` checks each
-dependency but never raises; it reports per-dependency status instead.
+dependency, never raises, and returns 503 (with per-dependency status) when
+any dependency is unreachable so orchestrators can use it as a readiness gate.
 """
 
 from __future__ import annotations
@@ -10,7 +11,8 @@ from __future__ import annotations
 from importlib.metadata import PackageNotFoundError, version
 
 import structlog
-from fastapi import APIRouter
+from fastapi import APIRouter, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.core.config import get_settings
@@ -62,13 +64,13 @@ async def _check_redis() -> str:
 
 
 @router.get("/health/ready")
-async def health_ready() -> dict:
+async def health_ready() -> JSONResponse:
     database_status = await _check_database()
     redis_status = await _check_redis()
-    return {
-        "status": "ok",
-        "dependencies": {
-            "database": database_status,
-            "redis": redis_status,
-        },
-    }
+    dependencies = {"database": database_status, "redis": redis_status}
+    all_ok = all(value == "ok" for value in dependencies.values())
+    body = {"status": "ok" if all_ok else "error", "dependencies": dependencies}
+    return JSONResponse(
+        status_code=status.HTTP_200_OK if all_ok else status.HTTP_503_SERVICE_UNAVAILABLE,
+        content=body,
+    )

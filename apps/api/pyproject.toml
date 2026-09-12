@@ -15,6 +15,7 @@ dependencies = [
     "asyncpg",
     "alembic",
     "pydantic",
+    "email-validator",  # required by pydantic EmailStr (auth schemas)
     "pydantic-settings",
     "pyjwt",
     "argon2-cffi",
