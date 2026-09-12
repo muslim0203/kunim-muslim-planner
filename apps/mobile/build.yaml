@@ -1,0 +1,23 @@
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # ADR-0002 §1 requires every sync timestamp to be UTC, RFC 3339,
+          # with MILLISECOND precision. Drift's default (unix-timestamp
+          # integer, seconds only) truncates sub-second precision and reads
+          # rows back as *local* `DateTime`s that fail `==` against the UTC
+          # `DateTime`s that were written — even though they represent the
+          # same instant. Storing as ISO-8601 text preserves both the exact
+          # precision and the UTC/local flag on round-trip.
+          store_date_time_values_as_text: true
+      json_serializable:
+        options:
+          # Without this, `SyncPushRequest.toJson()` (etc., in
+          # `core/sync/sync_models.dart`) leaves nested freezed objects
+          # (e.g. each `SyncChange` in `changes`) as-is instead of turning
+          # them into plain `Map`s. That still works if the result is fed
+          # straight into `jsonEncode`, but breaks `fromJson(toJson(x))`
+          # round-trips directly, and `dio`'s request encoding needs plain
+          # Maps too.
+          explicit_to_json: true

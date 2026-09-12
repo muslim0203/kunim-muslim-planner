@@ -93,6 +93,9 @@ dev_dependencies:
   drift_dev: ^2.18.0
   freezed: ^3.2.3
   json_serializable: ^6.8.0
+  # Used directly (not just transitively via drift) by
+  # test/db/migration_test.dart to hand-build a pre-migration database.
+  sqlite3: ^2.9.0
 
   custom_lint: ^0.8.1
   riverpod_lint: ^3.1.0

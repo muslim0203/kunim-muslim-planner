@@ -1,8 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-const Uuid _uuid = Uuid();
-
 /// Shared sync-tracking columns every syncable table must have, per
 /// `CLAUDE.md` ("Sync jadvallarida majburiy: id UUID, user_id, created_at,
 /// updated_at (UTC), deleted_at, server_version BIGINT") and
@@ -23,7 +21,14 @@ const Uuid _uuid = Uuid();
 ///   server (the outbox is the actual delivery queue; this flag is a quick
 ///   local marker used by repositories/UI, e.g. a "syncing" indicator).
 mixin SyncColumns on Table {
-  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+  // NOTE: `drift_dev` re-emits this closure's source text verbatim into
+  // `app_database.g.dart` (a `part of app_database.dart`), so it can ONLY
+  // reference symbols that `app_database.dart` itself imports — NOT
+  // anything private to this file. `const Uuid()` from `package:uuid`
+  // (imported directly by `app_database.dart`) works; a private top-level
+  // helper here does not (it fails at compile time with "getter '_x' isn't
+  // defined", since the generated code lives in a different library).
+  TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
   TextColumn get userId => text().nullable()();
 
