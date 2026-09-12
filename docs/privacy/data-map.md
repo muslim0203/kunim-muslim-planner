@@ -1,29 +1,40 @@
-# Ma'lumot xaritasi — Qurilma va server saqlash
+# Maxfiylik va ma'lumot xaritalanishi (Data Map)
 
-Bu hujjat qaysi ma'lumot qayerda saqlanadi va xavfsizlik qarorlari bo'yicha tashkil etilgan.
+Quyidagi jadval qaysi ma'lumotlar qayerda saqlanadi, serverga yuklaniladi yoki yo'q, va qanday shifrlanganligi ko'rsatadi.
 
-## Sinxronizatsiya qoidalari (Bosqich 2, 3)
-
-| Ma'lumot turi | Qurilmada | Serverda | Shifrlangan | Saqlash muddati |
+| Ma'lumot turi | Qayerda saqlanadi | Serverga yuklanadimi | Shifrlash | Saqlash muddati |
 |---|---|---|---|---|
-| **Foydalanuvchi profili** | SQLite (offline) | PostgreSQL (sync) | Profil foto API orqali | To'liq avtorizatsiya |
-| **Vazifalar** (tasks) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Kategoriyalar** (task_categories) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Kalendar event'lar** | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Odatlar** (habits) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Odat qaydlari** (habit_logs) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Maqsadlar** (goals) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Milestones** (milestones) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Namoz qaydlari** (prayer_logs) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Qur'on o'qish holati** (quran_progress) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Qur'on bookmark'lari** (quran_bookmarks) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Ruhiy holat qaydlari** (mood_logs) | Drift/SQLite | Sync | **AES-256-GCM** (note maydon) | Foydalanuvchi o'chguncha |
-| **Uyqu ma'lumot** (sleep_logs) | Drift/SQLite | Sync | **AES-256-GCM** (note maydon) | Foydalanuvchi o'chguncha |
-| **Sog'liq ma'lumot** (health_logs) | Drift/SQLite | Sync | **AES-256-GCM** (note maydon) | Foydalanuvchi o'chguncha |
-| **Ta'lim element'lar** (education_items) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Kitoblar** (books) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **Sozlamalar** (preferences) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
-| **App limit'lari** (app_limits) | Drift/SQLite | Sync | Yo'q | Foydalanuvchi o'chguncha |
+| **DW xom sessiyalari** (`dw_sessions` lokal) | Qurilmada Drift + SQLCipher | **YO'Q — hech qachon** | SQLCipher (lokal) | Kunlik agregat keyin o'chiriladi |
+| **Scrolling hodisalari** (`scrolling_events` lokal) | Qurilmada Drift + SQLCipher | **YO'Q — hech qachon** | SQLCipher (lokal) | Kunlik agregat keyin o'chiriladi |
+| **Notification engagement log** (lokal) | Qurilmada Drift + SQLCipher | Kunlik agregat faqat | SQLCipher + server AES-256-GCM | 180 kun keyin o'chiriladi |
+| **DW kunlik agregat** (`dw_daily`) | Qurilmada + server | **HA, app_key hash bilan** | SQLCipher (lokal) + AES-256-GCM (server) | Lokal 14 kun, server 180 kun |
+| **DW hodisalari** (`dw_events`) | Qurilmada + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | Lokal 14 kun, server 180 kun |
+| **DW Score kunlik** (`dw_score`) | Server | **HA** | AES-256-GCM | 180 kun |
+| **Mood jurnal** (`mood_logs.note`) | Qurilmada + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | 90 kun keyin tombstone, 30 kun `row_history` |
+| **Uyqu jurnal** (`sleep_logs.note`) | Qurilmada + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | 90 kun keyin tombstone, 30 kun `row_history` |
+| **Sog'liq jurnal** (`health_logs.note`) | Qurilmada + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | 90 kun keyin tombstone, 30 kun `row_history` |
+| **AI chat xabarlari** (`ai_messages.content`) | Qurilmada lokal kesh + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | 180 kun keyin o'chiriladi |
+| **AI xotira** (`ai_memory.text`) | Server | **HA** | AES-256-GCM | 180 kun keyin o'chiriladi |
+| **Vazifalar** (`tasks`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali, soft delete 90 kun |
+| **Kalendar hodisalari** (`calendar_events`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali, soft delete 90 kun |
+| **Odatlar** (`habits`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali, soft delete 90 kun |
+| **Odatlar loglari** (`habit_logs`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali, soft delete 90 kun |
+| **Namoz loglari** (`prayer_logs`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali, soft delete 90 kun |
+| **Qur'on o'qish holati** (`quran_progress`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali |
+| **Qur'on xatchiqlari** (`quran_bookmarks`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali |
+| **Maqsadlar** (`goals`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali, soft delete 90 kun |
+| **Ta'lim elementlari** (`education_items`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali, soft delete 90 kun |
+| **Kitoblar** (`books`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali, soft delete 90 kun |
+| **Foydalanuvchi profili** | Server | **HA** | TLS (tranzit) + server database | Pincode/username teslim so'ralguncha |
+| **Google/Apple OIDC tokenlar** | Secure storage (lokal) | **YO'Q** | Flutter Secure Storage | Logout'da o'chiriladi |
+| **JWT access token** | Xotira (lokal) | **YO'Q** | RAM xotirasi (15 daq TTL) | Session buyumada |
+| **JWT refresh token** | Secure storage (lokal) | Server hash sifatida | Flutter Secure Storage + server hash | 30 kun yoki rotation qilingunga |
+| **Qur'on matnlari** (`content` + `quran_progress`) | Qurilmada bundled | **YO'Q** | SQLCipher (lokal) | Doimiy (public domain) |
+| **Kontent (hadis, iqtibos)** | Qurilmada kesh + server | **HA (read-only pull)** | SQLCipher (lokal) + AES-256-GCM (server) | Lokal kesh 30 kun, server doimiy |
+| **Foydalanuvchi eksport** (JSON) | MinIO/S3 (vaqtincha) | **HA** | AES-256-GCM | 24 soat + signed URL |
+| **O'chirish tavoaf** | Server soft-delete | Cascade 7 kun grace | AES-256-GCM | 7 kun grace, keyin hard-delete |
+| **Audit log** | Server | **HA** | AES-256-GCM | 90 kun |
+| **`row_history`** (point-in-time recovery) | Server | **HA** | AES-256-GCM | 30 kun keyin o'chiriladi |
 
 ---
 

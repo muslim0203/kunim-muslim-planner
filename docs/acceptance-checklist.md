@@ -1,216 +1,187 @@
-# Qabul checklist — Bosqich bo'yicha DoD (Definition of Done)
+# Qabul tekshiruv ro'yxati (acceptance-checklist)
 
-Har bosqich `v0.N` teg bilan test qurilmasiga o'rnatiladi. Har item verifikasiyon qabul qilinadi (pass/fail).
+Har bosqich DoD (Definition of Done) quyida tekshiruv ro'yxati sifatida taqsimlanadi. Hamma `- [ ]` bo'lish kerak.
 
 ---
 
 ## Bosqich 0: Skelet va CI
 
-- [ ] Git monorepo tuzilishi tayyorlangan (`apps/`, `packages/`, `infra/`, `docs/`)
-- [ ] Flutter skeleti yaratilgan (Riverpod, go_router, Drift, ARB, tema)
-- [ ] FastAPI skeleti yaratilgan (`/health` endpoint, Alembic, SQLAdmin)
-- [ ] `docker-compose.yml` ishlaydi (postgres16+pgvector, redis, api, worker, minio)
-- [ ] GitHub Actions workflows ta'minlangan (mobile.yml, api.yml, content.yml)
-- [ ] `make gen` freezed/drift/riverpod/pigeon/openapi client'ni generatsiya qiladi
-- [ ] Android emulator `flutter run` bilan ishlaydi
-- [ ] iOS simulator `flutter run` bilan ishlaydi
-- [ ] `GET /health` 200 javob qaytaradi
-- [ ] CI avtomatik test'larini ishlantiradi (yo'qda bo'lsa verd), red qilmaydi
-- [ ] ADR-0001 (Stack) yozilgan
-- [ ] ADR-0002 (Sync) yozilgan
-- [ ] ADR-0003 (DW Platforms) yozilgan
-- [ ] ADR-0004 (AI Provider) yozilgan
+- [ ] CI pipelines o'rnatilgan va GitHub'da yashil
+- [ ] Android emulator ishlab ochildi va Flutter demo'si ishlaydi
+- [ ] iOS simulator ishlab ochildi va Flutter demo'si ishlaydi
+- [ ] `make gen` command barcha code generators'ni ishlantiradi (freezed, drift, riverpod, pigeon, openapi client)
+- [ ] ADR-001 (stack) tayyar va approved
+- [ ] ADR-002 (sync) tayyar va approved
+- [ ] ADR-003 (dw-platforms) tayyar va approved
+- [ ] ADR-004 (ai-provider) tayyar va approved
 - [ ] iOS Family Controls entitlement so'rovi Apple'ga yuborilgan
 
 ---
 
 ## Bosqich 1: Auth, profil, onboarding, Home shell, tema, i18n
 
-- [ ] Email + parol registratsiya ishlaydi
-- [ ] Google OIDC autentifikatsiya ishlaydi
-- [ ] Apple Sign In autentifikatsiya ishlaydi (iOS)
-- [ ] JWT refresh token rotation ishlaydi
-- [ ] Onboarding 5 qadam jag jag o'tadi:
-  - [ ] Til tanlash (uz-Latn, uz-Cyrl, ru, en)
-  - [ ] Ism / avatar tanlash
-  - [ ] Joylashuv + namoz usuli
-  - [ ] Maqsadlar asosiy tanlash
-  - [ ] Ruxsatlar + maxfiylik consent
-- [ ] Login'dan keyin Home sahifasi ko'rsatiladi
-- [ ] Logout foydalanuvchi sessiya tozalaydi
-- [ ] App restart'da offline'da sessiya saqlanadi
-- [ ] Light tema ishlaydi
-- [ ] Dark tema ishlaydi
-- [ ] System tema ishlaydi
-- [ ] 4 til UI elementlari to'g'ri ko'rsatiladi (uz-Latn, uz-Cyrl, ru, en)
-- [ ] CI `l10n_check` o'tadi (jami 4 til)
+- [ ] Fresh install → onboarding oqimi boshlanadi
+- [ ] Onboarding qadam 1: til tanlash (uz-Latn, uz-Cyrl, ru, en)
+- [ ] Onboarding qadam 2: ism va avatar kiriting/yuklang
+- [ ] Onboarding qadam 3: joylashuv va namoz usuli tanlang
+- [ ] Onboarding qadam 4: hayotiy maqsadlarni tanlang/kiriting
+- [ ] Onboarding qadam 5: ruxsatlar (notifikatsiya, joylashuv, healthkit/health connect) + maxfiylik siyosati
+- [ ] Onboarding oxirida: login ekraniga o'tish
+- [ ] Login email + parol bilan ishlaydi
+- [ ] Login Google Sign-In bilan ishlaydi
+- [ ] Login Apple Sign-In bilan ishlaydi
+- [ ] Login undan keyin Home shell ochildi
+- [ ] App restart → session saqlandi, qayta login yo'q (offline'da ham)
+- [ ] Logout → session tozalandi, login ekraniga qaytdi
+- [ ] Light tema o'chir; barcha shimlar Material 3 ColorScheme asosida
+- [ ] Dark tema o'chir; barcha shimlar Material 3 ColorScheme asosida
+- [ ] System theme izlashni o'rnatilgan OS sozlamasi qayta qo'llaniladi
+- [ ] 4 til arning hammasida 100% string qoplash (l10n_check CI)
+- [ ] Home navigation: Bosh sahifa | Kun tartibi | Statistika | AI | Sozlamalar
 
 ---
 
 ## Bosqich 2: Vazifalar, kalendar, odatlar, maqsadlar — offline-first + sync
 
-- [ ] Vazifa qo'shish ishlaydi (offline)
-- [ ] Vazifa tahrir ishlaydi (offline)
-- [ ] Vazifa o'chirish ishlaydi (offline)
-- [ ] Kalendar event qo'shish ishlaydi (offline)
-- [ ] Kalendar event tahrir ishlaydi (offline)
-- [ ] Odat (habit) qo'shish ishlaydi (offline)
-- [ ] Odat o'chirish ishlaydi (offline)
-- [ ] Maqsad qo'shish ishlaydi (offline)
-- [ ] Ikki qurilma offline tahrir → onlayn → ma'lumot yo'qotilmaydi (sync'da)
-- [ ] Konflikt matritsasi avtomatik test o'tadi (ikki in-memory Drift + test API)
-- [ ] Airplane-mode demo ishlaydi (aks holda ye offline'da tahrir qilib, ulaninganda sync)
-- [ ] Kalendar RRULE subset (daily, weekly, monthly) ishlaydi
-- [ ] Streak 7-kunlik badge ko'rsatiladi
-- [ ] Streak 30-kunlik badge ko'rsatiladi
-- [ ] Streak 100-kunlik badge ko'rsatiladi
-- [ ] Home'da Top-3 vazifalar ko'rsatiladi
-- [ ] Home'da bugungi bloklar ko'rsatiladi
-- [ ] Home'da odatlar ro'yxati ko'rsatiladi
+- [ ] Yangi vazifa qo'shish (sarlavha, tavsif, dedlayn, kategoriya)
+- [ ] Vazifani tahrir ishlaydi
+- [ ] Vazifani bajarilgan deb belgilash (`completed_at` yangilandi)
+- [ ] Vazifani o'chirish (soft delete)
+- [ ] Vazifalar Home'da "Top-3" blokda ko'rinadi
+- [ ] Vazifa "bugungi bloklar" (bugungi tayyorlangan vazifalar saatlari bo'yicha)
+- [ ] Kalendar ko'rinishi haftalar va kuni orqali ko'rish
+- [ ] Kalendar RRULE subset: kunlik, haftalik (kunlar tanlash)
+- [ ] Yangi odat qo'shish (sarlavha, kategoriya, ma'qul/taqs)
+- [ ] Odat streak counter: 7-kunlik, 30-kunlik, 100-kunlik badge'lar
+- [ ] Yangi maqsad qo'shish
+- [ ] Maqsad bosqichlariga (milestones) qo'shish
+- [ ] Qurilma 1 — offline'da vazifa qo'shing; qayta onlayn; Qurilma 2 — yangi vazifani ko'radi
+- [ ] Qurilma 1 — offline'da vazifa qo'shing; Qurilma 2 — offline'da ehtiyoj qayta qo'shing (bir xil id); qayta onlayn → merge conflict avtomatik hal qilinadi
+- [ ] Offline'da qo'shilgan o'zgarishlar sync_outbox'da saqlanadi; qayta online → sync push ishlaydi
+- [ ] Konflikt matritsasi test: ikki Dart in-memory Drift + test API server qarama-qarshi
 
 ---
 
 ## Bosqich 3: Namoz, Qur'on, kun hikmati
 
-- [ ] Namoz vaqtlari Toshkent uchun 12 test sanasida rasmiy jadvalga mos (±1 minut)
-- [ ] Namoz bildirishnomasi app start'da ishlaydi
-- [ ] Kuniga ≥3 kun × 6 vaqt (18 ta) namoz bildirish rejalashtir
-- [ ] App reboot'dan keyin bildirishnomalar ishlaydi
-- [ ] Android 13+ `SCHEDULE_EXACT_ALARM` so'raladi
-- [ ] Qur'on jadvallar lokal DB'da bilan `quran.sqlite` to'liq offline ishlaydi
-- [ ] Qur'on o'qish boshlash ishlaydi
-- [ ] Qur'on o'qish holatini saqlash ishlaydi
-- [ ] Qur'on bookmark qo'shish ishlaydi
-- [ ] Kun hikmati har kuni ko'rsatiladi
-- [ ] Kun hikmati manba'sini sho'wni (content manba nomi)
-- [ ] `content_tools` CLI Qur'on'ni import qiladi
-- [ ] `content_tools` CLI hadis to'plamini (masalan Riyozus-solihin) import qiladi
-- [ ] Imported kontentning litsenziyasi tekshiriladi va qo'shiladi
+- [ ] Namoz vaqtlari Toshkent'da 12 test sanasi uchun rasmiy jadval bilan mos
+- [ ] Namoz bildirishnomasi reboot'dan keyin ishlab ochildi
+- [ ] Qur'on matniga (Tanzil Uthmani) offline kirish
+- [ ] Qur'on tarjimasi (mavjud litsenziyaga ko'ra): o'zbek / rus / ingliz
+- [ ] Har kun hikmatida manba qayd qilingan
+- [ ] `content_tools` CLI — Qur'on import qiladi va embedding'larni generatsiya qiladi
+- [ ] `content_tools` CLI — birinchi hadis to'plami import qiladi (litsenziya tekshirilgan)
+- [ ] `content` jadvalida checksum har record'da
+- [ ] Hikmat status: draft → review → approved → published
 
 ---
 
-## Bosqich 4: Mood, uyqu, sog'liq, ta'lim, kitoblar
+## Bosqich 4: Mood, uyqu, sog'liq, ta'lim, kitoblar (+ ish, oila, dam olish)
 
-- [ ] Mood qaydi qo'shish ishlaydi (offline)
-- [ ] Mood qaydi tahrir ishlaydi (offline)
-- [ ] Mood qaydi o'chirish ishlaydi (offline)
-- [ ] Uyqu ma'lumot qo'shish ishlaydi (offline)
-- [ ] Uyqu ma'lumot tahrir ishlaydi (offline)
-- [ ] Sog'liq ma'lumot (suv, qadam, kalori) qo'shish ishlaydi (offline)
-- [ ] Sog'liq ma'lumot tahrir ishlaydi (offline)
-- [ ] Ta'lim element qo'shish ishlaydi (offline)
-- [ ] Kitob qo'shish ishlaydi (offline)
-- [ ] Har modul add/edit/delete/history loop'iga ega (6 modul)
-- [ ] Home "Smart Day" blokida mood/uyqu/sog'liq/ta'lim ko'rsatiladi
-- [ ] Ish kategoriyasi qo'shish va tahrir ishlaydi
-- [ ] Oila kategoriyasi qo'shish va tahrir ishlaydi
-- [ ] Dam olish kategoriyasi qo'shish va tahrir ishlaydi
+- [ ] Mood yozuvini qo'shish (emoji/rang + ixtiyori eslatma)
+- [ ] Uyqu jurnal (vaqt, davomiyligi, sifati)
+- [ ] Sog'liq metrika (suv, qadam, ish harakati, vb.)
+- [ ] Ta'lim sessiyasi (mavzu, davomiylik, qayta ko'rish)
+- [ ] Kitob qo'shish (sarlavha, muallif, page counter, vb.)
+- [ ] Ish kategoriyasi foydalanish (project/assignment qo'shish)
+- [ ] Oila kategoriyasi foydalanish (event/reminder qo'shish)
+- [ ] Dam olish kategoriyasi foydalanish (hobby/activity qo'shish)
+- [ ] Har modul: add/edit/delete/history
+- [ ] Offline va sync (mood, uyqu, sog'liq, ta'lim, kitoblar hammasida)
+- [ ] Home "Smart Day" bloki hamma kategoriyani ko'rinadi
 
 ---
 
 ## Bosqich 5: Statistika, review'lar, Bugungi balans, gamifikatsiya
 
-- [ ] Online va offline'da bir xil statistika hisoblaydi (golden test)
-- [ ] Review tunda qaida asosida generatsiya qilinadi
-- [ ] Review'lar Notification Center'da ko'rsatiladi
-- [ ] "Bugungi balans" 7 yo'nalish (Ma'naviyat, Sog'liq, Ish, Ta'lim, Oila, Dam olish, Raqamli) hesob qilinadi
-- [ ] Balans formula `docs/balance-formula.md` da spesifikatsion mos
+- [ ] Statistika (kunlik/haftalik) offline Drift'da hisoblandi
+- [ ] Statistika online va offline ma'lumot bir xil (golden test)
+- [ ] Review: "Haftalik review" tunda generatsiya qilinadi (qoida-asosli matn)
+- [ ] Review: "Oylik review" tunda generatsiya qilinadi
+- [ ] Review'lar Notification Center'da ko'rinadi
+- [ ] Bugungi balans: 7 yo'nalish ko'rinadi (Ma'naviyat, Sog'liq, Ish, Ta'lim, Oila, Dam olish, Raqamli)
+- [ ] Bugungi balans formula doc/balance-formula.md bilan mos
+- [ ] Streak badge'lar Home'da ko'rinadi (7/30/100 kunlik odata)
+- [ ] Gamifikatsiya milestone'lar
 
 ---
 
-## Bosqich 6: Digital Wellbeing — Android va iOS
+## Bosqich 6: Digital Wellbeing: Android va iOS
 
-### Android
-- [ ] PACKAGE_USAGE_STATS ruxsati so'raladi
-- [ ] In-app disclosure ekrani ko'rsatiladi (Play Permissions Declaration Form talabi)
-- [ ] 24 soatlik real foydalanish tizim DW ma'lumotida ±5% to'g'riligi
-- [ ] Screen time sessiyalari to'liq qayd qilinadi
-- [ ] App kategoriyalari `app_categories.json` override bilan
-- [ ] Limit bildirishnomasi 80% da ko'rsatiladi
-- [ ] Limit bildirishnomasi 100% da ko'rsatiladi
-- [ ] Bildirishnoma tugmalari: Ochish, 15 daq kechiktirish, Bugun uzaytirish
-- [ ] Play deklaratsiya hujjati to'liq to'ldirilgan
-
-### iOS
-- [ ] FamilyControls + DeviceActivity + ManagedSettings extension'lari o'rnatilgan
-- [ ] iOS 16+ da threshold bildirishnomasi ishlaydi
-- [ ] DeviceActivityReport extension'da statistika faqat sandbox view'da qayd qilinadi
-- [ ] Statistika ilovaga/serverga chiqmaydi
-- [ ] Entitlement ruxsat rad etilsa, ikkalasi ham buzilmaydi
-
-### Umumiy
-- [ ] Ruxsat rad etilsa ikkalasi ham buzilmaydi (fallback ishlaydi)
+- [ ] Android: PACKAGE_USAGE_STATS ruxsati so'raladi
+- [ ] Android: in-app disclosure ekrani ko'rinadi (Play talabi)
+- [ ] Android: 24 soatlik real foydalanish ma'lumoti tizim DW bilan ±5% to'g'riligi
+- [ ] Android: AppCategoryResolver (foydalanuvchi qayta belgilashi mumkin)
+- [ ] Android: UsageWorker har 15 daqiqada ishlaydi + app ochilganda
+- [ ] Android: Session qo'shilgan dw_sessions, dw_daily, dw_events
+- [ ] Android: limit 80% / 100% notifikatsiyasi
+- [ ] Android: limit snoozli ("15 daqiqa kechiktirish" / "Bugun uzaytirish")
+- [ ] iOS: Family Controls entitlement maqbul qabul qilinsa (yoki entitlement rad etilsa selfreport bilan)
+- [ ] iOS: DeviceActivityReport extension sandbox'da ishlaydi (raqamlar ilovaga chiqmaydi)
+- [ ] iOS: DeviceActivityMonitor extension 80%/100% event → lokal notifikatsiya + App Group flag
+- [ ] iOS: Threshold notification qurilmada ko'rinadi
+- [ ] iOS: "Qat'iy rejim" (ManagedSettings.shield) MVP'da o'chiq
+- [ ] Ruxsat rad etilsa: iOS va Android ikkalasi ham to'liq ishlaydi
+- [ ] Play Data Safety + Usage Access deklaratsiya hujjati tayyor
 
 ---
 
-## Bosqich 7: AI — chat, planner, reschedule, recs, memory, RAG
+## Bosqich 7: AI: chat, planner, reschedule, recs, memory, RAG
 
-- [ ] AI chat ishlaydi
-- [ ] AI planner ishlaydi
-- [ ] AI reschedule ishlaydi
-- [ ] AI recommendations ishlaydi
-- [ ] AI memory service ishlaydi
-- [ ] RAG retrieval ishlaydi
-- [ ] Safety to'plami refusal holatlarda 100% ishlaydi
-- [ ] Planner proposal sync orqali qo'llanadi (foydalanuvchi qabul/rad qiladi)
-- [ ] Faol foydalanuvchi uchun kunlik AI xarajati < $0.05 USD
-- [ ] Offline'da Smart Day/Top-3 fallback ishlaydi (AI xizmatisiz)
+- [ ] AI chat agent ishlaydi va javoblarni qaytaradi
+- [ ] AI planner agent kunlik reja taklifi beradi
+- [ ] AI rescheduler agent vazifalarni qayta jadvallash taklifi beradi
+- [ ] AI recommender agent tafsiyalarni beradi
+- [ ] AI memory service foydalanuvchi xotira saqlab turadi va prompts'ga qo'shadi
+- [ ] RAG: kontent taraftar qidiruvi (pgvector + tsvector)
+- [ ] RAG: citation.py har quoted_text'ni content_chunks ichida substring sifatida tekshiradi
+- [ ] RAG refusal: manba yo'q → AI refused javob beradi
+- [ ] Safety suite: refusal holatlarda 100% catch (fatvo, tibbiy maslahat, sohta iqtibos, vb.)
+- [ ] Planner proposal sync orqali qo'llanadi
+- [ ] Faol foydalanuvchi kunlik AI xarajati < $0.05
+- [ ] Offline fallback: Smart Day + Top-3
+- [ ] Intent klassifikator "fatvo-tipi" → muftiyatga yo'naltirish
+- [ ] Personalizatsiya (MVP): qoida asosli feature + memory + haftalik profil dayjest
 
 ---
 
 ## Bosqich 8: Smart notifications va personalizatsiya
 
-- [ ] Notification engagement tracking ishlaydi
-- [ ] Backoff algoritmasi simulyatsiya bilan tekshirilgan
-- [ ] 14 kunlik engagement kalkulyatsiyasi to'g'ri
-- [ ] Push notification duplikat bo'lmaydi (qurilmalar orasida)
-- [ ] Home'da shaxsiy insight ko'rsatiladi (≥14 kun ma'lumot bo'lganda)
+- [ ] Smart Interruption backoff: simulyatsiya qilingan engagement ma'lumoti bilan
+- [ ] Push notifikatsiyalari qurilmalar orasida dublikat yo'q
+- [ ] Home'da shaxsiy insight (≥14 kun ma'lumot bo'lganda)
+- [ ] Notification backoff: engagement ratio ≥0.4 → normal; 0.15–0.4 → 2x fewer; 0.05–0.15 → daily digest; <0.05 → weekly digest
+- [ ] Smart Interruption qoidalari `notification_policy.dart` va `jobs/notif_scheduler.py` da bir xil
+- [ ] Interaksiya (tap/action) → backoff reset
 
 ---
 
 ## Bosqich 9: Xavfsizlik, QA, beta, reliz
 
-### Xavfsizlik
-- [ ] OWASP MASVS-L1 checklist 100% qabul qilingan
-- [ ] TLS (Caddy) ishlaydi
-- [ ] Database SQLCipher shifrlangan
-- [ ] Sensitive maydonlar server'da shifrlangan (mood_logs.note, health_logs.note, sleep_logs.note, ai_messages.content, ai_memory.text)
-- [ ] JWT token rotation ishlaydi
-- [ ] Rate limiting ishlaydi
-
-### Accessibility
-- [ ] TalkBack (Android) test qilingan
-- [ ] VoiceOver (iOS) test qilingan
-- [ ] Text scale 200% qaytarma shart qilmaydi
-- [ ] Kontrast ratio ≥ 4.5:1 barcha tekstda
-
-### Performance
+- [ ] OWASP MASVS-L1 checklist 100% qoplanadi
+- [ ] TalkBack (Android) accessibility tekshiruvi
+- [ ] VoiceOver (iOS) accessibility tekshiruvi
+- [ ] Text scale 200% da sajlanadi
+- [ ] Kontrast (WCAG) checker'da yashil
+- [ ] RTL (Arabic pseudo-locale) smoke test
 - [ ] Cold start < 2 sekund
-- [ ] RTL smoke test qilingan (ar pseudo-locale)
-
-### Store preparation
-- [ ] Barcha asset'lar 4 tilida tayyorlangang (uz-Latn, uz-Cyrl, ru, en)
-- [ ] Privacy policy to'liq yozilgan
-- [ ] Play Data Safety Form to'liq to'ldirilgan
-- [ ] Play Usage Access deklaratsiya to'liq to'ldirilgan
-- [ ] App Store Nutrition Label yaratilgan
-
-### Beta testing
-- [ ] TestFlight/Internal testing 20–50 foydalanuvchiga taqsimlangang
-- [ ] Crash-free rate ≥ 99.5%
-- [ ] Performance metrics qaytarilmadi
-
-### Reliz
-- [ ] Android Play Store'ga yuborilgan
-- [ ] iOS App Store'ga yuborilgan
+- [ ] Store asset'lar: 4 tilga tarjima (uz-Latn, uz-Cyrl, ru, en)
+- [ ] Privacy policy har til'da
+- [ ] Play Data Safety form to'liq to'ldirilgan
+- [ ] Play Usage Access deklaratsiya
+- [ ] App Store nutrition label
+- [ ] TestFlight build 20–50 tester'ga jo'natilgan
+- [ ] Internal testing build 20–50 tester'ga jo'natilgan
+- [ ] Crash-free rate ≥ 99.5% testing davomida
+- [ ] Android do'koniga (Google Play) yuborilgan
+- [ ] iOS do'koniga (App Store) yuborilgan
 
 ---
 
-## Reliz (Bosqich 17)
+## Reliz: Keyingi marhala
 
-- [ ] `docs/acceptance-checklist.md` (ТЗ 70) 100% qayd qilingan va tekshirilgan
-- [ ] Android qurilma (API 26+) real device'da test qilingan
-- [ ] iOS qurilma (iOS 16+) real device'da test qilingan
-- [ ] Ikkala do'konga (Play Store, App Store) yuborilgan
-- [ ] Reliz qismi versiyoni tag bilan belgilangan (masalan `v1.0`)
-- [ ] Release notes to'liq yozilgan
+- [ ] `docs/acceptance-checklist.md` 100% tugallangan
+- [ ] Bosqich 0–9 hammasida DoD 100%
+- [ ] Real Android qurilmada (API 26+) test qilingan
+- [ ] Real iOS qurilmada (iOS 16+) test qilingan
+- [ ] Ikkala do'koniga yuborilgan hammasida tugallangan

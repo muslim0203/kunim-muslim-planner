@@ -1,0 +1,18 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "lib/app/l10n/gen/**"
+  plugins:
+    - custom_lint
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    always_declare_return_types: true
+    avoid_print: true
+
+# custom_lint picks up riverpod_lint automatically from dev_dependencies once
+# `dart run custom_lint` / `flutter analyze` is run with Flutter installed.

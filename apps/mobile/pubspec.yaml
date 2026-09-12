@@ -1,0 +1,107 @@
+# versions pinned on first `flutter pub get` — not yet run (Flutter not installed)
+# Caret ranges below are plausible for Flutter 3.22 / Dart 3.4 at time of writing;
+# they will be resolved (and this file rewritten by `flutter pub get`/`pub upgrade`)
+# once Flutter is installed on a build machine. Do not treat these as verified.
+name: kunim
+description: KUNIM — Muslim lifestyle, time and self-development assistant.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State management (ADR-001)
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Routing
+  go_router: ^14.1.1
+
+  # Local DB (offline-first source of truth)
+  drift: ^2.18.0
+  drift_flutter: ^0.2.0
+  sqlcipher_flutter_libs: ^0.6.4
+
+  # Immutable models / DTOs
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # HTTP
+  dio: ^5.4.3+1
+  dio_smart_retry: ^6.0.0
+
+  # i18n
+  intl: ^0.19.0
+
+  # Secure storage (refresh token, DB key — Phase 1)
+  flutter_secure_storage: ^9.2.2
+
+  # Prayer times (offline calculation)
+  adhan_dart: ^1.1.2
+
+  # Notifications (zoned local scheduling for prayer/task reminders)
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+  flutter_timezone: ^1.0.8
+
+  # Misc utilities used from Phase 0
+  uuid: ^4.4.0
+  connectivity_plus: ^6.0.3
+  package_info_plus: ^8.0.0
+  path_provider: ^2.1.3
+  flutter_svg: ^2.0.10+1
+
+  # --- Phase 1 (auth / account) ---
+  # google_sign_in             # Phase 1 — auth
+  # sign_in_with_apple         # Phase 1 — auth
+  # share_plus                 # Phase 1+ — as needed
+  # url_launcher               # Phase 1+ — as needed
+
+  # --- Phase 3 (prayer/Quran depth, geo, audio) ---
+  # geolocator                 # Phase 3 — one-time location
+  # geocoding                  # Phase 3
+  # just_audio                 # Phase 3 — Quran audio
+  # just_audio_background      # Phase 3
+  # flutter_cache_manager      # Phase 3 — Quran audio LRU cache
+
+  # --- Phase 6 (Digital Wellbeing / native bridge) ---
+  # workmanager                # Phase 6 — Android DW aggregation
+  # pigeon (dev)               # Phase 6 — native bridge (UsageStats / Screen Time)
+
+  # --- Phase 8 (push) ---
+  # firebase_core              # Phase 8 — push
+  # firebase_messaging         # Phase 8 — push (iOS via APNs)
+
+  # --- Phase 9 (observability, charts) ---
+  # posthog_flutter            # Phase 9 — analytics
+  # sentry_flutter             # Phase 9 — crash reporting
+  # fl_chart                   # Phase 5 — statistics charts
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  build_runner: ^2.4.9
+  riverpod_generator: ^2.4.0
+  drift_dev: ^2.18.0
+  freezed: ^2.5.2
+  json_serializable: ^6.8.0
+
+  custom_lint: ^0.6.4
+  riverpod_lint: ^2.3.10
+  flutter_lints: ^4.0.0
+  mocktail: ^1.0.3
+
+flutter:
+  generate: true
+  uses-material-design: true
+  # No assets/ directories exist yet in this Phase-0 skeleton, so no `assets:`
+  # entries are declared. Add them here once real asset folders are created
+  # (e.g. assets/db/quran.sqlite in Phase 3, assets/cities.json in Phase 3).

@@ -1,0 +1,23 @@
+{
+  "@@locale": "uz",
+  "appTitle": "Kunim",
+  "navHome": "Bosh sahifa",
+  "navDay": "Kun tartibi",
+  "navStats": "Statistika",
+  "navAi": "AI",
+  "navSettings": "Sozlamalar",
+  "loading": "Yuklanmoqda...",
+  "errorGeneric": "Nimadir xato ketdi",
+  "errorNetwork": "Internet aloqasi yo'q",
+  "retry": "Qayta urinish",
+  "emptyState": "Hozircha bu yerda hech narsa yo'q",
+  "actionSave": "Saqlash",
+  "actionCancel": "Bekor qilish",
+  "actionDelete": "O'chirish",
+  "actionClose": "Yopish",
+  "settingsLanguage": "Til",
+  "settingsTheme": "Mavzu",
+  "themeLight": "Yorug'",
+  "themeDark": "Qorong'i",
+  "themeSystem": "Tizim"
+}

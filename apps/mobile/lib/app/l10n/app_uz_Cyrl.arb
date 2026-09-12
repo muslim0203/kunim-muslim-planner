@@ -1,0 +1,23 @@
+{
+  "@@locale": "uz_Cyrl",
+  "appTitle": "Куним",
+  "navHome": "Бош сахифа",
+  "navDay": "Кун тартиби",
+  "navStats": "Статистика",
+  "navAi": "АИ",
+  "navSettings": "Созламалар",
+  "loading": "Юкланмоқда...",
+  "errorGeneric": "Нимадир хато кетди",
+  "errorNetwork": "Интернет алоқаси йўқ",
+  "retry": "Қайта уриниш",
+  "emptyState": "Ҳозирча бу ерда ҳеч нарса йўқ",
+  "actionSave": "Сақлаш",
+  "actionCancel": "Бекор қилиш",
+  "actionDelete": "Ўчириш",
+  "actionClose": "Ёпиш",
+  "settingsLanguage": "Тил",
+  "settingsTheme": "Мавзу",
+  "themeLight": "Ёруғ",
+  "themeDark": "Қоронғи",
+  "themeSystem": "Тизим"
+}

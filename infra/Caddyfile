@@ -1,0 +1,50 @@
+# KUNIM — Caddy reverse proxy (production only; see docker-compose.prod.yml).
+#
+# NOT run on the machine that authored this file: Docker is not installed
+# here (see infra/README.md). Only checked by eye for Caddyfile syntax —
+# never validated with `caddy validate` or an actual TLS handshake.
+#
+# {$DOMAIN} is read from the environment (see .env.example: DOMAIN=...).
+# Caddy obtains and renews a Let's Encrypt certificate for it automatically
+# on first request — no manual certbot/ACME setup needed.
+
+{$DOMAIN} {
+	# Reverse proxy to the API container, reachable by its compose service
+	# name on the internal network (no published port needed on `api`).
+	reverse_proxy api:8000
+
+	# --- Security headers ---
+	header {
+		# Force HTTPS for a year, including subdomains. Safe to enable only
+		# once TLS is confirmed working end-to-end for {$DOMAIN}.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		# Caddy already hides its own identity by default; this is belt and
+		# suspenders against upstream leaking a Server header.
+		-Server
+	}
+
+	# --- Compression ---
+	encode zstd gzip
+
+	# --- Access log, JSON, to stdout (picked up by `docker compose logs`
+	# or whatever log driver / shipper the host uses). ---
+	log {
+		output stdout
+		format json
+	}
+
+	# NOTE: /admin (SQLAdmin, see apps/api/app/admin) must be IP-restricted
+	# or placed behind additional auth before this ever fronts production
+	# traffic — it is NOT safe to expose to the public internet as-is.
+	# Example (uncomment and fill in once the real admin source IPs are
+	# known):
+	# @admin path /admin*
+	# handle @admin {
+	# 	@blocked not remote_ip 203.0.113.0/24
+	# 	respond @blocked 403
+	# 	reverse_proxy api:8000
+	# }
+}

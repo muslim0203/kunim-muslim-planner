@@ -1,0 +1,23 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Kunim",
+  "navHome": "Главная",
+  "navDay": "Распорядок дня",
+  "navStats": "Статистика",
+  "navAi": "ИИ",
+  "navSettings": "Настройки",
+  "loading": "Загрузка...",
+  "errorGeneric": "Что-то пошло не так",
+  "errorNetwork": "Нет подключения к интернету",
+  "retry": "Повторить",
+  "emptyState": "Здесь пока ничего нет",
+  "actionSave": "Сохранить",
+  "actionCancel": "Отмена",
+  "actionDelete": "Удалить",
+  "actionClose": "Закрыть",
+  "settingsLanguage": "Язык",
+  "settingsTheme": "Тема",
+  "themeLight": "Светлая",
+  "themeDark": "Тёмная",
+  "themeSystem": "Системная"
+}

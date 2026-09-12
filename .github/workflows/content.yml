@@ -1,0 +1,21 @@
+# Content tools validator
+# This workflow becomes the Qur'an/hadith import checksum validator in phase 3.
+name: Content
+
+on:
+  pull_request:
+    paths:
+      - 'packages/content_tools/**'
+      - 'docs/content-policy.md'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Content tools placeholder
+        run: echo "content_tools CLI 3-bosqichda qo'shiladi"

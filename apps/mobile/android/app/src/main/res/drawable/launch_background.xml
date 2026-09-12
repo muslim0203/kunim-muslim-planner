@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plain placeholder splash background (module-neutral). Replace with a
+     real branded launch asset before the first store-track build; a real
+     `flutter create` also emits density-specific drawable-*/ variants that
+     this hand-written pass does not attempt to reproduce. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/white" />
+</layer-list>

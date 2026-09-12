@@ -1,0 +1,83 @@
+{
+  "@@locale": "en",
+  "appTitle": "Kunim",
+  "@appTitle": {
+    "description": "The application name, shown on the splash screen and app switcher."
+  },
+  "navHome": "Home",
+  "@navHome": {
+    "description": "Bottom navigation label for the Home tab."
+  },
+  "navDay": "Day",
+  "@navDay": {
+    "description": "Bottom navigation label for the daily schedule tab."
+  },
+  "navStats": "Stats",
+  "@navStats": {
+    "description": "Bottom navigation label for the statistics tab."
+  },
+  "navAi": "AI",
+  "@navAi": {
+    "description": "Bottom navigation label for the AI assistant tab."
+  },
+  "navSettings": "Settings",
+  "@navSettings": {
+    "description": "Bottom navigation label for the settings tab."
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Generic loading indicator label."
+  },
+  "errorGeneric": "Something went wrong",
+  "@errorGeneric": {
+    "description": "Generic error message shown when a more specific message is not available."
+  },
+  "errorNetwork": "No internet connection",
+  "@errorNetwork": {
+    "description": "Error message shown when an action fails because the device has no network connectivity."
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Label for a button that retries a failed action."
+  },
+  "emptyState": "Nothing here yet",
+  "@emptyState": {
+    "description": "Generic message shown when a list or screen has no content yet."
+  },
+  "actionSave": "Save",
+  "@actionSave": {
+    "description": "Label for a button that persists changes made by the user."
+  },
+  "actionCancel": "Cancel",
+  "@actionCancel": {
+    "description": "Label for a button that discards the current action or dialog without saving."
+  },
+  "actionDelete": "Delete",
+  "@actionDelete": {
+    "description": "Label for a button that permanently removes an item, usually after confirmation."
+  },
+  "actionClose": "Close",
+  "@actionClose": {
+    "description": "Label for a button that dismisses a sheet, dialog or banner without taking another action."
+  },
+  "settingsLanguage": "Language",
+  "@settingsLanguage": {
+    "description": "Settings row label for choosing the app language."
+  },
+  "settingsTheme": "Theme",
+  "@settingsTheme": {
+    "description": "Settings row label for choosing the app theme."
+  },
+  "themeLight": "Light",
+  "@themeLight": {
+    "description": "Option label for the light theme."
+  },
+  "themeDark": "Dark",
+  "@themeDark": {
+    "description": "Option label for the dark theme."
+  },
+  "themeSystem": "System",
+  "@themeSystem": {
+    "description": "Option label for following the system theme setting."
+  }
+}
