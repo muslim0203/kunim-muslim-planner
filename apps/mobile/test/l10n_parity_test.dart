@@ -34,9 +34,7 @@ void main() {
       // Translation keys only: drop `@@...` locale metadata and `@key`
       // per-string metadata (descriptions/placeholders), which legitimately
       // only need to exist once, in the template file.
-      final keys = json.keys
-          .where((k) => !k.startsWith('@'))
-          .toSet();
+      final keys = json.keys.where((k) => !k.startsWith('@')).toSet();
 
       expect(keys, isNotEmpty, reason: '$fileName has no translation keys');
       keysByFile[fileName] = keys;

@@ -25,7 +25,9 @@ void main() {
       expect(KunimRadii.large, inInclusiveRange(16, 20));
     });
 
-    test('large radius is not smaller than medium, medium not smaller than small', () {
+    test(
+        'large radius is not smaller than medium, medium not smaller than small',
+        () {
       expect(KunimRadii.large, greaterThanOrEqualTo(KunimRadii.medium));
       expect(KunimRadii.medium, greaterThanOrEqualTo(KunimRadii.small));
     });

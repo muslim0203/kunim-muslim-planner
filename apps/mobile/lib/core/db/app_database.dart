@@ -27,8 +27,7 @@ class SyncOutbox extends Table {
   TextColumn get payload => text()();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
   TextColumn get lastError => text().nullable()();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// Small generic key/value store for local-only flags and settings that

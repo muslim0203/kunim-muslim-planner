@@ -36,7 +36,16 @@ jobs:
           cache: true
       - run: flutter pub get
         working-directory: apps/mobile
+      # Format-check runs BEFORE codegen: dart format has no exclude list, so
+      # once *.g.dart exists it would check generated output too.
       - run: dart format --output=none --set-exit-if-changed .
+        working-directory: apps/mobile
+      # Generated sources (*.g.dart, l10n) are gitignored, so CI must produce
+      # them before analyze/test -- otherwise every reference to AppDatabase or
+      # AppLocalizations is an undefined-name error.
+      - run: dart run build_runner build --delete-conflicting-outputs
+        working-directory: apps/mobile
+      - run: flutter gen-l10n
         working-directory: apps/mobile
       - run: flutter analyze
         working-directory: apps/mobile
