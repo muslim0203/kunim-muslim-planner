@@ -79,5 +79,165 @@
   "themeSystem": "System",
   "@themeSystem": {
     "description": "Option label for following the system theme setting."
+  },
+  "authSignInTitle": "Sign In",
+  "@authSignInTitle": {
+    "description": "Title of the sign in screen."
+  },
+  "authSignUpTitle": "Create Account",
+  "@authSignUpTitle": {
+    "description": "Title of the sign up screen."
+  },
+  "authEmailLabel": "Email",
+  "@authEmailLabel": {
+    "description": "Label for the email input field on auth screens."
+  },
+  "authPasswordLabel": "Password",
+  "@authPasswordLabel": {
+    "description": "Label for the password input field on auth screens."
+  },
+  "authConfirmPasswordLabel": "Confirm Password",
+  "@authConfirmPasswordLabel": {
+    "description": "Label for the confirm password input field on auth screens."
+  },
+  "authForgotPassword": "Forgot password?",
+  "@authForgotPassword": {
+    "description": "Link text for password recovery on the sign in screen."
+  },
+  "authSignInButton": "Sign In",
+  "@authSignInButton": {
+    "description": "Label for the button that submits the sign in form."
+  },
+  "authSignUpButton": "Create Account",
+  "@authSignUpButton": {
+    "description": "Label for the button that submits the sign up form."
+  },
+  "authContinueWithGoogle": "Continue with Google",
+  "@authContinueWithGoogle": {
+    "description": "Label for the button that allows signing in with a Google account."
+  },
+  "authContinueWithApple": "Continue with Apple",
+  "@authContinueWithApple": {
+    "description": "Label for the button that allows signing in with an Apple account."
+  },
+  "authNoAccount": "Don't have an account?",
+  "@authNoAccount": {
+    "description": "Prompt text shown on the sign in screen for users without an account."
+  },
+  "authHaveAccount": "Already have an account?",
+  "@authHaveAccount": {
+    "description": "Prompt text shown on the sign up screen for users with an existing account."
+  },
+  "authSignOut": "Sign Out",
+  "@authSignOut": {
+    "description": "Label for the button that signs out the current user."
+  },
+  "authErrorInvalidEmail": "Please enter a valid email address",
+  "@authErrorInvalidEmail": {
+    "description": "Error message shown when the email format is invalid."
+  },
+  "authErrorPasswordTooShort": "Password must be at least 8 characters",
+  "@authErrorPasswordTooShort": {
+    "description": "Error message shown when the password is too short."
+  },
+  "authErrorPasswordsMismatch": "Passwords do not match",
+  "@authErrorPasswordsMismatch": {
+    "description": "Error message shown when the password and confirm password fields do not match."
+  },
+  "authErrorInvalidCredentials": "Email or password is incorrect",
+  "@authErrorInvalidCredentials": {
+    "description": "Error message shown when sign in fails due to invalid email or password. Must not reveal whether the email exists."
+  },
+  "authErrorSessionExpired": "Your session has expired. Please sign in again.",
+  "@authErrorSessionExpired": {
+    "description": "Error message shown when the user's session has expired and they need to sign in again."
+  },
+  "onbLanguageTitle": "Select Language",
+  "@onbLanguageTitle": {
+    "description": "Title of the language selection step in the onboarding flow."
+  },
+  "onbLanguageSubtitle": "Choose your preferred language",
+  "@onbLanguageSubtitle": {
+    "description": "Subtitle of the language selection step in the onboarding flow."
+  },
+  "onbNameTitle": "Your Profile",
+  "@onbNameTitle": {
+    "description": "Title of the name and avatar input step in the onboarding flow."
+  },
+  "onbNameSubtitle": "Tell us your name and add an avatar",
+  "@onbNameSubtitle": {
+    "description": "Subtitle of the name and avatar input step in the onboarding flow."
+  },
+  "onbNameFieldLabel": "Name",
+  "@onbNameFieldLabel": {
+    "description": "Label for the name input field in the onboarding flow."
+  },
+  "onbLocationTitle": "Prayer Settings",
+  "@onbLocationTitle": {
+    "description": "Title of the location and prayer method selection step in the onboarding flow."
+  },
+  "onbLocationSubtitle": "Set up your prayer calculation method and location",
+  "@onbLocationSubtitle": {
+    "description": "Subtitle of the location and prayer method selection step in the onboarding flow."
+  },
+  "onbLocationUseMyLocation": "Use My Location",
+  "@onbLocationUseMyLocation": {
+    "description": "Label for the button that uses the device's current location in the onboarding flow."
+  },
+  "onbLocationChooseManually": "Choose City Manually",
+  "@onbLocationChooseManually": {
+    "description": "Label for the button that allows manual city selection in the onboarding flow."
+  },
+  "onbPrayerMethodLabel": "Calculation Method",
+  "@onbPrayerMethodLabel": {
+    "description": "Label for the prayer calculation method selector in the onboarding flow."
+  },
+  "onbMadhabLabel": "School of Islamic Law (Madhab)",
+  "@onbMadhabLabel": {
+    "description": "Label for the madhab (Islamic school of law) selector in the onboarding flow."
+  },
+  "onbGoalsTitle": "Your Goals",
+  "@onbGoalsTitle": {
+    "description": "Title of the goals selection step in the onboarding flow."
+  },
+  "onbGoalsSubtitle": "What are you looking to achieve?",
+  "@onbGoalsSubtitle": {
+    "description": "Subtitle of the goals selection step in the onboarding flow."
+  },
+  "onbPermissionsTitle": "Permissions & Privacy",
+  "@onbPermissionsTitle": {
+    "description": "Title of the permissions and privacy step in the onboarding flow."
+  },
+  "onbPermissionsSubtitle": "Allow notifications and review our policy",
+  "@onbPermissionsSubtitle": {
+    "description": "Subtitle of the permissions and privacy step in the onboarding flow."
+  },
+  "onbNotificationsExplanation": "We'll send prayer reminders and important updates",
+  "@onbNotificationsExplanation": {
+    "description": "Explanation of what notifications will be sent for in the permissions step."
+  },
+  "onbPrivacyPolicyLink": "Privacy Policy",
+  "@onbPrivacyPolicyLink": {
+    "description": "Link text for the privacy policy in the permissions step."
+  },
+  "onbAgreeButton": "I Agree",
+  "@onbAgreeButton": {
+    "description": "Label for the button that confirms agreement to permissions and privacy in the final onboarding step."
+  },
+  "onbNext": "Next",
+  "@onbNext": {
+    "description": "Label for the button that advances to the next step in the onboarding flow."
+  },
+  "onbBack": "Back",
+  "@onbBack": {
+    "description": "Label for the button that goes back to the previous step in the onboarding flow."
+  },
+  "onbSkip": "Skip",
+  "@onbSkip": {
+    "description": "Label for the button that skips the current step in the onboarding flow."
+  },
+  "onbFinish": "Finish",
+  "@onbFinish": {
+    "description": "Label for the button that completes the onboarding flow."
   }
 }

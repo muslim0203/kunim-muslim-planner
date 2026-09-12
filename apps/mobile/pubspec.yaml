@@ -102,6 +102,14 @@ dev_dependencies:
 flutter:
   generate: true
   uses-material-design: true
-  # No assets/ directories exist yet in this Phase-0 skeleton, so no `assets:`
-  # entries are declared. Add them here once real asset folders are created
-  # (e.g. assets/db/quran.sqlite in Phase 3, assets/cities.json in Phase 3).
+
+  # `assets/` only holds a `.gitkeep` placeholder in Phase 0 (no real asset
+  # files exist yet — e.g. assets/db/quran.sqlite and assets/cities.json
+  # land in Phase 3). Declaring the directory now means later phases can
+  # drop files straight into it without touching this file again.
+  assets:
+    - assets/
+
+# l10n code generation is driven by `l10n.yaml` (arb-dir/template/output
+# class/dir). `generate: true` above is what makes `flutter gen-l10n` run
+# automatically as part of `flutter pub get` / `flutter build`.
