@@ -16,10 +16,12 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import get_settings
 from app.db.base import Base
+from app.db.models_discovery import import_all_models
 
-# Import all model modules so they register on Base.metadata.
-from app.modules.auth import models as auth_models  # noqa: F401
-from app.modules.users import models as users_models  # noqa: F401
+# Import every feature model module so it registers on Base.metadata.
+# Discovered rather than listed: a module missing from a hand-written list is
+# invisible to autogenerate, which then emits `drop_table` for its tables.
+import_all_models()
 
 config = context.config
 

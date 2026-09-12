@@ -63,6 +63,11 @@ class SyncUserState(Base):
         doc="Highest server_version whose tombstones have been physically "
         "deleted. A pull cursor below this cannot be reconciled -> "
         "full_resync_required (ADR §4).",
+        # Must stay byte-identical to `0004_sync_infrastructure`'s comment:
+        # autogenerate diffs DB comments, so any drift shows up as a
+        # `modify_comment` operation and makes `alembic check` fail.
+        comment="Highest server_version whose tombstones were purged; a pull "
+        "cursor below this cannot be reconciled (full_resync_required).",
     )
     updated_at: Mapped[datetime] = mapped_column(
         TZDateTime, server_default=func.now(), onupdate=func.now(), nullable=False
@@ -87,7 +92,14 @@ class SyncBatch(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     device_id: Mapped[str] = mapped_column(String(64), nullable=False)
-    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    request_hash: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        # Byte-identical to `0004_sync_infrastructure` -- see the note on
+        # SyncUserState.purged_up_to_version.
+        comment="sha256 of the canonical JSON of changes[]; a different hash "
+        "under the same batch_id is HTTP 409 batch_id_reused.",
+    )
     response: Mapped[dict] = mapped_column(_JSONType, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         TZDateTime, server_default=func.now(), nullable=False
