@@ -28,11 +28,11 @@ Future<void> _pumpFrames(WidgetTester tester, [int frames = 8]) async {
 }
 
 ButtonStyle? _styleOf(ThemeData theme, String which) => switch (which) {
-  'filled' => theme.filledButtonTheme.style,
-  'elevated' => theme.elevatedButtonTheme.style,
-  'outlined' => theme.outlinedButtonTheme.style,
-  _ => null,
-};
+      'filled' => theme.filledButtonTheme.style,
+      'elevated' => theme.elevatedButtonTheme.style,
+      'outlined' => theme.outlinedButtonTheme.style,
+      _ => null,
+    };
 
 void main() {
   group('button themes keep a finite minimum width', () {
