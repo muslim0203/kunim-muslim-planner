@@ -17,6 +17,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/db/base_repository.dart';
+import '../../../core/sync/conflict.dart' show toRfc3339Millis, toWireDate;
 
 const _uuid = Uuid();
 
@@ -48,6 +49,7 @@ class MilestoneRepository extends SyncableRepository {
     required String title,
     DateTime? targetDate,
     int sortOrder = 0,
+    int progressPercent = 0,
     String? userId,
   }) {
     final now = _now();
@@ -64,6 +66,7 @@ class MilestoneRepository extends SyncableRepository {
       targetDate: targetDate,
       completedAt: null,
       sortOrder: sortOrder,
+      progressPercent: progressPercent,
     );
     return _persist(row);
   }
@@ -79,6 +82,7 @@ class MilestoneRepository extends SyncableRepository {
     DateTime? targetDate,
     bool clearTargetDate = false,
     int? sortOrder,
+    int? progressPercent,
   }) async {
     final existing = await _require(id);
     final updated = existing.copyWith(
@@ -87,6 +91,7 @@ class MilestoneRepository extends SyncableRepository {
           ? const Value(null)
           : (targetDate == null ? const Value.absent() : Value(targetDate)),
       sortOrder: sortOrder,
+      progressPercent: progressPercent,
       updatedAt: _now(),
     );
     return _persist(updated);
@@ -125,7 +130,7 @@ class MilestoneRepository extends SyncableRepository {
       entity: 'milestones',
       rowId: id,
       op: SyncOp.delete,
-      payload: syncPayload(updated.toJson()),
+      payload: _payloadOf(updated),
       write: () => db.update(db.milestones).replace(updated),
     );
     onLocalWrite?.call();
@@ -142,17 +147,47 @@ class MilestoneRepository extends SyncableRepository {
   }
 
   Future<Milestone> _persist(Milestone row) async {
+    // `dirty` marks "not yet acknowledged by the server". `copyWith` on an
+    // already-synced row would keep the old `false`, and a forced full resync
+    // deletes `dirty = 0` rows -- silently dropping an edit whose push had
+    // not landed yet (ADR-0002 §1 + the resync step in `conflict.dart`).
+    final pending = row.copyWith(dirty: true);
     final result = await writeWithOutbox<Milestone>(
       entity: 'milestones',
-      rowId: row.id,
+      rowId: pending.id,
       op: SyncOp.upsert,
-      payload: syncPayload(row.toJson()),
+      payload: _payloadOf(pending),
       write: () async {
-        await db.into(db.milestones).insertOnConflictUpdate(row);
-        return row;
+        await db.into(db.milestones).insertOnConflictUpdate(pending);
+        return pending;
       },
     );
     onLocalWrite?.call();
     return result;
   }
+
+  /// The `milestones` wire row (ADR-0002 rule 18).
+  ///
+  /// Built by hand in snake_case rather than from Drift's generated
+  /// `toJson()`, which emits Dart field names (`userId`, `targetDate`, ...).
+  /// The server's row schema is `extra="forbid"` snake_case, so a camelCase
+  /// payload is rejected as `schema_invalid` on every push, for ever.
+  /// `target_date` is a DATE column, so it must not carry a time.
+  Map<String, dynamic> _payloadOf(Milestone row) => {
+        'id': row.id,
+        'user_id': row.userId,
+        'created_at': toRfc3339Millis(row.createdAt),
+        'updated_at': toRfc3339Millis(row.updatedAt),
+        'deleted_at':
+            row.deletedAt == null ? null : toRfc3339Millis(row.deletedAt!),
+        'server_version': row.serverVersion,
+        'goal_id': row.goalId,
+        'title': row.title,
+        'target_date':
+            row.targetDate == null ? null : toWireDate(row.targetDate!),
+        'progress_percent': row.progressPercent,
+        'completed_at':
+            row.completedAt == null ? null : toRfc3339Millis(row.completedAt!),
+        'sort_order': row.sortOrder,
+      };
 }

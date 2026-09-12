@@ -32,6 +32,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/db/base_repository.dart';
+import '../../../core/sync/conflict.dart' show toRfc3339Millis, toWireDate;
 import '../domain/local_day.dart';
 import 'habit_local_write_hook.dart';
 
@@ -262,6 +263,7 @@ class HabitLogRepository extends SyncableRepository with HabitLocalWriteHook {
     final patch = HabitLogsCompanion(
       deletedAt: Value(now),
       updatedAt: Value(now),
+      dirty: const Value(true),
     );
     final merged = existing.copyWithCompanion(patch);
 
@@ -313,7 +315,12 @@ class HabitLogRepository extends SyncableRepository with HabitLocalWriteHook {
   }
 
   Future<void> _update(HabitLog existing, HabitLogsCompanion patch) {
-    final merged = existing.copyWithCompanion(patch);
+    // Re-arm `dirty` for every local edit, whatever the caller patched: a
+    // forced full resync deletes `dirty = 0` rows, so an edit whose push has
+    // not been acknowledged yet would be silently dropped. Applied here so
+    // all three callers (`adjustCount`, `adjustValue`, `setNote`) inherit it.
+    final dirtyPatch = patch.copyWith(dirty: const Value(true));
+    final merged = existing.copyWithCompanion(dirtyPatch);
     return writeAndNotify<void>(
       entity: entityName,
       rowId: existing.id,
@@ -322,7 +329,7 @@ class HabitLogRepository extends SyncableRepository with HabitLocalWriteHook {
       write: () => (db.update(
         db.habitLogs,
       )..where((l) => l.id.equals(existing.id)))
-          .write(patch),
+          .write(dirtyPatch),
     );
   }
 
@@ -335,13 +342,17 @@ class HabitLogRepository extends SyncableRepository with HabitLocalWriteHook {
         'id': row.id,
         'user_id': row.userId,
         'habit_id': row.habitId,
-        'date': row.date.toIso8601String(),
+        // `date` is the natural-key DATE column (ADR-0002 rule 9), not a
+        // timestamp: a full datetime string is rejected as `schema_invalid`.
+        'date': toWireDate(row.date),
         'count': row.count,
         'value': row.value,
         'note': row.note,
-        'created_at': row.createdAt.toIso8601String(),
-        'updated_at': row.updatedAt.toIso8601String(),
-        'deleted_at': row.deletedAt?.toIso8601String(),
+        // Millisecond precision per ADR-0002 rule 13.
+        'created_at': toRfc3339Millis(row.createdAt),
+        'updated_at': toRfc3339Millis(row.updatedAt),
+        'deleted_at':
+            row.deletedAt == null ? null : toRfc3339Millis(row.deletedAt!),
         'server_version': row.serverVersion,
       };
 }

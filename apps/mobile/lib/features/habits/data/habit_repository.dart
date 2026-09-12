@@ -12,11 +12,14 @@
 /// has; see that repository's doc for rule 9/14.
 library;
 
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/db/base_repository.dart';
+import '../../../core/sync/conflict.dart' show toRfc3339Millis;
 import '../domain/habit_schedule.dart';
 import '../domain/local_day.dart';
 import 'habit_local_write_hook.dart';
@@ -125,14 +128,16 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
       payload: {
         'id': id,
         'user_id': userId,
-        'created_at': now.toIso8601String(),
-        'updated_at': now.toIso8601String(),
+        'created_at': toRfc3339Millis(now),
+        'updated_at': toRfc3339Millis(now),
         'deleted_at': null,
         'server_version': 0,
         'title': title,
         'description': description,
-        'frequency': scheduleJson,
-        'target_count': targetCount,
+        // Wire field is `schedule` (a JSON object), not `frequency` (the
+        // local column, which holds the same JSON as a string).
+        'schedule': _scheduleObject(scheduleJson),
+        'target': targetCount,
         'color': color,
       },
       write: () => db.into(db.habits).insert(
@@ -170,6 +175,9 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
     final now = DateTime.now().toUtc();
     final patch = HabitsCompanion(
       updatedAt: Value(now),
+      // Re-arm `dirty`: a full resync deletes `dirty = 0` rows, so an edit
+      // whose push has not landed yet would be silently dropped.
+      dirty: const Value(true),
       title: title,
       description: description,
       frequency: schedule.present
@@ -197,7 +205,11 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
     if (current == null || current.deletedAt != null) return;
 
     final now = DateTime.now().toUtc();
-    final patch = HabitsCompanion(deletedAt: Value(now), updatedAt: Value(now));
+    final patch = HabitsCompanion(
+      deletedAt: Value(now),
+      updatedAt: Value(now),
+      dirty: const Value(true),
+    );
     final merged = current.copyWithCompanion(patch);
 
     await writeAndNotify<void>(
@@ -219,14 +231,31 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
   Map<String, dynamic> _payloadOf(Habit row) => {
         'id': row.id,
         'user_id': row.userId,
-        'created_at': row.createdAt.toIso8601String(),
-        'updated_at': row.updatedAt.toIso8601String(),
-        'deleted_at': row.deletedAt?.toIso8601String(),
+        // Millisecond precision, not `toIso8601String()`'s microseconds:
+        // ADR-0002 rule 13, and the server echoes milliseconds back.
+        'created_at': toRfc3339Millis(row.createdAt),
+        'updated_at': toRfc3339Millis(row.updatedAt),
+        'deleted_at':
+            row.deletedAt == null ? null : toRfc3339Millis(row.deletedAt!),
         'server_version': row.serverVersion,
         'title': row.title,
         'description': row.description,
-        'frequency': row.frequency,
-        'target_count': row.targetCount,
+        // The local `frequency` column stores `HabitSchedule.toJson()` as a
+        // STRING; the wire field is `schedule`, a JSON OBJECT (JSONB on the
+        // server). Decode rather than pass the string through, or the row is
+        // rejected as `schema_invalid`.
+        'schedule': _scheduleObject(row.frequency),
+        'target': row.targetCount,
         'color': row.color,
       };
+
+  /// Decodes the locally stored schedule string into the wire object.
+  ///
+  /// Falls back to the default schedule's object form for anything
+  /// unparseable, exactly as `HabitSchedule.fromJson` does for reads, so a
+  /// corrupt local value degrades instead of blocking the whole outbox.
+  static Map<String, dynamic> _scheduleObject(String raw) {
+    final decoded = jsonDecode(HabitSchedule.fromJson(raw).toJson());
+    return (decoded as Map).cast<String, dynamic>();
+  }
 }

@@ -14,7 +14,7 @@ import 'package:drift/drift.dart';
 import 'package:kunim/core/db/app_database.dart';
 import 'package:kunim/core/db/base_repository.dart';
 import 'package:kunim/core/db/tables/tasks_table.dart' show TaskPriority;
-import 'package:kunim/core/sync/conflict.dart' show toRfc3339Millis;
+import 'package:kunim/core/sync/conflict.dart' show toRfc3339Millis, toWireDate;
 import 'package:uuid/uuid.dart';
 
 class TaskRepository extends SyncableRepository {
@@ -318,8 +318,12 @@ class TaskRepository extends SyncableRepository {
       'title': title,
       'description': description,
       'category_id': categoryId,
-      'priority': priority.index,
-      'due_date': dueDate == null ? null : toRfc3339Millis(dueDate),
+      // The wire enum is the NAME, not the index: the server's `priority` is
+      // a string enum (low/medium/high), and pinning the wire format to Dart
+      // declaration order would silently change meaning if a member is ever
+      // inserted. `due_date` is a DATE column on the server.
+      'priority': priority.name,
+      'due_date': dueDate == null ? null : toWireDate(dueDate),
       'completed_at': completedAt == null ? null : toRfc3339Millis(completedAt),
     };
   }
