@@ -2,20 +2,23 @@
 
 Run with:  arq app.jobs.worker.WorkerSettings
 
-Phase 0 registers a diagnostic ping job so the worker can start and its
-Redis queue can be verified end to end.
-Real jobs (stats_aggregate, daily_review, weekly_review, monthly_review,
-notif_scheduler, daily_wisdom, ai_batch, cleanup) land in phases 2-8.
+`ping` is a diagnostic job kept so the worker's Redis queue can be verified
+end to end. `sync_retention` is the ADR-0002 rule 11 sweep.
+
+Still to come (phases 5-8): stats_aggregate, daily_review, weekly_review,
+monthly_review, notif_scheduler, daily_wisdom, ai_batch.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
+from arq import cron
 from arq.connections import RedisSettings
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.jobs.cleanup import sync_retention
 
 
 async def startup(ctx: dict[str, Any]) -> None:
@@ -34,8 +37,14 @@ async def ping(ctx: dict[str, Any]) -> str:  # noqa: ARG001
 class WorkerSettings:
     """arq worker configuration."""
 
-    functions: list[Any] = [ping]
-    cron_jobs: list[Any] = []
+    functions: list[Any] = [ping, sync_retention]
+
+    # 03:00 UTC daily: off the daily-review window (user-local 21:00) so a
+    # long sweep cannot delay user-facing jobs. `run_retention` is idempotent,
+    # so a missed or repeated run is harmless.
+    cron_jobs: list[Any] = [
+        cron(sync_retention, hour=3, minute=0, run_at_startup=False),
+    ]
     on_startup = startup
     on_shutdown = shutdown
     max_jobs = 10
