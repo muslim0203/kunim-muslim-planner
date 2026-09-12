@@ -72,17 +72,29 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
-  /// Version 1 → 2 (this phase): adds the phase-2 sync tables — `tasks`,
+  /// Version 1 → 2: adds the phase-2 sync tables — `tasks`,
   /// `task_categories`, `calendar_events`, `habits`, `habit_logs`, `goals`,
   /// `milestones` (`docs/plan.md` §3 sync table list). All seven are brand
-  /// new tables, so the upgrade step is purely additive; nothing existing
-  /// is altered or dropped.
+  /// new tables, so that step is purely additive; nothing existing is
+  /// altered or dropped.
+  ///
+  /// Version 2 → 3: two changes.
+  ///
+  /// 1. Adds `milestones.progress_percent`. ADR-0002 conflict-matrix rule 18
+  ///    names `progress_percent` for `milestones` as well as `goals`, and the
+  ///    server's wire row carries it, so a local column is required for the
+  ///    row to round-trip.
+  /// 2. Replaces `habit_logs`' table-level UNIQUE on the natural key with the
+  ///    partial index [_habitLogNaturalKeyIndex], which constrains LIVE rows
+  ///    only. See `HabitLogs` for why the table-level constraint made rule 14
+  ///    unsatisfiable and deadlocked the pull cursor.
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
+          await customStatement(_habitLogNaturalKeyIndex);
         },
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
@@ -94,8 +106,40 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(goals);
             await m.createTable(milestones);
           }
+          if (from < 3) {
+            // `from < 2` created these from the CURRENT definitions, which
+            // already reflect v3; only a real v2 database needs the changes.
+            if (from >= 2) {
+              await m.addColumn(milestones, milestones.progressPercent);
+              // A UNIQUE table constraint is part of SQLite's CREATE TABLE
+              // and cannot be dropped in place, so the table is rebuilt from
+              // its current (constraint-free) definition with its rows
+              // copied across.
+              // `TableMigration` is marked experimental in drift, but it is
+              // the only supported way to drop a UNIQUE table constraint;
+              // the alternative is hand-written create/copy/drop/rename SQL.
+              // ignore: experimental_member_use
+              await m.alterTable(TableMigration(habitLogs));
+            }
+            await customStatement(_habitLogNaturalKeyIndex);
+          }
         },
       );
+
+  /// Uniqueness for `habit_logs`' natural key among **live** rows only.
+  ///
+  /// `deleted_at IS NULL` is the whole point: rule 14's losing row arrives as
+  /// a tombstone sharing the natural key, and it has to be storable.
+  ///
+  /// `COALESCE(user_id, '')` matters just as much: SQLite treats NULLs as
+  /// distinct in a UNIQUE index, and `user_id` is NULL for every locally
+  /// created row until sign-in exists — so indexing the raw column would
+  /// enforce nothing at all today. This mirrors the server's own
+  /// `coalesce(ref_id, '')` natural-key convention (ADR-0002 rules 11-13).
+  static const String _habitLogNaturalKeyIndex =
+      'CREATE UNIQUE INDEX IF NOT EXISTS ux_habit_logs_natural_key '
+      "ON habit_logs (COALESCE(user_id, ''), habit_id, date) "
+      'WHERE deleted_at IS NULL';
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
