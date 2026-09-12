@@ -8,6 +8,14 @@ analyzer:
     - build/**
     - android/**
     - ios/**
+  errors:
+    # `@JsonKey` on a freezed factory's constructor parameters is the
+    # standard freezed + json_serializable pattern (see freezed's README,
+    # "Disabling invalid_annotation_target warning"), used by
+    # `core/sync/sync_models.dart` to map Dart field names to the ADR-0002
+    # wire field names (e.g. `client_seq`). Without this, the analyzer flags
+    # every such parameter even though code generation handles it correctly.
+    invalid_annotation_target: ignore
   # NOTE: the legacy `plugins: [custom_lint]` entry is deprecated in Dart 3.13
   # and makes `flutter analyze` emit a warning, which fails CI. riverpod_lint
   # stays in dev_dependencies and is run separately via `dart run custom_lint`

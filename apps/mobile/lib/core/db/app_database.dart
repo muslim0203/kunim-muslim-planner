@@ -10,8 +10,17 @@ library;
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Referenced only from generated code: every [SyncColumns.id] column's
+// `clientDefault` (`tables/sync_column_mixin.dart`) is re-emitted by
+// `drift_dev` verbatim into `app_database.g.dart`, which is `part of` this
+// library — so `Uuid` must be imported here, not just in the mixin's file.
+import 'package:uuid/uuid.dart'; // ignore: unused_import
 
+import 'tables/calendar_events_table.dart';
+import 'tables/goals_table.dart';
+import 'tables/habits_table.dart';
 import 'tables/preferences_table.dart';
+import 'tables/tasks_table.dart';
 
 part 'app_database.g.dart';
 
@@ -41,7 +50,20 @@ class KeyValue extends Table {
   Set<Column> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [SyncOutbox, KeyValue, Preferences])
+@DriftDatabase(
+  tables: [
+    SyncOutbox,
+    KeyValue,
+    Preferences,
+    TaskCategories,
+    Tasks,
+    CalendarEvents,
+    Habits,
+    HabitLogs,
+    Goals,
+    Milestones,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -50,15 +72,28 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
-  /// Phase 0 only ever creates schema version 1 from scratch — there is
-  /// nothing to migrate from yet. Real migrations (`onUpgrade` steps) start
-  /// once schemaVersion is bumped past 1 in a later phase.
+  /// Version 1 → 2 (this phase): adds the phase-2 sync tables — `tasks`,
+  /// `task_categories`, `calendar_events`, `habits`, `habit_logs`, `goals`,
+  /// `milestones` (`docs/plan.md` §3 sync table list). All seven are brand
+  /// new tables, so the upgrade step is purely additive; nothing existing
+  /// is altered or dropped.
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.createTable(taskCategories);
+            await m.createTable(tasks);
+            await m.createTable(calendarEvents);
+            await m.createTable(habits);
+            await m.createTable(habitLogs);
+            await m.createTable(goals);
+            await m.createTable(milestones);
+          }
         },
       );
 
