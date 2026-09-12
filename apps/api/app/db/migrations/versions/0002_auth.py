@@ -21,6 +21,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects.postgresql import ENUM
 
 # revision identifiers, used by Alembic.
 revision: str = "0002_auth"
@@ -28,7 +29,9 @@ down_revision: str | None = "0001"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-verification_purpose_enum = sa.Enum("email_verify", "password_reset", name="verification_purpose")
+verification_purpose_enum = ENUM(
+    "email_verify", "password_reset", name="verification_purpose", create_type=False
+)
 
 
 def upgrade() -> None:

@@ -12,6 +12,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects.postgresql import ENUM
 
 # revision identifiers, used by Alembic.
 revision: str = "0001"
@@ -19,7 +20,9 @@ down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-user_role_enum = sa.Enum("user", "reviewer", "content_editor", "admin", name="user_role")
+user_role_enum = ENUM(
+    "user", "reviewer", "content_editor", "admin", name="user_role", create_type=False
+)
 
 
 def upgrade() -> None:

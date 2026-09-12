@@ -52,3 +52,6 @@ make lint       # ruff + dart analyze
 Python 3.11.8 ✅ · Node 20 ✅ · Java 17 ✅ · Git ✅
 Flutter ❌ o'rnatilmagan · Android SDK ❌ · Docker ❌ · PostgreSQL/Redis ❌
 → Flutter va Docker'ga bog'liq tekshiruvlar shu mashinada bajarilmaydi; `docs/implementation-status.md` da "tekshirilmagan" deb belgilanadi.
+
+## Environment update — 2026-09-12
+Docker Desktop and WSL2 are now installed; development Compose and PostgreSQL/Redis smoke checks passed. The earlier Docker-unavailable note is historical. See docs/implementation-status.md for current evidence.

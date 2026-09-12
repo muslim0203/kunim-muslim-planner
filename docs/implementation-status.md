@@ -1,3 +1,18 @@
+## Setup verification — 2026-09-12 (latest, supersedes environment notes below)
+
+- GitHub: main pushed to private muslim0203/kunim-muslim-planner; origin/main tracking configured.
+- WSL 2.7.14.0 installed. Docker Desktop 4.90.0, Engine 29.7.2, Compose 5.5.1 installed and running. Windows reported a restart recommendation during WSL setup, but Docker Linux containers work in this session.
+- Development Compose stack built and started. API, PostgreSQL/pgvector, Redis, MinIO and worker healthy; minio-init exited 0.
+- Alembic revisions 0001 -> 0002_auth -> 0003_profile_preferences applied to real PostgreSQL. Fixed duplicate enum creation in the first two migrations.
+- /health/ready returns 200 with database=ok and redis=ok.
+- Live PostgreSQL auth smoke: register, login, me, refresh, logout passed. One synthetic setup account remains in the local development database.
+- Live Redis queue smoke: enqueued ping -> worker returned pong.
+- Worker startup fixed: registered diagnostic job, RedisSettings object, logging settings argument, source import path, dedicated arq healthcheck.
+- MinIO images moved to the vendor's quay.io namespace because Docker Hub pulls were denied. Development ports bound to localhost. Local random credentials stored only in ignored .env; Docker build excludes local environments and secrets.
+- Apple Developer Agreement accepted with explicit user confirmation. Account portal offers enrollment rather than active program membership. Entitlement form returned Unauthorized. Enrollment page is waiting for user-provided legal name, phone and address. No entitlement request submitted and no paid membership purchased.
+- Apple request draft corrected to describe planned capabilities and actual untested iOS scaffold. No invented Team ID, bundle identifier or device-testing claims.
+- Initial GitHub Mobile workflow failed; push success does not mean CI is green. CI repair and mobile setup are outside this setup verification.
+
 # Loyiha amalga oshirish holati
 
 ## Bosqichlar bo'yicha jarayon
@@ -59,3 +74,5 @@ Hozirgi developers-machine muhit holati:
 3. **GitHub remote** — CI'ni haqiqatda yashil ko'rish uchun.
 4. **Apple Developer akkaunt** — entitlement so'rovini yuborish uchun. Javob **haftalar/oylar** olishi yoki **rad etilishi** mumkin, shuning uchun reja bo'yicha bu eng erta bosqichda yuboriladi va iOS relizi unga bog'lanmaydi (`dw_ios_mode = selfreport` zaxira yo'li).
 5. **macOS mashinasi** — iOS build/simulator uchun (Windows'da iOS'ni qurib bo'lmaydi).
+
+Final setup validation: pytest 73 passed (13 existing deprecation warnings); Ruff for changed Python files passed; git diff --check passed. Automated auth/profile suites use SQLite fixtures; real PostgreSQL migration/auth and live Redis worker checks were separately executed successfully.

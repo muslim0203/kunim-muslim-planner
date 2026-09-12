@@ -76,7 +76,7 @@ services:
     #       memory: 512m
 
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     restart: unless-stopped
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
@@ -94,7 +94,7 @@ services:
       retries: 10
 
   minio-init:
-    image: minio/mc
+    image: quay.io/minio/mc
     restart: "no"
     depends_on:
       minio:
@@ -146,6 +146,12 @@ services:
     environment:
       <<: *api-env
     command: ["arq", "app.jobs.worker.WorkerSettings"]
+    healthcheck:
+      test: ["CMD", "arq", "--check", "app.jobs.worker.WorkerSettings"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
     # deploy:
     #   resources:
     #     limits:

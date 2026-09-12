@@ -1,3 +1,7 @@
+# Verification update — 2026-09-12
+
+Development stack now runs on Docker Desktop with healthy PostgreSQL, Redis, MinIO, API and worker. Migrations and live auth/queue smoke checks passed. See docs/implementation-status.md. Historical untested notes below describe the original authoring state. Production deployment has not been run. Development ports are localhost-only; MinIO images now use quay.io/minio. Use the documented --env-file command. Restart terminals opened before Docker installation to refresh PATH.
+
 # KUNIM — infratuzilma (`infra/`)
 
 > **Diqqat:** ushbu fayllarning hech biri ular yozilgan mashinada ishga
