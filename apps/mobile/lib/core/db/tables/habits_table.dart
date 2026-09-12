@@ -45,8 +45,17 @@ class HabitLogs extends Table with SyncColumns {
   @override
   Set<Column> get primaryKey => {id};
 
-  @override
-  List<Set<Column>> get uniqueKeys => [
-        {userId, habitId, date},
-      ];
+  // NO table-level `uniqueKeys` on the natural key, deliberately.
+  //
+  // ADR-0002 conflict-matrix rule 14 requires the client to accept BOTH rows
+  // when two devices minted different ids for the same `(user_id, habit_id,
+  // date)`: the losing row arrives as a tombstone carrying `merged_into`. A
+  // SQLite UNIQUE constraint is not exempted by `deleted_at`, so that
+  // tombstone insert would throw, abort the whole pulled page, and leave the
+  // cursor stuck -- re-fetching and re-failing the same page for ever, which
+  // kills sync for the entire account, not just habits.
+  //
+  // Uniqueness among LIVE rows is enforced instead by the partial index
+  // `ux_habit_logs_natural_key` (see `AppDatabase.migration`), which is the
+  // constraint we actually want.
 }
