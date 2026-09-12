@@ -29,6 +29,7 @@ class TaskCategorySyncRow(SyncRowBase):
 
     name: str
     color: str | None = None
+    sort_order: int = 0
 
 
 class TaskPriority(StrEnum):
@@ -47,12 +48,12 @@ class TaskSyncRow(SyncRowBase):
     """Wire shape of a `tasks` row.
 
     Fields are exactly `docs/plan.md` section 3's minimum for this table:
-    title, notes, priority, due date, a loose category reference, and
+    title, description, priority, due date, a loose category reference, and
     `completed_at`. No extra product features are added.
     """
 
     title: str
-    notes: str | None = None
+    description: str | None = None
     priority: TaskPriority = TaskPriority.medium
     due_date: date | None = None
     category_id: uuid.UUID | None = None

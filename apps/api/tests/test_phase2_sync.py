@@ -65,7 +65,7 @@ def task_payload(
         "deleted_at": None,
         "server_version": server_version,
         "title": title,
-        "notes": None,
+        "description": None,
         "priority": priority,
         "due_date": None,
         "category_id": category_id,

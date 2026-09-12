@@ -11,7 +11,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -46,9 +46,17 @@ class CalendarEvent(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text(), nullable=True, default=None)
     start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # Nullable: the client models an open-ended / point-in-time event as a row
+    # with no end (`CalendarEvents.endAt` is `dateTime().nullable()`). A
+    # NOT NULL column here would reject every such event as `schema_invalid`.
+    end_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    all_day: Mapped[bool] = mapped_column(Boolean(), nullable=False, server_default=text("false"))
     rrule: Mapped[str | None] = mapped_column(String(500), nullable=True, default=None)
+    location: Mapped[str | None] = mapped_column(Text(), nullable=True, default=None)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid, no secrets
         return f"<CalendarEvent id={self.id} user_id={self.user_id}>"

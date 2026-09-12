@@ -36,8 +36,10 @@ class HabitSyncRow(SyncRowBase):
     """Wire shape of a `habits` row: title, a JSON schedule, and a target."""
 
     title: str
+    description: str | None = None
     schedule: dict = Field(default_factory=dict)
     target: int = 1
+    color: str | None = None
 
 
 class HabitLogSyncRow(SyncRowBase):
@@ -46,7 +48,7 @@ class HabitLogSyncRow(SyncRowBase):
     habit_id: uuid.UUID
     date: date
     count: int = 0
-    value: float = 0.0
+    value: float | None = None
     note: str | None = None
 
 
