@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Annotated, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -23,7 +23,17 @@ class Settings(BaseSettings):
     )
 
     ENV: Literal["dev", "staging", "prod"] = "dev"
-    DEBUG: bool = True
+
+    # Secure by default. `DEBUG` is not cosmetic: it is passed to `FastAPI(...)`,
+    # where Starlette's ServerErrorMiddleware renders a traceback for any
+    # unhandled exception, and `core.errors` puts `str(exc)` in the response
+    # body instead of "Internal server error". A production deploy that simply
+    # forgot to set it therefore leaked internals -- which it did, visibly: a
+    # cross-user `batch_id` collision returned a full Python traceback.
+    #
+    # Left unset it follows `ENV`, so a developer still gets tracebacks
+    # locally without anyone having to remember a flag.
+    DEBUG: bool = False
 
     DATABASE_URL: str = "postgresql+asyncpg://kunim:kunim@localhost:5432/kunim"
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -42,6 +52,15 @@ class Settings(BaseSettings):
     ADMIN_ENABLED: bool = False
 
     APP_NAME: str = "KUNIM API"
+
+    @model_validator(mode="after")
+    def _debug_follows_env_unless_set(self) -> Settings:
+        if "DEBUG" not in self.model_fields_set and self.ENV == "dev":
+            # `object.__setattr__` would bypass validation; assigning through
+            # the model keeps `validate_assignment` semantics if it is ever
+            # switched on.
+            self.DEBUG = True
+        return self
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
