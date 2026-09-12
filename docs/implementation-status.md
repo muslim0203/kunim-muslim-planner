@@ -42,7 +42,8 @@ Hozirgi developers-machine muhit holati:
 | SQLAdmin `/admin` | ⚠️ | `ADMIN_ENABLED=true` bilan mount bo'lishi tekshirilgan; jonli baza bilan sinalmagan |
 | arq worker entrypoint | ✅ | `app.jobs.worker.WorkerSettings` import qilinadi (jobs ro'yxati bo'sh — 2-bosqichdan boshlab to'ladi) |
 | Flutter skeleti (`flutter run` bo'sh shell) | ❌ | Manba kod yozilgan, **hech qachon kompilyatsiya qilinmagan** — Flutter SDK yo'q |
-| `android/` va `ios/` host loyihalari | ❌ | Yo'q. `apps/mobile/PLATFORM-SETUP.md` da `flutter create --platforms=android,ios --org com.kunim .` buyrug'i hujjatlashtirilgan |
+| `android/` host loyihasi | ⚠️ | Mavjud: `build.gradle.kts` (minSdk 26), `AndroidManifest.xml` (AccessibilityService / QUERY_ALL_PACKAGES / SYSTEM_ALERT_WINDOW **yo'q**, faqat `<queries>` MAIN/LAUNCHER), `MainActivity.kt`. **Hech qachon qurilmagan** |
+| `ios/` host loyihasi | ⚠️ | Faqat `Info.plist` + `AppDelegate.swift`. `Runner.xcodeproj` qo'lda yozilmaydi — `flutter create --platforms=ios .` va macOS kerak (`apps/mobile/PLATFORM-SETUP.md`) |
 | 4 til ARB + l10n tekshiruvi | ✅ | `node apps/mobile/tool/check_l10n.mjs` → 4 locale × 20 kalit, passed |
 | `make gen` (freezed/drift/riverpod/pigeon/openapi) | ⚠️ | Makefile target yozilgan; **ishga tushirilmagan** — `make` ham, Flutter ham yo'q |
 | docker-compose (postgres+pgvector, redis, minio, api, worker) | ⚠️ | YAML valid; **ishga tushirilmagan** — Docker yo'q |

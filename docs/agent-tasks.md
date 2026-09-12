@@ -13,7 +13,7 @@ Taxminiy foizlar yozilmaydi.
 |---|---|---|---|---|---|
 | T-001 | Monorepo skeleti, `git init`, `.gitignore`, `.editorconfig`, `CLAUDE.md` | Opus 5 (orkestrator) | ✅ | root fayllar, `docs/plan.md` | Papka daraxti va git repo yaratildi |
 | T-002 | FastAPI skeleti: `/health`, `/health/ready`, config, db mixinlar, Alembic, SQLAdmin | Sonnet | ✅ | `apps/api/**` | `pytest -q` → **4 passed**; `ruff check` → **passed**; `ruff format --check` → **passed** |
-| T-003 | Flutter shell: router, tema, 4 til ARB, Drift, dio, shared widgetlar | Sonnet | ⚠️ qisman | `apps/mobile/**` | `check_l10n.mjs` → **4 locale × 20 kalit, passed**. Flutter toolchain yo'q → `pub get`/`analyze`/`test` **bajarilmadi** |
+| T-003 | Flutter shell: router, tema, 4 til ARB, Drift, dio, shared widgetlar | Sonnet | ⚠️ qisman | `apps/mobile/**` | `check_l10n.mjs` → **4 locale × 20 kalit, passed**. `android/` manifest siyosat qoidalariga mos (taqiqlangan ruxsatlar yo'q). Flutter toolchain yo'q → `pub get`/`analyze`/`test` **bajarilmadi** |
 | T-004 | Hujjatlar: status, checklist, backlog, content-policy, privacy/data-map, iOS entitlement | Haiku | ✅ | `docs/*.md` (adr'dan tashqari) | Fayllar mavjud; litsenziya holati UNRESOLVED deb halol qoldirilgan |
 | T-005 | ADR-0001..0004 + index | Opus | ✅ | `docs/adr/**` | 5 fayl, 705 satr; sarlavha strukturasi va model ID'lari tekshirildi |
 | T-006 | Infra: docker-compose (dev/prod), api.Dockerfile, Caddyfile, init-db, `Makefile`, `.env.example` | Sonnet | ⚠️ qisman | `infra/**`, `Makefile`, `.env.example` | YAML parse → **OK**; Docker va `make` o'rnatilmagan → **ishga tushirilmadi** |
