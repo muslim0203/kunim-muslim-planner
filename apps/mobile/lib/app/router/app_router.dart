@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/home/presentation/home_screen.dart';
 import '../l10n/gen/app_localizations.dart';
 
 /// Top-level route paths. Keep these as constants so features and deep
@@ -29,7 +30,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: KunimRoutes.home,
-                builder: (context, state) => const _HomePlaceholderScreen(),
+                builder: (context, state) => const HomeScreen(),
               ),
             ],
           ),
@@ -123,19 +124,6 @@ class _KunimScaffoldWithNavBar extends StatelessWidget {
 
 /// Phase-0 placeholder: each branch will be replaced by its real feature
 /// screen under `lib/features/<name>/presentation/` in later phases.
-class _HomePlaceholderScreen extends StatelessWidget {
-  const _HomePlaceholderScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.navHome)),
-      body: Center(child: Text(l10n.navHome)),
-    );
-  }
-}
-
 class _DayPlaceholderScreen extends StatelessWidget {
   const _DayPlaceholderScreen();
 
