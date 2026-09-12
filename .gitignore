@@ -58,5 +58,10 @@ node_modules/
 *.sqlite-wal
 /tmp/
 
-# Flutter generated localization sources (make gen / flutter gen-l10n)
+# --- Generated sources (produced by `make gen`, never hand-edited) ---
 apps/mobile/lib/app/l10n/gen/
+*.g.dart
+*.freezed.dart
+apps/mobile/ios/Flutter/ephemeral/
+apps/mobile/ios/Runner/GeneratedPluginRegistrant.*
+apps/mobile/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
