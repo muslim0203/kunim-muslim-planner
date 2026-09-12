@@ -174,15 +174,15 @@ class _TaskRow extends ConsumerWidget {
 /// Opens the create/edit sheet. Passing [task] edits it, omitting it
 /// creates a new one.
 Future<void> showTaskEditor(BuildContext context, {Task? task}) {
+  // The keyboard inset is applied *inside* the sheet (see
+  // `_TaskEditorSheet.build`), not here. Wrapping the sheet in a `Padding`
+  // that also adds `viewInsets.bottom` double-counts the keyboard height and
+  // pushes the whole sheet — including the Save button — off the bottom of
+  // the screen as soon as the autofocused title field raises the IME.
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (context) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: _TaskEditorSheet(task: task),
-    ),
+    builder: (context) => _TaskEditorSheet(task: task),
   );
 }
 
@@ -269,8 +269,16 @@ class _TaskEditorSheetState extends ConsumerState<_TaskEditorSheet> {
     final l10n = AppLocalizations.of(context);
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(KunimSpacing.lg),
+      // Scrollable so the sheet still reaches its actions when the keyboard
+      // covers most of the screen; the keyboard inset is added exactly once,
+      // here, as bottom padding.
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: KunimSpacing.lg,
+          right: KunimSpacing.lg,
+          top: KunimSpacing.lg,
+          bottom: KunimSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

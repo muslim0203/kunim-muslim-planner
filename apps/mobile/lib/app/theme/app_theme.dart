@@ -38,9 +38,14 @@ abstract final class KunimTheme {
         ),
         margin: const EdgeInsets.all(KunimSpacing.sm),
       ),
+      // NOTE: the minimum here constrains *height* only. `Size.fromHeight`
+      // must not be used: it expands to `Size(double.infinity, h)`, which
+      // gives every button an infinite minimum width. Inside a `Row` that
+      // overflows the row, collapses any `Spacer` and pushes later children
+      // off-screen (it hid the task editor's Save button entirely).
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(kMinTouchTarget),
+          minimumSize: const Size(0, kMinTouchTarget),
           shape: const RoundedRectangleBorder(
             borderRadius: KunimRadii.mediumRadius,
           ),
@@ -48,7 +53,7 @@ abstract final class KunimTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          minimumSize: const Size.fromHeight(kMinTouchTarget),
+          minimumSize: const Size(0, kMinTouchTarget),
           shape: const RoundedRectangleBorder(
             borderRadius: KunimRadii.mediumRadius,
           ),
@@ -56,7 +61,7 @@ abstract final class KunimTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(kMinTouchTarget),
+          minimumSize: const Size(0, kMinTouchTarget),
           shape: const RoundedRectangleBorder(
             borderRadius: KunimRadii.mediumRadius,
           ),
