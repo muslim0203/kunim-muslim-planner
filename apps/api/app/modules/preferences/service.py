@@ -6,21 +6,20 @@
 mandates a per-user **monotonic** counter, produced by a row-locked
 `UPDATE ... RETURNING` against a dedicated `sync_user_state` table, and it
 explicitly forbids a global `BIGSERIAL` (commit order can differ from the
-order a sequence hands out numbers, which would let a pull cursor skip a
-row). That `sync_user_state` counter is Phase 2 `app/modules/sync/`
-infrastructure and does not exist yet, and this module does not own (and will
-not create) it.
+order a sequence hands out numbers, which would let a pull cursor skip a row).
 
-`preferences` has exactly one row per user, so for *this table only* the
-smallest correct substitute is to make the row's own `server_version` do
-double duty as the per-user counter: `repository.update()` bumps it with a
-single atomic `UPDATE preferences SET server_version = server_version + 1 ...`
-statement. Because there is only ever one row per user, "this row's counter"
-and "this user's counter" are the same number -- there is no second row that
-could race it or fragment the sequence. This is **not** a general mechanism:
-it must not be copied onto any multi-row synced table without the real
-`sync_user_state` counter, and Phase 2's sync module should replace it here
-too once that counter exists, for a single code path.
+That counter now exists: `app.modules.sync.repository.allocate_server_version`.
+`repository.update()` calls it, so a `PATCH /preferences` and a
+`POST /sync/push` touching the same row draw from one sequence -- there is a
+single code path and no table-specific special case any more. The earlier
+`server_version = server_version + 1` shortcut (correct only because this
+table has exactly one row per user) is gone.
+
+One deliberate exception remains: `repository.create()` leaves
+`server_version` at `0`. ADR §1 defines `0` as "new row, never versioned", and
+a row lazily created by `GET /preferences` has no client-visible content
+beyond the defaults; it enters the sync sequence on its first write, whether
+that write arrives over REST or over `/sync/push`.
 """
 
 from __future__ import annotations
