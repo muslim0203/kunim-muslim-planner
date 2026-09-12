@@ -101,6 +101,13 @@ class SyncService:
                 status_code=http_status.HTTP_400_BAD_REQUEST, detail="batch_too_large"
             )
 
+        # FIRST statement of the push, before any read the merge depends on.
+        # `allocate_server_version` takes this same row lock, but only after
+        # the merge decision has been made -- which let two concurrent pushes
+        # both read the pre-push state, both answer `applied`, and leave the
+        # OLDER edit on the server. See `repository.acquire_user_lock`.
+        await self._repo.acquire_user_lock(user.id)
+
         request_hash = canonical_request_hash(request.changes)
         stored = await self._repo.get_batch(request.batch_id, user.id)
         if stored is not None:
@@ -411,6 +418,21 @@ class SyncService:
         # has nothing to delete, and this keeps the first load small.
         include_tombstones = cursor > 0
 
+        # Watermark read BEFORE the per-entity loop, and every query bounded by
+        # it. Each `rows_after` runs in its own READ COMMITTED snapshot, so a
+        # multi-entity commit landing mid-loop is invisible to the statements
+        # already issued and visible to those that follow. Entities are queried
+        # in a fixed order, so the sibling that lands in an earlier-queried
+        # entity is missed while the higher-versioned one in a later entity is
+        # delivered -- and `next_cursor` then sits ABOVE a row that was never
+        # sent, which no later pull will ever return.
+        #
+        # `last_version` is the right watermark because `allocate_server_version`
+        # holds the `sync_user_state` row lock until commit: the value a reader
+        # sees is always the highest COMMITTED version, so bounding by it means
+        # a batch is either wholly inside this page's range or wholly after it.
+        upper_bound = await self._repo.max_server_version(user.id)
+
         collected: list[tuple[int, str, Any]] = []
         for entity in registry.all_entities():
             if not entity.pullable:
@@ -423,6 +445,7 @@ class SyncService:
                 cursor=cursor,
                 limit=page + 1,
                 include_tombstones=include_tombstones,
+                upper_bound=upper_bound,
             )
             for row in rows:
                 collected.append((int(row.server_version), entity.name, row))
@@ -446,7 +469,10 @@ class SyncService:
                 wire_row["merged_into"] = str(merged_into)
             out_rows.append(PullRow(entity=name, server_version=version, row=wire_row))
 
+        # Never advance past the watermark: if the window is empty because
+        # everything new is still in flight, the cursor must stay put.
         next_cursor = window[-1][0] if window else cursor
+        next_cursor = min(next_cursor, upper_bound) if upper_bound >= cursor else cursor
         return PullResponse(
             rows=out_rows,
             next_cursor=next_cursor,

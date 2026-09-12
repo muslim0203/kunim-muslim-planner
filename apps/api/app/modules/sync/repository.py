@@ -16,11 +16,50 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from sqlalchemy import delete, or_, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.sync.models import RowHistory, SyncBatch, SyncMergedRow, SyncUserState
 from app.modules.sync.registry import SyncEntity
 from app.modules.sync.schemas import normalise_stored
+
+
+async def acquire_user_lock(session: AsyncSession, user_id: uuid.UUID) -> None:
+    """Serialize this user's pushes by locking their `sync_user_state` row.
+
+    ADR-0002 ("Oqibatlar") claims the `sync_user_state` row lock serializes
+    writes per user, but `allocate_server_version` only takes it *after* the
+    merge decision has already been made from a pre-lock snapshot. Two pushes
+    for the same row could therefore both read the old state, both decide
+    "incoming wins", and both answer `applied` -- leaving whichever committed
+    last on the server, even when it carried the OLDER `updated_at`. The
+    losing device clears `dirty`, drops its outbox entry, and the newer edit
+    is gone (rules 1-2 violated). The same race let two devices both miss a
+    natural-key collision and insert duplicate rows, defeating rule 14.
+
+    Taking the lock as the FIRST statement of a push closes the window: every
+    read in the batch then sees state no concurrent push can still change.
+
+    `INSERT ... ON CONFLICT DO NOTHING` first, because the row is created
+    lazily and two first-ever writers would otherwise collide on the primary
+    key (surfacing as a bogus `schema_invalid`).
+    """
+    dialect = session.bind.dialect.name if session.bind is not None else "postgresql"
+    insert_stmt = pg_insert if dialect == "postgresql" else sqlite_insert
+    await session.execute(
+        insert_stmt(SyncUserState)
+        .values(user_id=user_id, last_version=0, purged_up_to_version=0)
+        .on_conflict_do_nothing(index_elements=["user_id"])
+    )
+
+    stmt = select(SyncUserState.user_id).where(SyncUserState.user_id == user_id)
+    if dialect == "postgresql":
+        # Held until this transaction commits or rolls back. SQLite has no
+        # row locks (and no concurrency inside a single connection), so the
+        # plain SELECT is the whole story there.
+        stmt = stmt.with_for_update()
+    await session.execute(stmt)
 
 
 async def allocate_server_version(session: AsyncSession, user_id: uuid.UUID) -> int:
@@ -61,6 +100,9 @@ class SyncRepository:
         return self._session
 
     # --- per-user state -----------------------------------------------------
+
+    async def acquire_user_lock(self, user_id: uuid.UUID) -> None:
+        return await acquire_user_lock(self._session, user_id)
 
     async def allocate_server_version(self, user_id: uuid.UUID) -> int:
         return await allocate_server_version(self._session, user_id)
@@ -193,7 +235,20 @@ class SyncRepository:
         cursor: int,
         limit: int,
         include_tombstones: bool,
+        upper_bound: int | None = None,
     ) -> list[Any]:
+        """Rows in `(cursor, upper_bound]`, oldest version first.
+
+        `upper_bound` is what keeps a multi-entity commit from being seen
+        half-delivered. `pull` runs one of these per entity, each in its own
+        READ COMMITTED snapshot, so a batch committing mid-loop is invisible to
+        the statements already issued and visible to the ones that follow. With
+        entities queried in a fixed order, the row that lands in an
+        earlier-queried entity is missed while its higher-versioned sibling in
+        a later one is delivered -- and the cursor then sits above the row that
+        was never sent. Bounding every statement by a watermark read *before*
+        the loop makes the whole page come from one consistent version range.
+        """
         model = entity.model
         stmt = (
             select(model)
@@ -201,6 +256,8 @@ class SyncRepository:
             .order_by(model.server_version.asc())
             .limit(limit)
         )
+        if upper_bound is not None:
+            stmt = stmt.where(model.server_version <= upper_bound)
         if not include_tombstones:
             stmt = stmt.where(model.deleted_at.is_(None))
         return list((await self._session.execute(stmt)).scalars().all())
