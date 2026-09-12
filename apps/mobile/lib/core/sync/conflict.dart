@@ -234,8 +234,7 @@ Future<void> applyPulledPage(AppDatabase db, List<SyncPullRow> rows) async {
       // Skipping is safe: the pending outbox entry is still pushed on the
       // next cycle, and the server's answer decides the winner -- which is
       // exactly ADR-0002's "merge lives only on the server".
-      if (rowId is String &&
-          await _hasPendingOutbox(db, row.entity, rowId)) {
+      if (rowId is String && await _hasPendingOutbox(db, row.entity, rowId)) {
         _log(
           'keep local dirty row ${row.entity}/$rowId during pull apply '
           '(unpushed outbox entry pending)',

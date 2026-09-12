@@ -38,8 +38,7 @@ const _updateGolden =
     bool.fromEnvironment('UPDATE_GOLDEN', defaultValue: false);
 
 /// Directory the golden payloads live in, relative to `apps/mobile`.
-final _goldenDir =
-    Directory('../../packages/kunim_contracts/golden').absolute;
+final _goldenDir = Directory('../../packages/kunim_contracts/golden').absolute;
 
 // Fixed stand-ins so a golden file is stable across runs.
 const _fixedId = '00000000-0000-4000-8000-000000000001';
@@ -179,8 +178,7 @@ void main() {
     });
 
     // --- milestones -------------------------------------------------------
-    final milestones =
-        MilestoneRepository(db, onLocalWrite: () {}, now: nowFn);
+    final milestones = MilestoneRepository(db, onLocalWrite: () {}, now: nowFn);
     payloads['milestones'] = await _capture(db, 'milestones', () async {
       await milestones.createMilestone(
         goalId: goal.id,
@@ -193,8 +191,7 @@ void main() {
     });
 
     // --- calendar_events --------------------------------------------------
-    final events =
-        CalendarEventRepository(db, onLocalWrite: () {}, now: nowFn);
+    final events = CalendarEventRepository(db, onLocalWrite: () {}, now: nowFn);
     payloads['calendar_events'] =
         await _capture(db, 'calendar_events', () async {
       await events.createEvent(
