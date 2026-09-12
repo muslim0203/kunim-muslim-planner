@@ -20,7 +20,7 @@ class KunimApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       routerConfig: router,
       theme: KunimTheme.light,
       darkTheme: KunimTheme.dark,

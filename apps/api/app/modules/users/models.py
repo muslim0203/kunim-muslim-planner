@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import Boolean, DateTime, Enum, String
+from sqlalchemy import Boolean, DateTime, Enum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -40,6 +40,23 @@ class User(UUIDPk, Timestamps, SoftDelete, Base):
     email_verified_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
+
+    # --- Added in Phase 1 (profile, `app/modules/profile/`). All nullable
+    # except `timezone`, which defaults to "UTC" so every existing/newly
+    # registered row has a valid IANA zone from the start -- the backend
+    # schedules a user's daily review at their local 21:00 and needs one.
+    # `gender` is intentionally a plain string, not a DB enum: the allowed
+    # values (`male|female|other|prefer_not_to_say`) are validated once, at
+    # the API boundary in `app.modules.profile.schemas`, matching how
+    # `locale`'s allow-list is validated there rather than as a DB constraint.
+    display_name: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
+    timezone: Mapped[str] = mapped_column(String(64), default="UTC", nullable=False)
+    gender: Mapped[str | None] = mapped_column(String(20), nullable=True, default=None)
+    birth_year: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    # TODO(storage): avatar upload is out of scope for Phase 1 (no object
+    # storage configured). This column only stores a URL the client already
+    # hosts elsewhere; nothing here uploads or validates reachability.
+    avatar_url: Mapped[str | None] = mapped_column(String(2048), nullable=True, default=None)
 
     def __repr__(self) -> str:
         return f"<User id={self.id} email={self.email!r}>"

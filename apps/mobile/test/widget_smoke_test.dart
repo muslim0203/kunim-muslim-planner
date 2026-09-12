@@ -16,7 +16,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final BuildContext context = tester.element(find.byType(Scaffold).first);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     // The Home branch is the initial location, so its localized title
     // should appear both in the app bar and the bottom navigation bar.

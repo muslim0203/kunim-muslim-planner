@@ -41,6 +41,7 @@ ApiFailure mapDioExceptionToApiFailure(DioException exception) {
     case DioExceptionType.connectionTimeout:
     case DioExceptionType.sendTimeout:
     case DioExceptionType.receiveTimeout:
+    case DioExceptionType.transformTimeout:
       return TimeoutFailure(message: exception.message);
     case DioExceptionType.connectionError:
       return NetworkFailure(message: exception.message);

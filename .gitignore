@@ -57,3 +57,6 @@ node_modules/
 *.sqlite-journal
 *.sqlite-wal
 /tmp/
+
+# Flutter generated localization sources (make gen / flutter gen-l10n)
+apps/mobile/lib/app/l10n/gen/

@@ -64,13 +64,13 @@ void main() {
   group('KunimModuleColors', () {
     test('every module has a distinct accent color', () {
       final colors = <int>{
-        KunimModuleColors.prayer.value,
-        KunimModuleColors.quran.value,
-        KunimModuleColors.mood.value,
-        KunimModuleColors.family.value,
-        KunimModuleColors.health.value,
-        KunimModuleColors.work.value,
-        KunimModuleColors.sleep.value,
+        KunimModuleColors.prayer.toARGB32(),
+        KunimModuleColors.quran.toARGB32(),
+        KunimModuleColors.mood.toARGB32(),
+        KunimModuleColors.family.toARGB32(),
+        KunimModuleColors.health.toARGB32(),
+        KunimModuleColors.work.toARGB32(),
+        KunimModuleColors.sleep.toARGB32(),
       };
       // 7 modules in docs/plan.md section 2: prayer/quran/mood/family/
       // health/work/sleep. If two collapse to the same color, one was
@@ -88,7 +88,8 @@ void main() {
         KunimModuleColors.work,
         KunimModuleColors.sleep,
       ]) {
-        expect(color.alpha, 0xFF);
+        // Color.a is a 0.0-1.0 double in Dart 3.13; fully opaque is 1.0.
+        expect(color.a, 1.0);
       }
     });
   });

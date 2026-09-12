@@ -5,8 +5,13 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "lib/app/l10n/gen/**"
-  plugins:
-    - custom_lint
+    - build/**
+    - android/**
+    - ios/**
+  # NOTE: the legacy `plugins: [custom_lint]` entry is deprecated in Dart 3.13
+  # and makes `flutter analyze` emit a warning, which fails CI. riverpod_lint
+  # stays in dev_dependencies and is run separately via `dart run custom_lint`
+  # until the new analyzer plugin system is wired up.
 
 linter:
   rules:

@@ -80,7 +80,7 @@ class _KunimScaffoldWithNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
@@ -128,7 +128,7 @@ class _HomePlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navHome)),
       body: Center(child: Text(l10n.navHome)),
@@ -141,7 +141,7 @@ class _DayPlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navDay)),
       body: Center(child: Text(l10n.navDay)),
@@ -154,7 +154,7 @@ class _StatsPlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navStats)),
       body: Center(child: Text(l10n.navStats)),
@@ -167,7 +167,7 @@ class _AiPlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navAi)),
       body: Center(child: Text(l10n.navAi)),
@@ -180,7 +180,7 @@ class _SettingsPlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navSettings)),
       body: Center(child: Text(l10n.navSettings)),

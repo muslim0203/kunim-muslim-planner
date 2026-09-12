@@ -48,7 +48,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// For tests / DAOs that want to inject a custom executor (e.g. an
   /// in-memory database), per `docs/plan.md` section 13 testing strategy.
-  AppDatabase.withExecutor(QueryExecutor executor) : super(executor);
+  AppDatabase.withExecutor(super.executor);
 
   @override
   int get schemaVersion => 1;

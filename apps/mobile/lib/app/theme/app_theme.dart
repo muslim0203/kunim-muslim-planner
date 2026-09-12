@@ -56,11 +56,11 @@ abstract final class KunimTheme {
           minimumSize: const Size.square(kMinTouchTarget),
         ),
       ),
-      navigationBarTheme: NavigationBarThemeData(
+      navigationBarTheme: const NavigationBarThemeData(
         height: 72,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
-      inputDecorationTheme: InputDecorationTheme(
+      inputDecorationTheme: const InputDecorationTheme(
         border: OutlineInputBorder(
           borderRadius: KunimRadii.mediumRadius,
         ),

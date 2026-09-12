@@ -14,6 +14,8 @@ from app.core.logging import configure_logging
 from app.middleware.request_id import RequestIDMiddleware
 from app.modules.auth.router import router as auth_router
 from app.modules.health.router import router as health_router
+from app.modules.preferences.router import router as preferences_router
+from app.modules.profile.router import router as profile_router
 
 
 def _package_version() -> str:
@@ -48,6 +50,8 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(profile_router)
+    app.include_router(preferences_router)
 
     mount_admin(app, settings)
 
