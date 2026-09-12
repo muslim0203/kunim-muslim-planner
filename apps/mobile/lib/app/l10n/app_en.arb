@@ -239,5 +239,367 @@
   "onbFinish": "Finish",
   "@onbFinish": {
     "description": "Label for the button that completes the onboarding flow."
+  },
+  "taskScreenTitle": "Tasks",
+  "@taskScreenTitle": {
+    "description": "Title of the tasks list screen."
+  },
+  "taskNew": "New Task",
+  "@taskNew": {
+    "description": "Label for the button that creates a new task."
+  },
+  "taskTitleLabel": "Title",
+  "@taskTitleLabel": {
+    "description": "Label for the task title input field."
+  },
+  "taskNotesLabel": "Notes",
+  "@taskNotesLabel": {
+    "description": "Label for the task notes input field."
+  },
+  "taskDueDateLabel": "Due Date",
+  "@taskDueDateLabel": {
+    "description": "Label for the task due date field."
+  },
+  "taskCategoryLabel": "Category",
+  "@taskCategoryLabel": {
+    "description": "Label for the task category field."
+  },
+  "taskPriorityLabel": "Priority",
+  "@taskPriorityLabel": {
+    "description": "Label for the task priority field."
+  },
+  "taskPriorityLow": "Low",
+  "@taskPriorityLow": {
+    "description": "Task priority value: low."
+  },
+  "taskPriorityMedium": "Medium",
+  "@taskPriorityMedium": {
+    "description": "Task priority value: medium."
+  },
+  "taskPriorityHigh": "High",
+  "@taskPriorityHigh": {
+    "description": "Task priority value: high."
+  },
+  "taskMarkComplete": "Mark Complete",
+  "@taskMarkComplete": {
+    "description": "Action label that marks a task as completed."
+  },
+  "taskMarkIncomplete": "Mark Incomplete",
+  "@taskMarkIncomplete": {
+    "description": "Action label that marks a task as not completed."
+  },
+  "taskEmptyState": "No tasks yet",
+  "@taskEmptyState": {
+    "description": "Message shown when the task list is empty."
+  },
+  "taskOverdue": "Overdue",
+  "@taskOverdue": {
+    "description": "Label shown on a task whose due date has passed."
+  },
+  "taskDueToday": "Due Today",
+  "@taskDueToday": {
+    "description": "Label shown on a task that is due today."
+  },
+  "taskDeleteConfirm": "Delete this task?",
+  "@taskDeleteConfirm": {
+    "description": "Confirmation prompt shown before permanently deleting a task."
+  },
+  "taskLeftCount": "{count, plural, one{{count} task left} other{{count} tasks left}}",
+  "@taskLeftCount": {
+    "description": "Label showing how many tasks are still incomplete.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "habitScreenTitle": "Habits",
+  "@habitScreenTitle": {
+    "description": "Title of the habits list screen."
+  },
+  "habitNew": "New Habit",
+  "@habitNew": {
+    "description": "Label for the button that creates a new habit."
+  },
+  "habitNameLabel": "Name",
+  "@habitNameLabel": {
+    "description": "Label for the habit name input field."
+  },
+  "habitScheduleLabel": "Schedule",
+  "@habitScheduleLabel": {
+    "description": "Label for the habit schedule field."
+  },
+  "habitTargetLabel": "Target",
+  "@habitTargetLabel": {
+    "description": "Label for the habit target field."
+  },
+  "habitScheduleEveryDay": "Every Day",
+  "@habitScheduleEveryDay": {
+    "description": "Habit schedule kind: repeats every day."
+  },
+  "habitScheduleSpecificWeekdays": "Specific Weekdays",
+  "@habitScheduleSpecificWeekdays": {
+    "description": "Habit schedule kind: repeats on selected weekdays only."
+  },
+  "habitScheduleTimesPerWeek": "{count, plural, one{{count} time per week} other{{count} times per week}}",
+  "@habitScheduleTimesPerWeek": {
+    "description": "Habit schedule kind: repeats a set number of times per week.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "habitLogToday": "Log for Today",
+  "@habitLogToday": {
+    "description": "Label for the button that logs today's habit completion."
+  },
+  "habitStreakDays": "{count, plural, one{Streak: {count} day} other{Streak: {count} days}}",
+  "@habitStreakDays": {
+    "description": "Label showing the current streak length in days for a habit.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "habitBadge7Days": "7-Day Streak",
+  "@habitBadge7Days": {
+    "description": "Name of the badge earned for a 7-day habit streak."
+  },
+  "habitBadge30Days": "30-Day Streak",
+  "@habitBadge30Days": {
+    "description": "Name of the badge earned for a 30-day habit streak."
+  },
+  "habitBadge100Days": "100-Day Streak",
+  "@habitBadge100Days": {
+    "description": "Name of the badge earned for a 100-day habit streak."
+  },
+  "habitEmptyState": "No habits yet",
+  "@habitEmptyState": {
+    "description": "Message shown when the habit list is empty."
+  },
+  "habitNotScheduledToday": "Not scheduled today",
+  "@habitNotScheduledToday": {
+    "description": "Label shown for a habit that is not scheduled to be done today."
+  },
+  "goalScreenTitle": "Goals",
+  "@goalScreenTitle": {
+    "description": "Title of the goals list screen."
+  },
+  "goalNew": "New Goal",
+  "@goalNew": {
+    "description": "Label for the button that creates a new goal."
+  },
+  "goalTitleLabel": "Title",
+  "@goalTitleLabel": {
+    "description": "Label for the goal title input field."
+  },
+  "goalTargetDateLabel": "Target Date",
+  "@goalTargetDateLabel": {
+    "description": "Label for the goal target date field."
+  },
+  "goalProgressLabel": "Progress",
+  "@goalProgressLabel": {
+    "description": "Label for the goal progress indicator."
+  },
+  "goalMilestones": "Milestones",
+  "@goalMilestones": {
+    "description": "Label for the milestones section of a goal."
+  },
+  "goalAddMilestone": "Add Milestone",
+  "@goalAddMilestone": {
+    "description": "Label for the button that adds a new milestone to a goal."
+  },
+  "goalMilestonesDoneCount": "{total, plural, one{{done} of {total} milestone done} other{{done} of {total} milestones done}}",
+  "@goalMilestonesDoneCount": {
+    "description": "Label showing how many of a goal's milestones are completed, out of the total.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "goalEmptyState": "No goals yet",
+  "@goalEmptyState": {
+    "description": "Message shown when the goal list is empty."
+  },
+  "goalDaysRemaining": "{count, plural, one{{count} day remaining} other{{count} days remaining}}",
+  "@goalDaysRemaining": {
+    "description": "Label showing the number of days remaining until a goal's target date.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calScreenTitle": "Calendar",
+  "@calScreenTitle": {
+    "description": "Title of the calendar screen."
+  },
+  "calNewEvent": "New Event",
+  "@calNewEvent": {
+    "description": "Label for the button that creates a new calendar event."
+  },
+  "calTitleLabel": "Title",
+  "@calTitleLabel": {
+    "description": "Label for the event title input field."
+  },
+  "calStartLabel": "Start",
+  "@calStartLabel": {
+    "description": "Label for the event start time field."
+  },
+  "calEndLabel": "End",
+  "@calEndLabel": {
+    "description": "Label for the event end time field."
+  },
+  "calRepeatLabel": "Repeat",
+  "@calRepeatLabel": {
+    "description": "Label for the event repeat field."
+  },
+  "calRepeatNone": "Does Not Repeat",
+  "@calRepeatNone": {
+    "description": "Repeat option: the event does not recur."
+  },
+  "calRepeatDaily": "Daily",
+  "@calRepeatDaily": {
+    "description": "Repeat option: the event recurs every day."
+  },
+  "calRepeatWeekly": "Weekly",
+  "@calRepeatWeekly": {
+    "description": "Repeat option: the event recurs every week."
+  },
+  "calRepeatMonthly": "Monthly",
+  "@calRepeatMonthly": {
+    "description": "Repeat option: the event recurs every month."
+  },
+  "calRepeatCustom": "Custom",
+  "@calRepeatCustom": {
+    "description": "Repeat option: the event recurs on a custom schedule."
+  },
+  "calAllDay": "All Day",
+  "@calAllDay": {
+    "description": "Label indicating an event lasts the entire day."
+  },
+  "calEmptyStateToday": "No events today",
+  "@calEmptyStateToday": {
+    "description": "Message shown when there are no calendar events for today."
+  },
+  "calWeekdayMonday": "Monday",
+  "@calWeekdayMonday": {
+    "description": "Full name of Monday, used in calendar headers."
+  },
+  "calWeekdayTuesday": "Tuesday",
+  "@calWeekdayTuesday": {
+    "description": "Full name of Tuesday, used in calendar headers."
+  },
+  "calWeekdayWednesday": "Wednesday",
+  "@calWeekdayWednesday": {
+    "description": "Full name of Wednesday, used in calendar headers."
+  },
+  "calWeekdayThursday": "Thursday",
+  "@calWeekdayThursday": {
+    "description": "Full name of Thursday, used in calendar headers."
+  },
+  "calWeekdayFriday": "Friday",
+  "@calWeekdayFriday": {
+    "description": "Full name of Friday, used in calendar headers."
+  },
+  "calWeekdaySaturday": "Saturday",
+  "@calWeekdaySaturday": {
+    "description": "Full name of Saturday, used in calendar headers."
+  },
+  "calWeekdaySunday": "Sunday",
+  "@calWeekdaySunday": {
+    "description": "Full name of Sunday, used in calendar headers."
+  },
+  "calWeekdayMondayShort": "Mon",
+  "@calWeekdayMondayShort": {
+    "description": "Abbreviated name of Monday, used in compact calendar views."
+  },
+  "calWeekdayTuesdayShort": "Tue",
+  "@calWeekdayTuesdayShort": {
+    "description": "Abbreviated name of Tuesday, used in compact calendar views."
+  },
+  "calWeekdayWednesdayShort": "Wed",
+  "@calWeekdayWednesdayShort": {
+    "description": "Abbreviated name of Wednesday, used in compact calendar views."
+  },
+  "calWeekdayThursdayShort": "Thu",
+  "@calWeekdayThursdayShort": {
+    "description": "Abbreviated name of Thursday, used in compact calendar views."
+  },
+  "calWeekdayFridayShort": "Fri",
+  "@calWeekdayFridayShort": {
+    "description": "Abbreviated name of Friday, used in compact calendar views."
+  },
+  "calWeekdaySaturdayShort": "Sat",
+  "@calWeekdaySaturdayShort": {
+    "description": "Abbreviated name of Saturday, used in compact calendar views."
+  },
+  "calWeekdaySundayShort": "Sun",
+  "@calWeekdaySundayShort": {
+    "description": "Abbreviated name of Sunday, used in compact calendar views."
+  },
+  "homeGreeting": "Hi, {name}!",
+  "@homeGreeting": {
+    "description": "Greeting shown on the home screen, addressed to the user by name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTodaysPlan": "Today's Plan",
+  "@homeTodaysPlan": {
+    "description": "Section title for the day's planned items on the home screen."
+  },
+  "homeTopThree": "Top 3",
+  "@homeTopThree": {
+    "description": "Section title for the user's top 3 priority tasks."
+  },
+  "homeChooseTopThree": "Choose Your Top 3",
+  "@homeChooseTopThree": {
+    "description": "Prompt inviting the user to select their top 3 priority tasks for the day."
+  },
+  "homeTodaysHabits": "Today's Habits",
+  "@homeTodaysHabits": {
+    "description": "Section title for today's habits on the home screen."
+  },
+  "homeNothingPlanned": "Nothing planned for today",
+  "@homeNothingPlanned": {
+    "description": "Message shown on the home screen when there is nothing scheduled for today."
+  },
+  "syncSyncedJustNow": "Synced just now",
+  "@syncSyncedJustNow": {
+    "description": "Sync status label shown right after a successful sync."
+  },
+  "syncSyncing": "Syncing...",
+  "@syncSyncing": {
+    "description": "Sync status label shown while a sync is in progress."
+  },
+  "syncLastSynced": "Last synced {time}",
+  "@syncLastSynced": {
+    "description": "Sync status label showing when the last successful sync occurred.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncOffline": "Offline — changes will sync later",
+  "@syncOffline": {
+    "description": "Sync status label shown when the device has no network connectivity."
+  },
+  "syncFailed": "Sync failed, will retry",
+  "@syncFailed": {
+    "description": "Sync status label shown when a sync attempt failed and will be retried."
+  },
+  "syncNow": "Sync Now",
+  "@syncNow": {
+    "description": "Label for the button that triggers an immediate sync."
   }
 }
