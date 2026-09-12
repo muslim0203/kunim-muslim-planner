@@ -21,7 +21,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, Index, String, Text, text
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -62,6 +62,9 @@ class TaskCategory(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     color: Mapped[str | None] = mapped_column(String(20), nullable=True, default=None)
+    # The user orders their own categories; the client holds this column, so
+    # it has to round-trip or every task_categories push is schema_invalid.
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid, no secrets
         return f"<TaskCategory id={self.id} user_id={self.user_id}>"
@@ -85,7 +88,7 @@ class Task(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)
-    notes: Mapped[str | None] = mapped_column(Text(), nullable=True, default=None)
+    description: Mapped[str | None] = mapped_column(Text(), nullable=True, default=None)
     priority: Mapped[str] = mapped_column(String(20), nullable=False, server_default="medium")
     due_date: Mapped[date | None] = mapped_column(Date(), nullable=True, default=None)
     # Loose reference to `task_categories.id` -- see module docstring.

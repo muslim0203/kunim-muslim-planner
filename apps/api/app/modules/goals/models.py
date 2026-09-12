@@ -11,9 +11,9 @@ why cross-entity ids are not enforced at the database level here.
 from __future__ import annotations
 
 import uuid
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Date, ForeignKey, Index, Integer, String, text
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -48,6 +48,7 @@ class Goal(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text(), nullable=True, default=None)
     target_date: Mapped[date | None] = mapped_column(Date(), nullable=True, default=None)
     progress_percent: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
 
@@ -70,6 +71,13 @@ class Milestone(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     target_date: Mapped[date | None] = mapped_column(Date(), nullable=True, default=None)
     progress_percent: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    # A milestone is also a checklist item the user ticks off, and the client
+    # orders milestones within a goal by hand -- both are part of the local
+    # `Milestones` table and must round-trip, or the row cannot sync at all.
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid, no secrets
         return f"<Milestone id={self.id} user_id={self.user_id}>"

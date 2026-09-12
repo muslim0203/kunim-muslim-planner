@@ -59,8 +59,10 @@ class Habit(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text(), nullable=True, default=None)
     schedule: Mapped[dict] = mapped_column(_JSONType, nullable=False, default=dict)
     target: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
+    color: Mapped[str | None] = mapped_column(String(20), nullable=True, default=None)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid, no secrets
         return f"<Habit id={self.id} user_id={self.user_id}>"
@@ -85,7 +87,10 @@ class HabitLog(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
     habit_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     date: Mapped[date] = mapped_column(Date(), nullable=False)
     count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    value: Mapped[float] = mapped_column(Float(), nullable=False, server_default="0")
+    # Nullable: the client column is `real().nullable()` ("not applicable"
+    # for a count-only habit). `_max_wins` already treats None as the
+    # smallest value, so rule 9 still holds.
+    value: Mapped[float | None] = mapped_column(Float(), nullable=True, default=None)
     note: Mapped[str | None] = mapped_column(Text(), nullable=True, default=None)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid, no secrets
