@@ -162,6 +162,23 @@ String toRfc3339Millis(DateTime dt) {
   return truncated.toIso8601String();
 }
 
+/// Formats [dt] as a calendar date only (`2026-09-12`).
+///
+/// Several wire fields are `DATE` on the server (`tasks.due_date`,
+/// `goals.target_date`, `milestones.target_date`, `habit_logs.date`) while the
+/// local Drift columns are `DateTimeColumn`. Sending a full timestamp for one
+/// of those is rejected outright as `schema_invalid`, so every payload builder
+/// must funnel date-typed fields through here.
+///
+/// Uses the instant's **UTC** calendar fields, matching `toRfc3339Millis`, so
+/// a row's date and its timestamps can never disagree about which day it is.
+String toWireDate(DateTime dt) {
+  final utc = dt.toUtc();
+  final month = utc.month.toString().padLeft(2, '0');
+  final day = utc.day.toString().padLeft(2, '0');
+  return '${utc.year.toString().padLeft(4, '0')}-$month-$day';
+}
+
 Future<bool> _hasPendingOutbox(
   AppDatabase db,
   String entity,
@@ -206,8 +223,41 @@ Future<void> applyPulledPage(AppDatabase db, List<SyncPullRow> rows) async {
         _log('skip unknown entity "${row.entity}" during pull apply');
         continue;
       }
+
+      final rowId = row.row['id'];
+      // A locally-dirty row with an unpushed outbox entry must NOT be
+      // overwritten by a pulled row: `pull` can be in flight while the user
+      // is editing, and blindly replacing the row (and clearing `dirty`)
+      // makes that edit vanish from the UI. The push-apply path
+      // (`applyPushResults`) has always guarded this; pull did not.
+      //
+      // Skipping is safe: the pending outbox entry is still pushed on the
+      // next cycle, and the server's answer decides the winner -- which is
+      // exactly ADR-0002's "merge lives only on the server".
+      if (rowId is String &&
+          await _hasPendingOutbox(db, row.entity, rowId)) {
+        _log(
+          'keep local dirty row ${row.entity}/$rowId during pull apply '
+          '(unpushed outbox entry pending)',
+        );
+        continue;
+      }
+
       final camel = _snakeToCamelJson(row.row);
       camel['dirty'] = false;
+
+      // Deliberately NOT wrapped in a per-row try/catch. A row that cannot
+      // be written must fail the whole page so the cursor stays put
+      // (`sync_engine_pull_test.dart`: "cursor does not advance when
+      // applying a page throws") -- swallowing the error would advance past
+      // the row and lose it for ever, since pull never re-delivers it.
+      //
+      // The deadlock this used to cause is fixed at its root instead: the
+      // `habit_logs` table-level UNIQUE on the natural key is gone (see
+      // `HabitLogs`), so a rule-14 tombstone sharing a natural key is now
+      // storable. If some other unwritable row ever appears, the page does
+      // stall by design -- that needs a real quarantine/dead-letter design
+      // rather than a silent drop here.
       await adapter.upsertFull(db, camel);
     }
   });
