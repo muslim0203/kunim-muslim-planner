@@ -19,6 +19,21 @@ Taxminiy foizlar yozilmaydi.
 | T-006 | Infra: docker-compose (dev/prod), api.Dockerfile, Caddyfile, init-db, `Makefile`, `.env.example` | Sonnet | ⚠️ qisman | `infra/**`, `Makefile`, `.env.example` | YAML parse → **OK**; Docker va `make` o'rnatilmagan → **ishga tushirilmadi** |
 | T-007 | CI: `api.yml`, `mobile.yml`, `content.yml`, PR shabloni | Haiku | ✅ | `.github/**` | YAML parse → **OK**; runner yo'q → workflow **ishga tushirilmadi** |
 
+## 1-bosqich: Auth, profil, onboarding, i18n
+
+| ID | Vazifa | Model | Holat | Fayl egaligi | Tekshiruv (haqiqiy natija) |
+|---|---|---|---|---|---|
+| T-101 | Auth: argon2id, JWT, refresh rotation + reuse detection, RBAC, rate-limit | **Opus** | ✅ | `apps/api/app/{core/security,core/deps,modules/auth}`, `0002_auth` | `pytest` → **37 passed**; `ruff check`/`format` → passed; `alembic history` → `base → 0001 → 0002_auth`, bitta head |
+| T-102 | Profil + preferences modullari, `0003` migratsiya | Sonnet | 🟡 | `apps/api/app/modules/{profile,preferences}` | — |
+| T-103 | Auth/onboarding ARB kalitlari (40 ta) | Haiku | ❌ **rad etildi** | `apps/mobile/lib/app/l10n/*.arb` | Parite o'tdi, lekin tarjimada 7 xato — diniy atama xato (Мажҳаб) |
+| T-104 | ARB tarjima sifati auditi (T-103 eskalatsiyasi) | **Sonnet** | ✅ | `apps/mobile/lib/app/l10n/*.arb` | 17 xato tuzatildi; `check_l10n.mjs` → **4 × 60 kalit, passed** |
+
+**Eskalatsiya darsi:** Haiku ARB **kalitlarini** to'g'ri to'ldiradi, lekin tabiiy til
+**tarjimasi** uning darajasidan yuqori. Bundan keyin: kalit strukturasi → Haiku,
+tarjima matni → Sonnet.
+
+---
+
 ### Orkestrator tuzatgan xatolar
 
 | # | Nima topildi | Tuzatish |
