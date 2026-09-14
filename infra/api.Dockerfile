@@ -58,15 +58,22 @@ WORKDIR /app
 # the image (prod) or a dev bind-mount over it (see docker-compose.yml).
 COPY apps/api ./apps/api
 
+# Role-selecting default command (see infra/start.sh). Line endings are
+# normalised in case the file was checked out with CRLF on Windows.
+COPY infra/start.sh /usr/local/bin/kunim-start
+RUN sed -i 's/\r$//' /usr/local/bin/kunim-start \
+    && chmod 0755 /usr/local/bin/kunim-start
+
 RUN chown -R kunim:kunim /app
 USER kunim
 
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)" || exit 1
+    CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/health' % os.environ.get('PORT', '8000'), timeout=3)" || exit 1
 
-# Default command for a plain `docker run` of this image (no compose
-# override). docker-compose.yml/.prod.yml set their own `command:` for
-# dev (--reload) vs prod (no --reload) and for the `worker` service (arq).
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--app-dir", "apps/api"]
+# Default command for a plain `docker run` and for platforms that cannot
+# override it per service (Railway): KUNIM_ROLE=api applies migrations and
+# serves on $PORT, KUNIM_ROLE=worker runs arq. docker-compose files set their
+# own `command:` for dev (--reload) and for the `worker` service.
+CMD ["kunim-start"]
