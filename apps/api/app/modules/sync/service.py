@@ -23,6 +23,7 @@ from fastapi import status as http_status
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import safe_exception_fields
 from app.modules.sync import registry
 from app.modules.sync.merge import (
     ChangeStatus,
@@ -112,9 +113,11 @@ class SyncService:
         stored = await self._repo.get_batch(request.batch_id, user.id)
         if stored is not None:
             if stored.request_hash == request_hash:
-                # Replay: return the stored response, apply nothing.
+                # Replay: return the stored response, apply nothing. The cache
+                # holds encrypted columns sealed; `stored_response` opens them
+                # so the replay is identical to the original answer.
                 logger.info("sync_push_replayed", changes=len(request.changes))
-                return PushResponse.model_validate(stored.response)
+                return PushResponse.model_validate(self._repo.stored_response(stored))
             raise HTTPException(status_code=http_status.HTTP_409_CONFLICT, detail="batch_id_reused")
 
         results: list[ChangeResult] = []
@@ -127,13 +130,20 @@ class SyncService:
                     device_id=request.device_id,
                     server_time=server_time,
                 )
-            except Exception:
+            except Exception as exc:
                 await savepoint.rollback()
                 # An unexpected failure is confined to this one change; the
                 # closed reason list has no "server error", and `schema_invalid`
                 # is the reason whose client action (leave in the outbox,
                 # surface in diagnostics, do not resend) is correct here.
-                logger.exception("sync_change_failed", entity=change.entity)
+                # Never `logger.exception`: the rendered message would repeat
+                # whatever values the failure carried.
+                logger.error(
+                    "sync_change_failed",
+                    entity=change.entity,
+                    row_id=str(change.row_id),
+                    **safe_exception_fields(exc),
+                )
                 result = ChangeResult(
                     client_seq=change.client_seq,
                     row_id=change.row_id,
@@ -208,12 +218,29 @@ class SyncService:
 
         try:
             validated = entity.schema.model_validate(change.payload)
-        except ValidationError:
+        except ValidationError as exc:
+            # Field locations and error codes only: the error's own message
+            # repeats every rejected value (tags, notes, ...).
+            logger.info(
+                "sync_change_rejected",
+                entity=change.entity,
+                row_id=str(change.row_id),
+                reason=RejectReason.schema_invalid.value,
+                **safe_exception_fields(exc, include_origin=False),
+            )
             return result(ChangeStatus.rejected, reason=RejectReason.schema_invalid)
 
         incoming: dict[str, Any] = validated.model_dump()
         if incoming.get("id") != change.row_id:
             # ADR §3: `row_id` is `payload.id`; disagreement is a client bug.
+            logger.info(
+                "sync_change_rejected",
+                entity=change.entity,
+                row_id=str(change.row_id),
+                reason=RejectReason.schema_invalid.value,
+                error_fields=["id"],
+                error_codes=["row_id_mismatch"],
+            )
             return result(ChangeStatus.rejected, reason=RejectReason.schema_invalid)
 
         # Rule 23 / §1: the payload may not claim another user's rows.

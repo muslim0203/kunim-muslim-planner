@@ -23,7 +23,11 @@ from app.core.config import get_settings
 @lru_cache
 def get_engine() -> AsyncEngine:
     settings = get_settings()
-    return create_async_engine(settings.DATABASE_URL, pool_pre_ping=True, future=True)
+    # `hide_parameters`: a database error's message otherwise repeats every
+    # bound value (notes, tags, tokens), and those messages reach logs.
+    return create_async_engine(
+        settings.DATABASE_URL, pool_pre_ping=True, future=True, hide_parameters=True
+    )
 
 
 @lru_cache

@@ -1,6 +1,7 @@
 """Reusable column mixins shared by every syncable model.
 
-These mixins only define columns — no merge/conflict-resolution logic lives
+These mixins only define columns (plus `sync_version_index`, the one index
+every syncable table must carry) — no merge/conflict-resolution logic lives
 here (that belongs to the sync engine, Phase 2).
 """
 
@@ -9,8 +10,24 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, func
+from sqlalchemy import BigInteger, DateTime, Index, func, text
 from sqlalchemy.orm import Mapped, mapped_column
+
+
+def sync_version_index(table_name: str) -> Index:
+    """ADR-0002 rule 3: `(user_id, server_version)` unique among allocated versions.
+
+    `0` is the "never allocated" sentinel, hence the partial index. Must match
+    the migration's `_create_version_index` for the same table.
+    """
+    return Index(
+        f"uq_{table_name}_user_id_server_version",
+        "user_id",
+        "server_version",
+        unique=True,
+        postgresql_where=text("server_version > 0"),
+        sqlite_where=text("server_version > 0"),
+    )
 
 
 class UUIDPk:

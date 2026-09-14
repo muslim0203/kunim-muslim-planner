@@ -22,6 +22,7 @@ from typing import Any
 
 import structlog
 
+from app.core.logging import safe_exception_fields
 from app.db.session import get_sessionmaker
 from app.modules.sync.service import SyncService
 
@@ -40,9 +41,10 @@ async def sync_retention(ctx: dict[str, Any]) -> dict[str, int]:  # noqa: ARG001
     async with session_factory() as session:
         try:
             stats = await SyncService(session).run_retention()
-        except Exception:
-            # No payloads or row contents in the log -- counts and status only.
-            logger.exception("sync_retention_failed")
+        except Exception as exc:
+            # No payloads, row contents or exception text (which can carry SQL
+            # parameters) in the log -- type and code location only.
+            logger.error("sync_retention_failed", **safe_exception_fields(exc))
             raise
 
     logger.info(

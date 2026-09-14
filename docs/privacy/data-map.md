@@ -13,6 +13,7 @@ Quyidagi jadval qaysi ma'lumotlar qayerda saqlanadi, serverga yuklaniladi yoki y
 | **Mood jurnal** (`mood_logs.note`) | Qurilmada + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | 90 kun keyin tombstone, 30 kun `row_history` |
 | **Uyqu jurnal** (`sleep_logs.note`) | Qurilmada + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | 90 kun keyin tombstone, 30 kun `row_history` |
 | **Sog'liq jurnal** (`health_logs.note`) | Qurilmada + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | 90 kun keyin tombstone, 30 kun `row_history` |
+| **Oila jurnali** (`family_logs.note`) | Qurilmada + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | 90 kun keyin tombstone, 30 kun `row_history` |
 | **AI chat xabarlari** (`ai_messages.content`) | Qurilmada lokal kesh + server | **HA** | SQLCipher (lokal) + AES-256-GCM (server) | 180 kun keyin o'chiriladi |
 | **AI xotira** (`ai_memory.text`) | Server | **HA** | AES-256-GCM | 180 kun keyin o'chiriladi |
 | **Vazifalar** (`tasks`) | Qurilmada + server | **HA (sync)** | SQLCipher (lokal) + TLS (tranzit) | Sync orqali, soft delete 90 kun |
@@ -142,13 +143,21 @@ Quyidagi maydonlar `EncryptedText` TypeDecorator bilan shifrlangan:
 mood_logs.note
 health_logs.note
 sleep_logs.note
+family_logs.note
 ai_messages.content
 ai_memory.text
 ```
 
 - **Kalii:** `FIELD_ENC_KEY` (versiya raqami bilan; kalii rotatsiyasi standart)
 - **IV:** Har yozuvda random
-- **Auth tag:** GCM
+- **Auth tag:** GCM (16 bayt)
+- **Saqlash formati:** `v<versiya>:<base64url(nonce ‖ ciphertext ‖ tag)>`, nonce 12 bayt; versiya GCM associated data sifatida ham tekshiriladi (boshqa versiyaga "qayta yorliqlash" ishlamaydi)
+- **Kalit formati:** 32 tasodifiy baytning base64 ko'rinishi; `FIELD_ENC_KEY_VERSION` (default 1) har shifrmatnga yoziladi
+- **Dev/test:** `ENV=dev` da placeholder yoki bo'sh kalit bo'lsa ochiq, deterministik dev kaliti ishlatiladi (faqat dev/test uchun). **staging/prod** da placeholder yoki bo'sh kalit bilan server ishga tushmaydi — ochiq matnga jimgina qaytish yo'q
+- **`row_history`:** `before`/`after` JSON ichidagi shu maydonlar ham shifrlangan holda yoziladi
+- **`sync_batches.response`:** idempotentlik keshidagi `server_row` ichida ham shifrlangan; replay'da ochiladi (7 kun)
+- **Loglar:** rad etilgan / muvaffaqiyatsiz sync change uchun faqat entity, row id, maydon nomlari va xato kodlari — qiymatlar, exception matni, SQL parametrlari loglanmaydi; 422 javobi yuborilgan `input` ni qaytarmaydi
+- **Implementatsiya:** `apps/api/app/db/types.py` (`EncryptedText`)
 
 ---
 

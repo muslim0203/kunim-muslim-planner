@@ -3,8 +3,9 @@
 `docs/adr/0002-sync.md` says merge lives **only on the server** ("Merge faqat
 serverda"), and that every rule must carry its matrix row number and have a
 matching test. This module is the whole of it: rows 1-7 and 23-24 are the
-generic engine below; rows 8-22 are per-entity `MergePolicy` data, either
-declared by the feature module or taken from `ADR_ENTITY_POLICIES` here.
+generic engine below; rows 8-22 and 25 (`family_logs`, appended after the
+original 24) are per-entity `MergePolicy` data, either declared by the
+feature module or taken from `ADR_ENTITY_POLICIES` here.
 
 Everything in this module is a pure function over dictionaries. It touches no
 session, no ORM and no HTTP, which is what lets
@@ -32,6 +33,7 @@ from app.modules.sync.registry import (
 )
 from app.modules.sync.schemas import (
     FUTURE_TOLERANCE_HOURS,
+    SLUG_LIST_MAX_ITEMS,
     ChangeStatus,
     RejectReason,
     SyncOp,
@@ -106,20 +108,50 @@ def _enum_max_wins(left: Any, right: Any, order: tuple[str, ...]) -> Any:
     return left if ranks.get(str(left), -1) >= ranks.get(str(right), -1) else right
 
 
-def _set_union(left: Any, right: Any) -> Any:
-    """Union of two collections treated as sets (ADR rule 11, `mood_logs.tags`).
+def _set_key(value: Any) -> tuple[str, str]:
+    """Identity of a set member: equal type name and text are one item."""
+    return (type(value).__name__, str(value))
 
-    The result is sorted so both devices converge on byte-identical output
-    regardless of which one pushed first.
+
+def _as_values(source: Any) -> list[Any]:
+    if isinstance(source, (list, tuple, set, frozenset)):
+        return list(source)
+    return [] if source is None else [source]
+
+
+def _set_union(winner: Any, loser: Any, *, max_items: int | None = None) -> list[Any]:
+    """Union of two collections treated as sets (ADR rules 11 and 25).
+
+    Within `max_items` (or with no cap) the union is sorted by
+    `(type name, str(value))`, so both devices converge on byte-identical
+    output regardless of which one pushed first.
+
+    Over `max_items` the choice of survivors is deterministic: the LWW
+    winner's distinct items first, in the winner's own list order; then the
+    loser's remaining items in that same sorted order; then the first
+    `max_items` of that sequence are kept. A wire-valid winner never exceeds
+    the cap, so it always survives whole and the merged row always
+    re-validates against the schema's list limit.
+
+    The survivors are returned sorted, exactly like an uncapped union. Any
+    other output order would not be a fixed point: merging the stored list
+    with an unchanged copy of itself stays within the cap, comes back sorted,
+    and would turn a no-op re-push into a `conflict`.
     """
-    values: list[Any] = []
-    for source in (left, right):
-        if isinstance(source, (list, tuple, set, frozenset)):
-            values.extend(source)
-        elif source is not None:
-            values.append(source)
-    unique = {(type(value).__name__, str(value)): value for value in values}
-    return [unique[key] for key in sorted(unique)]
+    unique: dict[tuple[str, str], Any] = {}
+    for value in (*_as_values(winner), *_as_values(loser)):
+        unique.setdefault(_set_key(value), value)
+    ordered = [unique[key] for key in sorted(unique)]
+    if max_items is None or len(ordered) <= max_items:
+        return ordered
+
+    kept: dict[tuple[str, str], Any] = {}
+    for value in _as_values(winner):
+        kept.setdefault(_set_key(value), value)
+    for value in ordered:  # only the loser's remaining items are still new here
+        kept.setdefault(_set_key(value), value)
+    survivors = list(kept.values())[:max_items]
+    return sorted(survivors, key=_set_key)
 
 
 def _apply_field_rule(
@@ -140,7 +172,10 @@ def _apply_field_rule(
     elif rule.strategy is MergeStrategy.enum_max_wins:
         merged[rule.field] = _enum_max_wins(left, right, rule.enum_order)
     elif rule.strategy is MergeStrategy.set_union:
-        merged[rule.field] = _set_union(left, right)
+        loser = existing if winner is incoming else incoming
+        merged[rule.field] = _set_union(
+            winner.get(rule.field), loser.get(rule.field), max_items=rule.max_items
+        )
     elif rule.strategy in (MergeStrategy.grouped_lww, MergeStrategy.derived):
         # Rule 12: the whole group comes from one winner, and a derived field
         # follows its group instead of being max-wins in its own right.
@@ -365,10 +400,11 @@ ADR_ENTITY_POLICIES: dict[str, MergePolicy] = {
         field_rules=(
             FieldRule("score", MergeStrategy.lww, adr_rule=11),
             FieldRule("note", MergeStrategy.lww, adr_rule=11),
-            FieldRule("tags", MergeStrategy.set_union, adr_rule=11),
+            FieldRule("tags", MergeStrategy.set_union, adr_rule=11, max_items=SLUG_LIST_MAX_ITEMS),
         ),
     ),
-    # Rule 12 -- sleep_logs: bed/wake move as a pair, duration is derived.
+    # Rule 12 -- sleep_logs: bed/wake move as a pair, duration is derived;
+    # quality and note are plain LWW.
     "sleep_logs": MergePolicy(
         adr_rules=(12, 14),
         natural_key=("user_id", "ref_id", "date"),
@@ -376,6 +412,8 @@ ADR_ENTITY_POLICIES: dict[str, MergePolicy] = {
             FieldRule("bed_time", MergeStrategy.grouped_lww, adr_rule=12, group="sleep_window"),
             FieldRule("wake_time", MergeStrategy.grouped_lww, adr_rule=12, group="sleep_window"),
             FieldRule("duration_min", MergeStrategy.derived, adr_rule=12, group="sleep_window"),
+            FieldRule("quality", MergeStrategy.lww, adr_rule=12),
+            FieldRule("note", MergeStrategy.lww, adr_rule=12),
         ),
     ),
     # Rule 13 -- health_logs: additive fields max-wins, weight/note LWW.
@@ -389,6 +427,19 @@ ADR_ENTITY_POLICIES: dict[str, MergePolicy] = {
             FieldRule("calories", MergeStrategy.max_wins, adr_rule=13),
             FieldRule("weight_kg", MergeStrategy.lww, adr_rule=13),
             FieldRule("note", MergeStrategy.lww, adr_rule=13),
+        ),
+    ),
+    # Rule 25 -- family_logs (appended after 1-24): time with family is
+    # additive, activities are a union, the note is LWW; rule 14 applies.
+    "family_logs": MergePolicy(
+        adr_rules=(25, 14),
+        natural_key=("user_id", "ref_id", "date"),
+        field_rules=(
+            FieldRule("minutes", MergeStrategy.max_wins, adr_rule=25),
+            FieldRule(
+                "activities", MergeStrategy.set_union, adr_rule=25, max_items=SLUG_LIST_MAX_ITEMS
+            ),
+            FieldRule("note", MergeStrategy.lww, adr_rule=25),
         ),
     ),
     # Rules 15 & 16 -- quran_progress: one row per user, totals never shrink.

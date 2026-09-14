@@ -8,9 +8,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.admin.setup import mount_admin
-from app.core.config import get_settings
+from app.core.config import check_jwt_secret, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
+from app.db.types import get_field_cipher
 from app.middleware.request_id import RequestIDMiddleware
 from app.modules.auth.router import router as auth_router
 from app.modules.health.router import router as health_router
@@ -28,6 +29,12 @@ def _package_version() -> str:
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    # Fail at startup, not on the first login or encrypted write: outside
+    # ENV=dev a placeholder JWT_SECRET or FIELD_ENC_KEY must stop the process.
+    # Neither check (nor anything else here) opens a database or Redis
+    # connection; both are created lazily on first use.
+    check_jwt_secret(settings)
+    get_field_cipher()
     configure_logging(settings)
 
     app = FastAPI(

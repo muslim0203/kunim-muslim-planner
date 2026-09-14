@@ -31,6 +31,8 @@ dependencies = [
     # and some minimal Linux container images. Harmless where the system
     # database already exists.
     "tzdata",
+    # AES-256-GCM for `EncryptedText` note columns (app/db/types.py).
+    "cryptography>=50.0.1",
 ]
 
 [project.optional-dependencies]

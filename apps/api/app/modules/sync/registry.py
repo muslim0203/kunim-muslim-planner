@@ -97,11 +97,11 @@ class MergeStrategy(StrEnum):
     lww = "lww"
     """Take the field from the last-write-wins winner (the default)."""
     max_wins = "max_wins"
-    """Take the larger of the two values; `None` is the smallest (ADR 8, 9, 13, 16, 21)."""
+    """Take the larger of the two values; `None` is the smallest (ADR 8, 9, 13, 16, 21, 25)."""
     enum_max_wins = "enum_max_wins"
     """`max_wins` over an explicit ordering of string values (ADR 10)."""
     set_union = "set_union"
-    """Union of two lists treated as sets, order-stabilised (ADR 11)."""
+    """Union of two lists treated as sets, order-stabilised (ADR 11, 25)."""
     grouped_lww = "grouped_lww"
     """Every field sharing `group` comes from one and the same winner (ADR 12)."""
     derived = "derived"
@@ -123,12 +123,23 @@ class FieldRule:
     """Ordering for `enum_max_wins`, smallest first."""
     group: str | None = None
     """Group name for `grouped_lww` / `derived` (fields decided together)."""
+    max_items: int | None = None
+    """Upper bound on a `set_union` result; `None` means unbounded.
+
+    Must equal the wire schema's list limit for the field, so a merged row
+    always re-validates. See `merge._set_union` for the deterministic cut.
+    """
 
     def __post_init__(self) -> None:
         if self.strategy is MergeStrategy.enum_max_wins and not self.enum_order:
             raise ValueError(f"enum_max_wins rule for {self.field!r} needs enum_order")
         if self.strategy in (MergeStrategy.grouped_lww, MergeStrategy.derived) and not self.group:
             raise ValueError(f"{self.strategy} rule for {self.field!r} needs a group")
+        if self.max_items is not None:
+            if self.strategy is not MergeStrategy.set_union:
+                raise ValueError(f"max_items on {self.field!r} is only valid for set_union")
+            if self.max_items < 1:
+                raise ValueError(f"max_items on {self.field!r} must be >= 1")
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,0 +1,16 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "user_id": "00000000-0000-4000-8000-000000000001",
+  "ref_id": null,
+  "date": "2026-09-12",
+  "water_ml": 1500,
+  "steps": 8000,
+  "workout_min": 30,
+  "calories": 2100,
+  "weight_kg": 72.5,
+  "note": "Kechki sayr",
+  "created_at": "2026-09-12T08:15:30.123Z",
+  "updated_at": "2026-09-12T08:15:30.123Z",
+  "deleted_at": null,
+  "server_version": 0
+}

@@ -39,9 +39,14 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
 
     JWT_SECRET: str = "change-me-in-production"
-    # AES-256-GCM key for EncryptedText columns (plan section 11). Versioned:
-    # rotating it requires a re-encryption migration, never an in-place swap.
+    # AES-256-GCM key for EncryptedText columns (plan section 11,
+    # `app.db.types`): the base64 encoding of exactly 32 random bytes. With the
+    # placeholder, ENV=dev falls back to a public deterministic dev key and
+    # every other ENV refuses to start. Versioned: `FIELD_ENC_KEY_VERSION` is
+    # stamped into every ciphertext, and rotating the key requires a
+    # re-encryption migration, never an in-place swap.
     FIELD_ENC_KEY: str = "change-me-in-production-32-bytes!"
+    FIELD_ENC_KEY_VERSION: int = Field(default=1, ge=1)
     ACCESS_TOKEN_TTL_MIN: int = 15
     REFRESH_TOKEN_TTL_DAYS: int = 30
 
@@ -69,6 +74,39 @@ class Settings(BaseSettings):
         if isinstance(value, str) and not value.strip().startswith("["):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
+
+
+JWT_SECRET_MIN_LENGTH = 32
+_PLACEHOLDER_PREFIX = "change-me"
+
+
+class InsecureSettingsError(RuntimeError):
+    """A non-dev process was given a development secret.
+
+    Messages name the setting, never its value.
+    """
+
+
+def check_jwt_secret(settings: Settings) -> None:
+    """Refuse a placeholder, empty or short `JWT_SECRET` outside `ENV=dev`.
+
+    Called from `app.main.create_app`, so a misconfigured staging/production
+    process fails at startup instead of signing tokens with a public value.
+    `ENV=dev` keeps accepting the placeholder. Not a field validator: plenty
+    of code builds `Settings(ENV="prod")` just to inspect other fields.
+    """
+    if settings.ENV == "dev":
+        return
+    secret = settings.JWT_SECRET
+    if (
+        not secret.strip()
+        or secret.strip().startswith(_PLACEHOLDER_PREFIX)
+        or len(secret) < JWT_SECRET_MIN_LENGTH
+    ):
+        raise InsecureSettingsError(
+            f"JWT_SECRET must be a random value of at least {JWT_SECRET_MIN_LENGTH} "
+            f"characters (not the placeholder) when ENV={settings.ENV}; refusing to start"
+        )
 
 
 @lru_cache

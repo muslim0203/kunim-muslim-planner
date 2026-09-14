@@ -261,6 +261,76 @@ def test_rule_11_mood_logs_tags_are_unioned_score_is_lww() -> None:
     assert outcome.row["score"] == 2  # LWW, explicitly not additive
 
 
+def test_rule_11_tag_union_over_the_limit_keeps_the_winner_then_the_sorted_loser() -> None:
+    policy = ADR_ENTITY_POLICIES["mood_logs"]
+    assert policy.rule_for("tags").max_items == 32
+    winner_tags = [f"w{i:02d}" for i in range(31, -1, -1)]  # 32 items, deliberately unsorted
+    loser_tags = [f"l{i:02d}" for i in range(32)]
+
+    def merge(incoming_tags: list[str], existing_tags: list[str]) -> Any:
+        return merge_row(
+            policy=policy,
+            incoming=row(updated_at=T0 + timedelta(minutes=5), score=3, tags=incoming_tags),
+            existing=row(updated_at=T0, score=3, tags=existing_tags),
+            op=SyncOp.upsert,
+            server_time=T0,
+        )
+
+    # Two full 32-item lists: the (wire-valid) winner fills the cap on its own;
+    # the survivors come back sorted, like any union.
+    outcome = merge(winner_tags, loser_tags)
+    assert outcome.row["tags"] == sorted(winner_tags)
+    assert len(outcome.row["tags"]) == 32
+    assert merge(winner_tags, loser_tags).row == outcome.row  # deterministic
+
+    # A short winner survives whole and is topped up with the loser's items
+    # in sorted order (l00..l28), however the loser's own list was ordered.
+    outcome = merge(["zeta", "alpha", "mid"], list(reversed(loser_tags)))
+    assert outcome.row["tags"] == sorted(["zeta", "alpha", "mid", *loser_tags[:29]])
+    assert outcome.status is ChangeStatus.conflict
+
+    # When the stored row is the LWW winner, its items are the ones kept whole.
+    server_wins = merge_row(
+        policy=policy,
+        incoming=row(updated_at=T0, tags=loser_tags),
+        existing=row(updated_at=T0 + timedelta(minutes=5), tags=["b", "a"]),
+        op=SyncOp.upsert,
+        server_time=T0,
+    )
+    assert server_wins.row["tags"] == sorted(["b", "a", *loser_tags[:30]])
+
+    # The capped result is a fixed point: re-merging it with itself changes nothing.
+    capped = outcome.row["tags"]
+    assert merge(capped, capped).row["tags"] == capped
+
+    # Within the limit nothing changes: the union is simply sorted.
+    assert merge(["b"], ["a"]).row["tags"] == ["a", "b"]
+
+
+def test_rule_25_family_activity_union_is_capped_like_rule_11_even_on_collision() -> None:
+    policy = ADR_ENTITY_POLICIES["family_logs"]
+    assert policy.rule_for("activities").max_items == 32
+    newer = [f"b{i:02d}" for i in range(32)]
+    outcome = merge_natural_key_collision(
+        policy=policy,
+        incoming=row(
+            id=uuid.UUID("aaaaaaaa-0000-4000-8000-000000000011"),
+            created_at=T0 + timedelta(minutes=5),
+            updated_at=T0 + timedelta(minutes=5),
+            activities=newer,
+        ),
+        other=row(
+            id=uuid.UUID("bbbbbbbb-0000-4000-8000-000000000011"),
+            created_at=T0,
+            updated_at=T0,
+            activities=[f"a{i:02d}" for i in range(32)],
+        ),
+        op=SyncOp.upsert,
+        server_time=T0,
+    )
+    assert outcome.row["activities"] == newer
+
+
 # --- rule 12 -----------------------------------------------------------------
 
 
@@ -278,6 +348,21 @@ def test_rule_12_sleep_logs_bed_and_wake_move_as_one_pair_duration_is_derived() 
     # Both halves come from the same winner; duration is not max-wins (510 lost).
     assert (outcome.row["bed_time"], outcome.row["wake_time"]) == ("23:00", "06:00")
     assert outcome.row["duration_min"] == 420
+
+
+def test_rule_12_sleep_logs_quality_and_note_are_lww() -> None:
+    policy = ADR_ENTITY_POLICIES["sleep_logs"]
+    assert policy.rule_for("quality").strategy is MergeStrategy.lww
+    assert policy.rule_for("note").strategy is MergeStrategy.lww
+
+    incoming = row(updated_at=T0, quality=1, note="restless")  # the older write
+    existing = row(updated_at=T0 + timedelta(minutes=5), quality=4, note="rested")
+    outcome = merge_row(
+        policy=policy, incoming=incoming, existing=existing, op=SyncOp.upsert, server_time=T0
+    )
+    # A worse rating is not "smaller wins" or "larger wins": the last writer's stands.
+    assert (outcome.row["quality"], outcome.row["note"]) == (4, "rested")
+    assert outcome.status is ChangeStatus.conflict
 
 
 # --- rule 13 -----------------------------------------------------------------
@@ -540,18 +625,63 @@ def test_rule_24_pull_only_entity_push_is_rejected_readonly() -> None:
     assert content.pushable is False
 
 
+# --- rule 25 -----------------------------------------------------------------
+
+
+def test_rule_25_family_logs_minutes_max_wins_activities_union_note_lww() -> None:
+    policy = ADR_ENTITY_POLICIES["family_logs"]
+    assert policy.natural_key == ("user_id", "ref_id", "date")
+    assert policy.adr_rules == (25, 14)
+    incoming = row(
+        updated_at=T0 + timedelta(minutes=5),
+        minutes=30,
+        activities=["walk", "meal"],
+        note="client",
+    )
+    existing = row(updated_at=T0, minutes=90, activities=["meal", "quran"], note="server")
+    outcome = merge_row(
+        policy=policy, incoming=incoming, existing=existing, op=SyncOp.upsert, server_time=T0
+    )
+    assert outcome.row["minutes"] == 90  # additive: never shrinks
+    assert outcome.row["activities"] == ["meal", "quran", "walk"]
+    assert outcome.row["note"] == "client"  # LWW winner
+    assert outcome.status is ChangeStatus.conflict
+
+
+def test_rule_25_family_logs_natural_key_collision_merges_fields_per_rule_25() -> None:
+    policy = ADR_ENTITY_POLICIES["family_logs"]
+    newer_id = uuid.UUID("aaaaaaaa-0000-4000-8000-000000000025")
+    older_id = uuid.UUID("bbbbbbbb-0000-4000-8000-000000000025")
+    incoming = row(
+        id=newer_id,
+        created_at=T0 + timedelta(minutes=5),
+        updated_at=T0 + timedelta(minutes=5),
+        minutes=20,
+        activities=["walk"],
+    )
+    other = row(id=older_id, created_at=T0, updated_at=T0, minutes=45, activities=["meal"])
+    outcome = merge_natural_key_collision(
+        policy=policy, incoming=incoming, other=other, op=SyncOp.upsert, server_time=T0
+    )
+    assert outcome.status is ChangeStatus.conflict
+    assert outcome.row["id"] == older_id  # rule 14: older created_at survives
+    assert outcome.row["minutes"] == 45
+    assert outcome.row["activities"] == ["meal", "walk"]
+
+
 # --- the matrix itself is data ----------------------------------------------
 
+ADR_MATRIX_ROWS = 25
+"""Rows in the ADR-0002 conflict matrix; row 25 (`family_logs`) was appended after 1-24."""
 
-def test_every_adr_matrix_row_8_to_22_has_a_policy_entry() -> None:
+
+def test_every_adr_matrix_row_8_to_22_and_25_has_a_policy_entry() -> None:
     covered = {adr_rule for policy in ADR_ENTITY_POLICIES.values() for adr_rule in policy.adr_rules}
-    assert covered >= set(range(8, 23)) - {14}  # 14 is a cross-entity rule
-    assert 14 in {
-        adr_rule for policy in ADR_ENTITY_POLICIES.values() for adr_rule in policy.adr_rules
-    }
+    assert covered >= (set(range(8, 23)) | {25}) - {14}  # 14 is a cross-entity rule
+    assert 14 in covered
 
 
 def test_every_field_rule_carries_its_matrix_row_number() -> None:
     for policy in ADR_ENTITY_POLICIES.values():
         for rule in policy.field_rules:
-            assert 1 <= rule.adr_rule <= 24, rule
+            assert 1 <= rule.adr_rule <= ADR_MATRIX_ROWS, rule

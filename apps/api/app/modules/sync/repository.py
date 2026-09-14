@@ -12,6 +12,7 @@ own SAVEPOINT), so a commit hidden in here would break the savepoint contract.
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -20,8 +21,9 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.types import open_encrypted_fields, seal_encrypted_fields
 from app.modules.sync.models import RowHistory, SyncBatch, SyncMergedRow, SyncUserState
-from app.modules.sync.registry import SyncEntity
+from app.modules.sync.registry import SyncEntity, get_entity
 from app.modules.sync.schemas import normalise_stored
 
 
@@ -144,15 +146,63 @@ class SyncRepository:
         request_hash: str,
         response: dict[str, Any],
     ) -> SyncBatch:
+        """Cache a push response, sealing `EncryptedText` columns in its rows.
+
+        A conflict's `server_row` is a whole row with its notes decrypted, and
+        this cache lives for 7 days (ADR-0002 section 3), so it gets the same
+        treatment as `row_history`.
+        """
         batch = SyncBatch(
             batch_id=batch_id,
             user_id=user_id,
             device_id=device_id,
             request_hash=request_hash,
-            response=response,
+            response=self._map_server_rows(response, self._seal_row),
         )
         self._session.add(batch)
         return batch
+
+    def stored_response(self, batch: SyncBatch) -> dict[str, Any]:
+        """The cached response exactly as it was first sent.
+
+        Raises `FieldDecryptionError` if a sealed value was tampered with or
+        was never sealed: a replay must fail loudly rather than answer with
+        something other than the original response.
+        """
+        return self._map_server_rows(batch.response, self._open_row)
+
+    @staticmethod
+    def _map_server_rows(
+        response: dict[str, Any],
+        transform: Callable[[SyncEntity, dict[str, Any]], dict[str, Any]],
+    ) -> dict[str, Any]:
+        results = response.get("results")
+        if not isinstance(results, list):
+            return response
+        mapped: list[Any] = []
+        for result in results:
+            server_row = result.get("server_row") if isinstance(result, dict) else None
+            entity = get_entity(result["entity"]) if isinstance(server_row, dict) else None
+            if entity is None:
+                mapped.append(result)
+            else:
+                mapped.append({**result, "server_row": transform(entity, server_row)})
+        return {**response, "results": mapped}
+
+    @staticmethod
+    def _seal_row(entity: SyncEntity, row: dict[str, Any]) -> dict[str, Any]:
+        return seal_encrypted_fields(entity.model, row) or row
+
+    @staticmethod
+    def _open_row(entity: SyncEntity, row: dict[str, Any]) -> dict[str, Any]:
+        opened = open_encrypted_fields(entity.model, row) or row
+        # JSONB does not keep key order. The original row came from
+        # `schema.model_dump()`, so schema field order makes the replay
+        # byte-identical on PostgreSQL as well as on SQLite.
+        fields = entity.schema.model_fields
+        ordered = {name: opened[name] for name in fields if name in opened}
+        ordered.update({key: value for key, value in opened.items() if key not in fields})
+        return ordered
 
     # --- entity rows --------------------------------------------------------
 
@@ -296,6 +346,13 @@ class SyncRepository:
         server_version: int,
         device_id: str | None,
     ) -> None:
+        descriptor = get_entity(entity)
+        if descriptor is not None:
+            # ADR-0002 section 4: `EncryptedText` columns stay encrypted in
+            # `row_history` too; otherwise these JSON snapshots would keep
+            # every private note in plaintext for 30 days.
+            before = seal_encrypted_fields(descriptor.model, before)
+            after = seal_encrypted_fields(descriptor.model, after) or after
         self._session.add(
             RowHistory(
                 entity=entity,

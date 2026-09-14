@@ -22,7 +22,7 @@ from datetime import UTC, date, datetime
 from enum import StrEnum
 from typing import Annotated, Any, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
 from pydantic_core import PydanticCustomError
 
 # --- limits (ADR §3 "Chegaralar" and rule 5) --------------------------------
@@ -52,6 +52,41 @@ def _to_utc(value: datetime) -> datetime:
 
 UtcDatetime = Annotated[datetime, AfterValidator(_to_utc)]
 """Timestamp type every syncable entity schema must use."""
+
+
+# --- shared field types for daily log entities ------------------------------
+
+REF_ID_MAX_LENGTH = 64
+NOTE_MAX_LENGTH = 2000
+SLUG_MAX_LENGTH = 32
+SLUG_LIST_MAX_ITEMS = 32
+SLUG_PATTERN = r"^[a-z][a-z0-9_]*$"
+
+RefId = Annotated[str, StringConstraints(max_length=REF_ID_MAX_LENGTH)]
+"""A log table's natural-key discriminator; null and '' are one key (ADR rule 16)."""
+
+NoteText = Annotated[str, StringConstraints(max_length=NOTE_MAX_LENGTH)]
+"""Free text a user types into a log; stored in an `EncryptedText` column."""
+
+Slug = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=SLUG_MAX_LENGTH, pattern=SLUG_PATTERN),
+]
+
+
+def _dedupe_preserving_order(values: list[str]) -> list[str]:
+    return list(dict.fromkeys(values))
+
+
+SlugList = Annotated[
+    list[Slug],
+    Field(max_length=SLUG_LIST_MAX_ITEMS),
+    AfterValidator(_dedupe_preserving_order),
+]
+"""Tag-like list merged by set union (`mood_logs.tags`, `family_logs.activities`).
+
+At most 12 items as sent; repeated values are dropped, first occurrence kept.
+"""
 
 
 def to_wire(value: Any) -> Any:

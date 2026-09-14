@@ -16,13 +16,19 @@ from typing import Any
 from arq import cron
 from arq.connections import RedisSettings
 
-from app.core.config import get_settings
+from app.core.config import check_jwt_secret, get_settings
 from app.core.logging import configure_logging
+from app.db.types import get_field_cipher
 from app.jobs.cleanup import sync_retention
 
 
-async def startup(ctx: dict[str, Any]) -> None:
-    configure_logging(get_settings())
+async def startup(ctx: dict[str, Any]) -> None:  # noqa: ARG001
+    settings = get_settings()
+    # Same guards as `create_app`: the retention sweep loads rows with
+    # encrypted notes, and the worker shares the API's configuration.
+    check_jwt_secret(settings)
+    get_field_cipher()
+    configure_logging(settings)
 
 
 async def shutdown(ctx: dict[str, Any]) -> None:  # noqa: ARG001
