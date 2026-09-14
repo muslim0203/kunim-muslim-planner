@@ -138,6 +138,17 @@ class GoalsController extends Notifier<AsyncValue<void>> {
     return _run(() => _goals.deleteGoal(id));
   }
 
+  /// Deletes a goal and its milestones. The milestones go first, so an
+  /// interrupted delete never leaves live milestones under a deleted goal.
+  Future<void> deleteGoalWithMilestones(String id) {
+    return _run(() async {
+      for (final milestone in await _milestones.listForGoal(id)) {
+        await _milestones.deleteMilestone(milestone.id);
+      }
+      await _goals.deleteGoal(id);
+    });
+  }
+
   Future<void> addMilestone({
     required String goalId,
     required String title,

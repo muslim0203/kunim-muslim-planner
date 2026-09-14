@@ -654,7 +654,7 @@
   "moduleWork": "Work",
   "moduleWorkMeta": "Plans and tasks",
   "moduleGrowth": "Personal growth",
-  "moduleGrowthMeta": "Learning and goals",
+  "moduleGrowthMeta": "Goals and milestones",
   "moduleSleep": "Sleep",
   "moduleSleepMeta": "Nightly rest",
   "prayerFajr": "Fajr",
@@ -942,5 +942,22 @@
   "accountSignOutConfirmBody": "Your data stays on this device, but syncing stops.",
   "syncNeverSynced": "Not synced yet",
   "authErrorNetwork": "Could not reach the server. Check your internet connection.",
-  "authErrorRateLimited": "Too many attempts. Please try again shortly."
+  "authErrorRateLimited": "Too many attempts. Please try again shortly.",
+  "goalIntro": "Break a big goal into small milestones and track progress at your own pace.",
+  "goalDescriptionLabel": "Description",
+  "goalNoTargetDate": "No target date",
+  "goalOverdue": "Past the target date",
+  "goalDueToday": "Due today",
+  "goalAtRisk": "Behind schedule",
+  "goalEdit": "Edit goal",
+  "goalDeleteConfirmTitle": "Delete this goal?",
+  "goalDeleteConfirmBody": "The goal and all its milestones will be deleted.",
+  "goalMilestonesEmpty": "Add milestones to break the goal into small steps",
+  "goalMilestoneEdit": "Edit milestone",
+  "goalNotFound": "This goal was not found or has been deleted",
+  "goalProgressValue": "{percent}%",
+  "@goalProgressValue": {
+    "placeholders": {"percent": {"type": "int"}}
+  },
+  "goalClearDate": "Clear date"
 }

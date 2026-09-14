@@ -23,6 +23,8 @@ import 'package:kunim/core/sync/sync_triggers.dart';
 import 'package:kunim/features/ai/presentation/ai_screen.dart';
 import 'package:kunim/features/account/presentation/account_screen.dart';
 import 'package:kunim/features/family/presentation/family_screen.dart';
+import 'package:kunim/features/goals/presentation/goal_detail_screen.dart';
+import 'package:kunim/features/goals/presentation/goals_screen.dart';
 import 'package:kunim/features/health/presentation/health_screen.dart';
 import 'package:kunim/features/home/presentation/home_screen.dart';
 import 'package:kunim/features/mood/presentation/mood_screen.dart';
@@ -222,6 +224,8 @@ void main() {
     'sleep': () => const SleepScreen(),
     'family': () => const FamilyScreen(),
     'account': () => const AccountScreen(),
+    'goals': () => const GoalsScreen(),
+    'goal-missing': () => const GoalDetailScreen(goalId: 'missing'),
   };
 
   for (final screen in screens.entries) {

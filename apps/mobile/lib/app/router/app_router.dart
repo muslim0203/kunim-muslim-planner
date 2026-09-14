@@ -6,6 +6,8 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/account/presentation/account_screen.dart';
 import '../../features/ai/presentation/ai_screen.dart';
 import '../../features/family/presentation/family_screen.dart';
+import '../../features/goals/presentation/goal_detail_screen.dart';
+import '../../features/goals/presentation/goals_screen.dart';
 import '../../features/health/presentation/health_screen.dart';
 import '../../features/mood/presentation/mood_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
@@ -40,11 +42,16 @@ abstract final class KunimRoutes {
   static const String sleep = '$home/$_sleep';
   static const String family = '$home/$_family';
 
+  /// Personal growth: the goals list and one goal, from the home tab.
+  static const String goals = '$home/$_goals';
+  static String goal(String id) => '$goals/$id';
+
   static const String _prayer = 'prayer';
   static const String _mood = 'mood';
   static const String _health = 'health';
   static const String _sleep = 'sleep';
   static const String _family = 'family';
+  static const String _goals = 'goals';
   static const String _notifications = 'notifications';
   static const String _account = 'account';
 
@@ -88,6 +95,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: KunimRoutes._family,
                     builder: (context, state) => const FamilyScreen(),
+                  ),
+                  GoRoute(
+                    path: KunimRoutes._goals,
+                    builder: (context, state) => const GoalsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':goalId',
+                        builder: (context, state) => GoalDetailScreen(
+                          goalId: state.pathParameters['goalId']!,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

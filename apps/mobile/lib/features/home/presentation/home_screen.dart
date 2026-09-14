@@ -629,6 +629,7 @@ class _ModuleGrid extends StatelessWidget {
         meta: l10n.moduleGrowthMeta,
         icon: Icons.track_changes_rounded,
         color: KunimModuleColors.mood,
+        route: KunimRoutes.goals,
       ),
       _Module(
         title: l10n.moduleSleep,

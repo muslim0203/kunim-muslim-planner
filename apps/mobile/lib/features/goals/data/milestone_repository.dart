@@ -34,14 +34,19 @@ class MilestoneRepository extends SyncableRepository {
   /// All non-deleted milestones for [goalId], in display order. Returns
   /// an empty stream value (never throws) when [goalId] does not match
   /// any local goal — see the class doc.
-  Stream<List<Milestone>> watchForGoal(String goalId) {
-    final query = db.select(db.milestones)
+  Stream<List<Milestone>> watchForGoal(String goalId) =>
+      _forGoal(goalId).watch();
+
+  /// One-shot read of [watchForGoal]'s current value.
+  Future<List<Milestone>> listForGoal(String goalId) => _forGoal(goalId).get();
+
+  SimpleSelectStatement<$MilestonesTable, Milestone> _forGoal(String goalId) {
+    return db.select(db.milestones)
       ..where((m) => m.goalId.equals(goalId) & m.deletedAt.isNull())
       ..orderBy([
         (m) => OrderingTerm(expression: m.sortOrder),
         (m) => OrderingTerm(expression: m.createdAt),
       ]);
-    return query.watch();
   }
 
   Future<Milestone> createMilestone({
