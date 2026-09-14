@@ -15,7 +15,7 @@
 // the other and one of the two tests fails.
 //
 // Regenerate after an intentional schema change:
-//   flutter test test/sync/wire_contract_test.dart --dart-define=UPDATE_GOLDEN=1
+//   flutter test test/sync/wire_contract_test.dart --dart-define=UPDATE_GOLDEN=true
 import 'dart:convert';
 import 'dart:io';
 
@@ -25,12 +25,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kunim/core/db/app_database.dart';
 import 'package:kunim/core/db/tables/tasks_table.dart' show TaskPriority;
 import 'package:kunim/features/calendar/data/calendar_event_repository.dart';
+import 'package:kunim/features/family/data/family_log_repository.dart';
 import 'package:kunim/features/goals/data/goal_repository.dart';
 import 'package:kunim/features/goals/data/milestone_repository.dart';
 import 'package:kunim/features/habits/data/habit_log_repository.dart';
 import 'package:kunim/features/habits/data/habit_repository.dart';
 import 'package:kunim/features/habits/domain/habit_schedule.dart';
 import 'package:kunim/features/habits/domain/local_day.dart';
+import 'package:kunim/features/health/data/health_log_repository.dart';
+import 'package:kunim/features/mood/data/mood_log_repository.dart';
+import 'package:kunim/features/sleep/data/sleep_log_repository.dart';
 import 'package:kunim/features/tasks/data/task_category_repository.dart';
 import 'package:kunim/features/tasks/data/task_repository.dart';
 
@@ -44,6 +48,12 @@ final _goldenDir = Directory('../../packages/kunim_contracts/golden').absolute;
 const _fixedId = '00000000-0000-4000-8000-000000000001';
 const _fixedTimestamp = '2026-09-12T08:15:30.123Z';
 const _fixedDate = '2026-09-12';
+
+/// Fields whose values only make sense together and are already fixed by the
+/// test clock: normalising `sleep_logs`' bed and wake times to the same
+/// instant would make the golden a zero-length night the server rightly
+/// rejects.
+const _keepAsIs = {'bed_time', 'wake_time'};
 
 final _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-'
@@ -67,7 +77,9 @@ Object? _normalise(Object? value) {
   if (value is Map) {
     return {
       for (final entry in value.entries)
-        entry.key as String: _normalise(entry.value),
+        entry.key as String: _keepAsIs.contains(entry.key)
+            ? entry.value
+            : _normalise(entry.value),
     };
   }
   if (value is List) return value.map(_normalise).toList();
@@ -105,6 +117,7 @@ void main() {
     const userId = '00000000-0000-4000-8000-0000000000ff';
     final at = DateTime.utc(2026, 9, 12, 8, 15, 30, 123);
     DateTime nowFn() => at;
+    final day = LocalDay(at.year, at.month, at.day);
 
     final payloads = <String, Map<String, dynamic>>{};
 
@@ -153,7 +166,7 @@ void main() {
     payloads['habit_logs'] = await _capture(db, 'habit_logs', () async {
       await logs.logCompletion(
         habitId: habitId,
-        day: LocalDay(at.year, at.month, at.day),
+        day: day,
         userId: userId,
       );
     });
@@ -206,6 +219,58 @@ void main() {
       );
     });
 
+    // --- mood_logs --------------------------------------------------------
+    final mood = MoodLogRepository(db, onLocalWrite: () {}, now: nowFn);
+    payloads['mood_logs'] = await _capture(db, 'mood_logs', () async {
+      await mood.saveForDay(
+        day,
+        score: 4,
+        tags: const ['calm', 'grateful'],
+        note: 'Bugun xotirjam kun',
+        userId: userId,
+      );
+    });
+
+    // --- sleep_logs -------------------------------------------------------
+    final sleep = SleepLogRepository(db, onLocalWrite: () {}, now: nowFn);
+    payloads['sleep_logs'] = await _capture(db, 'sleep_logs', () async {
+      await sleep.saveForDay(
+        day,
+        bedTime: at.subtract(const Duration(hours: 7, minutes: 30)),
+        wakeTime: at,
+        quality: 4,
+        note: 'Yaxshi uxladim',
+        userId: userId,
+      );
+    });
+
+    // --- health_logs ------------------------------------------------------
+    final health = HealthLogRepository(db, onLocalWrite: () {}, now: nowFn);
+    payloads['health_logs'] = await _capture(db, 'health_logs', () async {
+      await health.saveForDay(
+        day,
+        waterMl: 1500,
+        steps: 8000,
+        workoutMin: 30,
+        calories: 2100,
+        weightKg: 72.5,
+        note: 'Kechki sayr',
+        userId: userId,
+      );
+    });
+
+    // --- family_logs ------------------------------------------------------
+    final family = FamilyLogRepository(db, onLocalWrite: () {}, now: nowFn);
+    payloads['family_logs'] = await _capture(db, 'family_logs', () async {
+      await family.saveForDay(
+        day,
+        minutes: 90,
+        activities: const ['meal', 'walk'],
+        note: 'Oila bilan kechki ovqat',
+        userId: userId,
+      );
+    });
+
     // --- compare or regenerate -------------------------------------------
     final encoder = const JsonEncoder.withIndent('  ');
     for (final entry in payloads.entries) {
@@ -220,13 +285,13 @@ void main() {
 
       expect(file.existsSync(), isTrue,
           reason: 'missing golden ${file.path}. Regenerate with '
-              '--dart-define=UPDATE_GOLDEN=1');
+              '--dart-define=UPDATE_GOLDEN=true');
       expect(
         jsonDecode(await file.readAsString()),
         entry.value,
         reason: '${entry.key}: the payload this repository enqueues no longer '
             'matches its golden wire row. If the change is intentional, '
-            'regenerate with --dart-define=UPDATE_GOLDEN=1 AND make sure '
+            'regenerate with --dart-define=UPDATE_GOLDEN=true AND make sure '
             'apps/api/tests/test_wire_contract.py still passes.',
       );
     }

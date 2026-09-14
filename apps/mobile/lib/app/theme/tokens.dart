@@ -11,19 +11,39 @@ import 'package:flutter/material.dart';
 /// never as the only signal, per accessibility rule in the plan).
 abstract final class KunimModuleColors {
   /// Prayer / namoz.
-  static const Color prayer = Color(0xFF2E7D32); // green
+  static const Color prayer = Color(0xFF0E6B5E);
+
   /// Quran.
-  static const Color quran = Color(0xFF1565C0); // blue
+  static const Color quran = Color(0xFF3E4D8F);
+
   /// Mood / ruhiy holat.
-  static const Color mood = Color(0xFF6A1B9A); // purple
+  static const Color mood = Color(0xFF7952B3);
+
   /// Family / oila.
-  static const Color family = Color(0xFFC62828); // red
+  static const Color family = Color(0xFFA5423C);
+
   /// Health / sog'liq.
-  static const Color health = Color(0xFF00796B); // teal
+  static const Color health = Color(0xFF26718C);
+
   /// Work / ish.
-  static const Color work = Color(0xFFF9A825); // yellow
+  static const Color work = Color(0xFFC6922B);
+
   /// Sleep / uyqu.
-  static const Color sleep = Color(0xFF283593); // indigo
+  static const Color sleep = Color(0xFF4856A6);
+}
+
+/// KUNIM brand palette, kept in step with the Figma library.
+abstract final class KunimColors {
+  static const Color midnight = Color(0xFF0B1F2A);
+  static const Color ink = Color(0xFF102C37);
+  static const Color inkMuted = Color(0xFF38545E);
+  static const Color jade = Color(0xFF0E6B5E);
+  static const Color jadeBright = Color(0xFF15947F);
+  static const Color jadeSoft = Color(0xFFDDF3EC);
+  static const Color gold = Color(0xFFC6922B);
+  static const Color goldSoft = Color(0xFFF8EFD4);
+  static const Color ivory = Color(0xFFFFFCF5);
+  static const Color sand = Color(0xFFEEE4D2);
 }
 
 /// Corner radii used across cards, sheets and buttons.
@@ -31,6 +51,7 @@ abstract final class KunimRadii {
   static const double small = 12;
   static const double medium = 16;
   static const double large = 20;
+  static const double extraLarge = 28;
 
   static const BorderRadius mediumRadius =
       BorderRadius.all(Radius.circular(medium));

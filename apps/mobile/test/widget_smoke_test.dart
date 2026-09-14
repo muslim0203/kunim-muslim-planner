@@ -21,7 +21,7 @@ void main() {
     await db.close();
   });
 
-  testWidgets('launches to the Home screen with 5 nav destinations', (
+  testWidgets('launches to the Home screen in Uzbek with 5 nav destinations', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -48,6 +48,9 @@ void main() {
     final BuildContext context = tester.element(find.byType(Scaffold).first);
     final l10n = AppLocalizations.of(context);
 
+    // Uzbek is the primary language, independent of the device locale.
+    expect(Localizations.localeOf(context), const Locale('uz'));
+
     // All five bottom-nav destinations are present.
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text(l10n.navHome), findsOneWidget);
@@ -56,13 +59,20 @@ void main() {
     expect(find.text(l10n.navAi), findsOneWidget);
     expect(find.text(l10n.navSettings), findsOneWidget);
 
-    // Home renders its three phase-2 blocks. With an empty database each
-    // one shows its empty state rather than a spinner or an error.
-    expect(find.text(l10n.homeTopThree), findsOneWidget);
-    expect(find.text(l10n.homeTodaysPlan), findsOneWidget);
-    expect(find.text(l10n.homeTodaysHabits), findsOneWidget);
-    expect(find.text(l10n.homeChooseTopThree), findsOneWidget);
+    // Home renders its phase-2 blocks. With an empty database each one shows
+    // its empty state rather than a spinner, an error or sample data.
+    expect(find.text(l10n.homeProgress), findsOneWidget);
     expect(find.text(l10n.homeNothingPlanned), findsOneWidget);
+    expect(find.text(l10n.homeMainTasks), findsOneWidget);
+    expect(find.text(l10n.homeChooseTopThree), findsOneWidget);
+
+    // The habits block sits below the fold; bring it into view first.
+    await tester.scrollUntilVisible(
+      find.text(l10n.habitEmptyState),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text(l10n.homeTodaysHabits), findsOneWidget);
     expect(find.text(l10n.habitEmptyState), findsOneWidget);
 
     // Unmount so ProviderScope disposes the Drift stream subscriptions.

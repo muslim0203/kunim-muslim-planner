@@ -56,6 +56,15 @@ class HabitLogRepository extends SyncableRepository with HabitLocalWriteHook {
 
   // --- Reads (reactive) ---------------------------------------------------
 
+  /// Every live log across all habits, oldest first. Read-only; used by the
+  /// statistics screen, which needs full history to compute streaks.
+  Stream<List<HabitLog>> watchAllLogs({String? userId}) {
+    final query = db.select(db.habitLogs)
+      ..where((l) => l.deletedAt.isNull() & _userIdMatches(l, userId))
+      ..orderBy([(l) => OrderingTerm.asc(l.date)]);
+    return query.watch();
+  }
+
   /// A habit's full log history, newest first. Never returns a tombstoned
   /// row.
   Stream<List<HabitLog>> watchLogsForHabit(String habitId, {String? userId}) {
@@ -357,5 +366,8 @@ class HabitLogRepository extends SyncableRepository with HabitLocalWriteHook {
       };
 }
 
+/// A `null` [userId] matches every row: the device holds one account's
+/// data at a time, whether its rows were created here (and stamped with
+/// the signed-in account) or pulled from the server.
 Expression<bool> _userIdMatches($HabitLogsTable t, String? userId) =>
-    userId == null ? t.userId.isNull() : t.userId.equals(userId);
+    userId == null ? const Constant(true) : t.userId.equals(userId);

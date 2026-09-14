@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release builds shrink unused resources. flutter_local_notifications looks
+     its icon up by name at runtime (AndroidInitializationSettings in
+     lib/core/notifications/plugin_local_notifier.dart), so the shrinker cannot
+     see the reference and would strip it; initialization then fails. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_kunim" />

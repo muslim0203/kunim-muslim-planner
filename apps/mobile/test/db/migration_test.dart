@@ -1,8 +1,9 @@
 // Schema migration tests. v1 -> v2 added the phase-2 sync tables; v2 -> v3
-// added `milestones.progress_percent`. Each step must (a) create everything
-// correctly for a brand-new install, and (b) upgrade an existing install of
-// EVERY prior version without touching its data.
-import 'package:drift/drift.dart' show Value;
+// added `milestones.progress_percent`; v3 -> v4 added the daily log tables.
+// Each step must (a) create everything correctly for a brand-new install, and
+// (b) upgrade an existing install of EVERY prior version without touching its
+// data.
+import 'package:drift/drift.dart' show Value, Variable;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kunim/core/db/app_database.dart';
@@ -18,29 +19,64 @@ const _phase2Tables = [
   'milestones',
 ];
 
-Future<Set<String>> _tableNames(AppDatabase db) async {
-  final rows = await db
-      .customSelect("SELECT name FROM sqlite_master WHERE type = 'table'")
-      .get();
+const _dailyLogTables = AppDatabase.dailyLogTables;
+
+Future<Set<String>> _names(AppDatabase db, String type) async {
+  final rows = await db.customSelect(
+    'SELECT name FROM sqlite_master WHERE type = ?',
+    variables: [Variable.withString(type)],
+  ).get();
   return rows.map((r) => r.data['name'] as String).toSet();
 }
 
+Future<Set<String>> _tableNames(AppDatabase db) => _names(db, 'table');
+
+/// The partial natural-key index must allow a rule-14 tombstone next to a
+/// live row but reject a second live row for the same day.
+Future<void> _expectLiveRowUniqueness(AppDatabase db) async {
+  final day = DateTime.utc(2026, 1, 1);
+  await db.into(db.moodLogs).insert(
+        MoodLogsCompanion.insert(id: const Value('m-1'), date: day, score: 3),
+      );
+  await db.into(db.moodLogs).insert(
+        MoodLogsCompanion.insert(
+          id: const Value('m-2'),
+          date: day,
+          score: 4,
+          deletedAt: Value(DateTime.utc(2026, 1, 2)),
+        ),
+      );
+  await expectLater(
+    db.into(db.moodLogs).insert(
+          MoodLogsCompanion.insert(id: const Value('m-3'), date: day, score: 5),
+        ),
+    throwsA(anything),
+  );
+}
+
 void main() {
-  test('schemaVersion is 3', () {
+  test('schemaVersion is 5', () {
     final db = AppDatabase.withExecutor(NativeDatabase.memory());
-    expect(db.schemaVersion, 3);
+    expect(db.schemaVersion, 5);
   });
 
-  test('a fresh install creates all phase-2 tables', () async {
+  test('a fresh install creates every sync table and natural-key index',
+      () async {
     final db = AppDatabase.withExecutor(NativeDatabase.memory());
-    final names = await _tableNames(db);
-    for (final table in _phase2Tables) {
-      expect(names, contains(table));
+    final tables = await _tableNames(db);
+    for (final table in [..._phase2Tables, ..._dailyLogTables]) {
+      expect(tables, contains(table));
     }
+    final indexes = await _names(db, 'index');
+    expect(indexes, contains('ux_habit_logs_natural_key'));
+    for (final table in _dailyLogTables) {
+      expect(indexes, contains('ux_${table}_natural_key'));
+    }
+    await _expectLiveRowUniqueness(db);
     await db.close();
   });
 
-  test('upgrading from schema v1 adds phase-2 tables and keeps existing data',
+  test('upgrading from schema v1 adds every later table and keeps data',
       () async {
     // Hand-build a minimal "v1" database: just the `key_value` table that
     // existed before this migration, with one row already in it, and
@@ -66,7 +102,7 @@ void main() {
     // Force the connection (and therefore the migration) to run.
     final names = await _tableNames(db);
 
-    for (final table in _phase2Tables) {
+    for (final table in [..._phase2Tables, ..._dailyLogTables]) {
       expect(names, contains(table), reason: '$table must exist after upgrade');
     }
 
@@ -182,6 +218,38 @@ void main() {
           ),
       throwsA(anything),
     );
+
+    await db.close();
+  });
+
+  test('upgrading from schema v3 adds the daily log tables and keeps data',
+      () async {
+    final raw = sqlite3.sqlite3.openInMemory();
+    raw.execute('''
+      CREATE TABLE key_value (
+        "key" TEXT NOT NULL,
+        value TEXT NOT NULL,
+        PRIMARY KEY ("key")
+      );
+    ''');
+    raw.execute(
+      "INSERT INTO key_value (\"key\", value) VALUES ('marker', 'kept-across-v4')",
+    );
+    raw.execute('PRAGMA user_version = 3');
+
+    final db = AppDatabase.withExecutor(
+      NativeDatabase.opened(raw, enableMigrations: true),
+    );
+
+    final tables = await _tableNames(db);
+    for (final table in _dailyLogTables) {
+      expect(tables, contains(table), reason: '$table must exist after v4');
+    }
+    final marker = await (db.select(db.keyValue)
+          ..where((t) => t.key.equals('marker')))
+        .getSingle();
+    expect(marker.value, 'kept-across-v4');
+    await _expectLiveRowUniqueness(db);
 
     await db.close();
   });

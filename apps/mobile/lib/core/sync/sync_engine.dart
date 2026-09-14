@@ -15,6 +15,7 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../auth/auth_controller.dart';
 import '../db/app_database.dart';
 import '../network/error_mapper.dart';
 import 'conflict.dart';
@@ -216,7 +217,7 @@ class SyncEngine {
           )
           .toList(growable: false);
 
-      final deviceId = await _deviceId();
+      final deviceId = await stateStore.getOrCreateDeviceId();
       final response = await api.push(
         SyncPushRequest(
           deviceId: deviceId,
@@ -325,14 +326,6 @@ class SyncEngine {
     await stateStore.setCursor(0);
     await _pullAll(limits);
   }
-
-  Future<String> _deviceId() async {
-    final existing = await stateStore.getDeviceId();
-    if (existing != null) return existing;
-    final generated = _uuid.v4();
-    await stateStore.setDeviceId(generated);
-    return generated;
-  }
 }
 
 /// Riverpod wiring. `sync_triggers.dart` and any UI code should depend on
@@ -358,10 +351,29 @@ class SyncStatusController extends Notifier<SyncStatus> {
   @override
   SyncStatus build() => const SyncIdle();
 
+  /// Runs a cycle while an account is signed in; signed out, the app is
+  /// local-only and nothing is sent.
   Future<SyncStatus> runNow({bool force = false}) async {
+    if (ref.read(authControllerProvider) is! AuthSignedIn) {
+      state = const SyncIdle();
+      return state;
+    }
     state = const SyncRunning();
-    final result = await ref.read(syncEngineProvider).syncOnce(force: force);
-    state = result;
+    SyncStatus result;
+    try {
+      result = await ref.read(syncEngineProvider).syncOnce(force: force);
+    } catch (error) {
+      // A failure outside the transport (e.g. applying a page locally) must
+      // not leave the status stuck at "running".
+      _log('sync cycle failed: ${error.runtimeType}');
+      result = SyncFailed(
+        failure: UnknownFailure(message: error.runtimeType.toString()),
+        consecutiveFailures: 1,
+        persistentlyFailing: false,
+        failedAt: DateTime.now().toUtc(),
+      );
+    }
+    if (ref.mounted) state = result;
     return result;
   }
 }

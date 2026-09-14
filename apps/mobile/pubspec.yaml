@@ -112,6 +112,12 @@ flutter:
   # drop files straight into it without touching this file again.
   assets:
     - assets/
+    - assets/images/
+
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-VariableFont_wght.ttf
 
 # l10n code generation is driven by `l10n.yaml` (arb-dir/template/output
 # class/dir). `generate: true` above is what makes `flutter gen-l10n` run

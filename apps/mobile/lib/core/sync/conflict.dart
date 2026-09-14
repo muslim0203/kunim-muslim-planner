@@ -23,12 +23,16 @@
 /// created (`writeFromServer` — see `core/db/base_repository.dart`).
 ///
 /// Entity <-> local table mapping: only the tables that exist in
-/// `core/db/app_database.dart` today (`tasks`, `task_categories`,
-/// `calendar_events`, `habits`, `habit_logs`, `goals`, `milestones`,
-/// `preferences`) can be applied here. An `entity` the server knows about
-/// but this client build does not yet have a table for is skipped (logged,
-/// not thrown) — forward-compatible with a server that has more entities
-/// registered than a given client release implements.
+/// `core/db/app_database.dart` can be applied here. An `entity` the server
+/// knows about but this client build does not yet have a table for is
+/// skipped (logged, not thrown) — forward-compatible with a server that has
+/// more entities registered than a given client release implements.
+///
+/// Wire rows are NOT the local column shape, so each adapter declares how to
+/// convert one ([_EntityAdapter.fromWire]) before Drift decodes it: server
+/// `DATE` values, renamed fields (`habits.schedule` -> `frequency`), enum
+/// names stored as indexes (`tasks.priority`) and JSON lists kept in text
+/// columns.
 library;
 
 import 'dart:convert';
@@ -38,6 +42,7 @@ import 'package:drift/drift.dart';
 
 import '../db/app_database.dart';
 import '../db/base_repository.dart';
+import '../db/tables/tasks_table.dart' show TaskPriority;
 import 'outbox.dart';
 import 'sync_models.dart';
 
@@ -49,7 +54,9 @@ class _SyncEngineWrites extends SyncableRepository {
   _SyncEngineWrites(super.db);
 }
 
-/// One registered local entity: how to turn the server's snake_case JSON
+typedef _WireToLocal = Map<String, dynamic> Function(Map<String, dynamic>);
+
+/// One registered local entity: how to turn the server's snake_case wire
 /// row into a typed Drift row and write it, and how to purge it during a
 /// full resync. Kept private and generic so adding an entity is a single
 /// map entry, not a new class.
@@ -58,22 +65,80 @@ class _EntityAdapter<D extends Insertable<D>, T extends Table> {
     required this.tableName,
     required this.table,
     required this.fromJson,
+    this.fromWire = _unchanged,
   });
 
   /// SQL table name (matches the entity string exactly for every table
-  /// declared with `SyncColumns` today — verified against
-  /// `app_database.g.dart`'s generated `$name` constants).
+  /// declared with `SyncColumns`).
   final String tableName;
   final TableInfo<T, D> Function(AppDatabase db) table;
   final D Function(Map<String, dynamic> json) fromJson;
 
-  /// Full-row upsert from a camelCase JSON map (already converted from the
-  /// server's snake_case wire format) that must include every column,
-  /// including `dirty` (the caller sets it explicitly since the server
-  /// payload never carries it).
-  Future<void> upsertFull(AppDatabase db, Map<String, dynamic> camelJson) {
-    final row = fromJson(camelJson);
-    return db.into(table(db)).insertOnConflictUpdate(row);
+  /// Converts a (copied) wire row into the local column shape, still in
+  /// snake_case.
+  final _WireToLocal fromWire;
+
+  /// Full-row upsert from a server wire row. [dirty] is set explicitly
+  /// because the wire never carries it.
+  Future<void> upsertWire(
+    AppDatabase db,
+    Map<String, dynamic> wireRow, {
+    required bool dirty,
+  }) {
+    final local = fromWire(Map<String, dynamic>.from(wireRow));
+    final camel = _snakeToCamelJson(local)..['dirty'] = dirty;
+    return db.into(table(db)).insertOnConflictUpdate(fromJson(camel));
+  }
+}
+
+Map<String, dynamic> _unchanged(Map<String, dynamic> row) => row;
+
+final RegExp _wireDatePattern = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+
+/// Builds a [_EntityAdapter.fromWire] from declarative parts.
+///
+/// - [renames]: wire field -> local column, applied first.
+/// - [dates]: server `DATE` fields (`2026-09-12`). Drift would parse a bare
+///   date as LOCAL midnight, so a pulled row would never compare equal to
+///   the same day written on this device (which stores UTC midnight, see
+///   `LocalDay.toUtcMidnight`); they become explicit UTC midnight instead.
+/// - [jsonText]: fields that are JSON objects/lists on the wire but text
+///   columns locally.
+_WireToLocal _wire({
+  Map<String, String> renames = const {},
+  List<String> dates = const [],
+  List<String> jsonText = const [],
+  void Function(Map<String, dynamic> row)? also,
+}) {
+  return (row) {
+    renames.forEach((wireName, localName) {
+      if (row.containsKey(wireName)) row[localName] = row.remove(wireName);
+    });
+    for (final field in dates) {
+      final value = row[field];
+      if (value is String && _wireDatePattern.hasMatch(value)) {
+        row[field] = '${value}T00:00:00.000Z';
+      }
+    }
+    for (final field in jsonText) {
+      final value = row[field];
+      if (value is List || value is Map) row[field] = jsonEncode(value);
+    }
+    also?.call(row);
+    return row;
+  };
+}
+
+/// `tasks.priority` is the enum NAME on the wire and its index locally.
+void _taskPriorityFromWire(Map<String, dynamic> row) {
+  final priority = row['priority'];
+  if (priority is String) {
+    row['priority'] = TaskPriority.values
+        .firstWhere(
+          (value) => value.name == priority,
+          orElse: () => TaskPriority.medium,
+        )
+        .index;
   }
 }
 
@@ -87,6 +152,7 @@ final Map<String, _EntityAdapter<dynamic, dynamic>> _entityAdapters = {
     tableName: 'tasks',
     table: (db) => db.tasks,
     fromJson: Task.fromJson,
+    fromWire: _wire(dates: const ['due_date'], also: _taskPriorityFromWire),
   ),
   'calendar_events': _EntityAdapter<CalendarEvent, $CalendarEventsTable>(
     tableName: 'calendar_events',
@@ -97,26 +163,59 @@ final Map<String, _EntityAdapter<dynamic, dynamic>> _entityAdapters = {
     tableName: 'habits',
     table: (db) => db.habits,
     fromJson: Habit.fromJson,
+    // The local `frequency` column stores the schedule object as JSON text
+    // (`HabitSchedule.toJson`), and `target_count` is `target` on the wire.
+    fromWire: _wire(
+      renames: const {'schedule': 'frequency', 'target': 'target_count'},
+      jsonText: const ['frequency'],
+    ),
   ),
   'habit_logs': _EntityAdapter<HabitLog, $HabitLogsTable>(
     tableName: 'habit_logs',
     table: (db) => db.habitLogs,
     fromJson: HabitLog.fromJson,
+    fromWire: _wire(dates: const ['date']),
   ),
   'goals': _EntityAdapter<Goal, $GoalsTable>(
     tableName: 'goals',
     table: (db) => db.goals,
     fromJson: Goal.fromJson,
+    fromWire: _wire(dates: const ['target_date']),
   ),
   'milestones': _EntityAdapter<Milestone, $MilestonesTable>(
     tableName: 'milestones',
     table: (db) => db.milestones,
     fromJson: Milestone.fromJson,
+    fromWire: _wire(dates: const ['target_date']),
   ),
   'preferences': _EntityAdapter<Preference, $PreferencesTable>(
     tableName: 'preferences',
     table: (db) => db.preferences,
     fromJson: Preference.fromJson,
+  ),
+  'mood_logs': _EntityAdapter<MoodLog, $MoodLogsTable>(
+    tableName: 'mood_logs',
+    table: (db) => db.moodLogs,
+    fromJson: MoodLog.fromJson,
+    fromWire: _wire(dates: const ['date'], jsonText: const ['tags']),
+  ),
+  'sleep_logs': _EntityAdapter<SleepLog, $SleepLogsTable>(
+    tableName: 'sleep_logs',
+    table: (db) => db.sleepLogs,
+    fromJson: SleepLog.fromJson,
+    fromWire: _wire(dates: const ['date']),
+  ),
+  'health_logs': _EntityAdapter<HealthLog, $HealthLogsTable>(
+    tableName: 'health_logs',
+    table: (db) => db.healthLogs,
+    fromJson: HealthLog.fromJson,
+    fromWire: _wire(dates: const ['date']),
+  ),
+  'family_logs': _EntityAdapter<FamilyLog, $FamilyLogsTable>(
+    tableName: 'family_logs',
+    table: (db) => db.familyLogs,
+    fromJson: FamilyLog.fromJson,
+    fromWire: _wire(dates: const ['date'], jsonText: const ['activities']),
   ),
 };
 
@@ -165,10 +264,10 @@ String toRfc3339Millis(DateTime dt) {
 /// Formats [dt] as a calendar date only (`2026-09-12`).
 ///
 /// Several wire fields are `DATE` on the server (`tasks.due_date`,
-/// `goals.target_date`, `milestones.target_date`, `habit_logs.date`) while the
-/// local Drift columns are `DateTimeColumn`. Sending a full timestamp for one
-/// of those is rejected outright as `schema_invalid`, so every payload builder
-/// must funnel date-typed fields through here.
+/// `goals.target_date`, `milestones.target_date`, the daily logs' `date`)
+/// while the local Drift columns are `DateTimeColumn`. Sending a full
+/// timestamp for one of those is rejected outright as `schema_invalid`, so
+/// every payload builder must funnel date-typed fields through here.
 ///
 /// Uses the instant's **UTC** calendar fields, matching `toRfc3339Millis`, so
 /// a row's date and its timestamps can never disagree about which day it is.
@@ -197,7 +296,7 @@ Future<bool> _hasPendingOutbox(
 Future<void> _applyEntityRow(
   AppDatabase db,
   String entity,
-  Map<String, dynamic> snakeJson, {
+  Map<String, dynamic> wireRow, {
   required bool dirty,
 }) async {
   final adapter = _entityAdapters[entity];
@@ -205,10 +304,10 @@ Future<void> _applyEntityRow(
     _log('skip unknown entity "$entity" (row not applied locally)');
     return;
   }
-  final camel = _snakeToCamelJson(snakeJson);
-  camel['dirty'] = dirty;
   final writes = _SyncEngineWrites(db);
-  await writes.writeFromServer(() => adapter.upsertFull(db, camel));
+  await writes.writeFromServer(
+    () => adapter.upsertWire(db, wireRow, dirty: dirty),
+  );
 }
 
 /// Applies one full pulled page inside a single local transaction, per
@@ -242,9 +341,6 @@ Future<void> applyPulledPage(AppDatabase db, List<SyncPullRow> rows) async {
         continue;
       }
 
-      final camel = _snakeToCamelJson(row.row);
-      camel['dirty'] = false;
-
       // Deliberately NOT wrapped in a per-row try/catch. A row that cannot
       // be written must fail the whole page so the cursor stays put
       // (`sync_engine_pull_test.dart`: "cursor does not advance when
@@ -252,12 +348,12 @@ Future<void> applyPulledPage(AppDatabase db, List<SyncPullRow> rows) async {
       // the row and lose it for ever, since pull never re-delivers it.
       //
       // The deadlock this used to cause is fixed at its root instead: the
-      // `habit_logs` table-level UNIQUE on the natural key is gone (see
-      // `HabitLogs`), so a rule-14 tombstone sharing a natural key is now
+      // log tables have no table-level UNIQUE on the natural key (see
+      // `HabitLogs`), so a rule-14 tombstone sharing a natural key is
       // storable. If some other unwritable row ever appears, the page does
       // stall by design -- that needs a real quarantine/dead-letter design
       // rather than a silent drop here.
-      await adapter.upsertFull(db, camel);
+      await adapter.upsertWire(db, row.row, dirty: false);
     }
   });
 }
@@ -407,7 +503,7 @@ Future<void> _requeueWithFreshTimestamp(
   OutboxEntry entry,
   DateTime now,
 ) async {
-  final freshSnakeJson = Map<String, dynamic>.from(entry.payload)
+  final freshWireRow = Map<String, dynamic>.from(entry.payload)
     ..['updated_at'] = toRfc3339Millis(now);
   final writes = _SyncEngineWrites(db);
   await writes.writeFromServer(() async {
@@ -416,34 +512,19 @@ Future<void> _requeueWithFreshTimestamp(
     // here; this re-implements its two-writes-in-one-transaction shape by
     // hand for the engine's own internal requeue.
     await outboxDao.acknowledge([entry.seq]);
-    await _applyEntityRowInline(db, entry.entity, freshSnakeJson, dirty: true);
+    final adapter = _entityAdapters[entry.entity];
+    if (adapter == null) {
+      _log('skip unknown entity "${entry.entity}" (row not applied locally)');
+    } else {
+      await adapter.upsertWire(db, freshWireRow, dirty: true);
+    }
     await db.into(db.syncOutbox).insert(
           SyncOutboxCompanion.insert(
             entity: entry.entity,
             rowId: entry.rowId,
             op: entry.op.name,
-            payload: jsonEncode(syncPayload(freshSnakeJson)),
+            payload: jsonEncode(syncPayload(freshWireRow)),
           ),
         );
   });
-}
-
-/// Same as [_applyEntityRow] but assumes it is already running inside a
-/// [SyncableRepository.writeFromServer] transaction (used by
-/// [_requeueWithFreshTimestamp], which needs the outbox insert in the same
-/// transaction as the row update).
-Future<void> _applyEntityRowInline(
-  AppDatabase db,
-  String entity,
-  Map<String, dynamic> snakeJson, {
-  required bool dirty,
-}) async {
-  final adapter = _entityAdapters[entity];
-  if (adapter == null) {
-    _log('skip unknown entity "$entity" (row not applied locally)');
-    return;
-  }
-  final camel = _snakeToCamelJson(snakeJson);
-  camel['dirty'] = dirty;
-  await adapter.upsertFull(db, camel);
 }

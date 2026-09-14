@@ -11,6 +11,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart';
 
 import '../db/app_database.dart';
@@ -170,6 +171,17 @@ class SyncStateStore {
   Future<String?> getDeviceId() => _get(_deviceIdKey);
 
   Future<void> setDeviceId(String deviceId) => _set(_deviceIdKey, deviceId);
+
+  /// The device id, generated and stored on first use. Login, token
+  /// refresh and every push must send the same value: the server ties a
+  /// refresh token to the device it was issued to.
+  Future<String> getOrCreateDeviceId() async {
+    final existing = await getDeviceId();
+    if (existing != null) return existing;
+    final generated = const Uuid().v4();
+    await setDeviceId(generated);
+    return generated;
+  }
 
   Future<String?> _get(String key) async {
     final row = await (db.select(
