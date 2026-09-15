@@ -379,5 +379,22 @@
   "goalMilestoneEdit": "Изменить этап",
   "goalNotFound": "Цель не найдена или удалена",
   "goalProgressValue": "{percent}%",
-  "goalClearDate": "Убрать дату"
+  "goalClearDate": "Убрать дату",
+  "habitIntro": "Маленькие регулярные шаги складываются в большие перемены. Отмечайте привычку одним касанием.",
+  "habitEdit": "Изменить привычку",
+  "habitManage": "Все",
+  "habitStreakWeeks": "{count, plural, one{Серия: {count} неделя} few{Серия: {count} недели} many{Серия: {count} недель} other{Серия: {count} недели}}",
+  "habitTargetPerDay": "{count, plural, one{{count} раз в день} few{{count} раза в день} many{{count} раз в день} other{{count} раза в день}}",
+  "habitDecrease": "Уменьшить",
+  "habitIncrease": "Увеличить",
+  "habitArchiveConfirmTitle": "Удалить привычку?",
+  "habitArchiveConfirmBody": "Привычка будет убрана из списка.",
+  "habitUndoToday": "Отменить отметку за сегодня",
+  "habitWeekdaysRequired": "Выберите хотя бы один день",
+  "prayerMarkHint": "Нажмите на намаз, время которого наступило, чтобы отметить его.",
+  "prayerStatusJamaah": "С джамаатом",
+  "prayerStatusAlone": "Совершён",
+  "prayerStatusQaza": "Каза",
+  "prayerStatusClear": "Снять отметку",
+  "statsPrayersMarked": "{count, plural, one{Отмечен {count} намаз} few{Отмечено {count} намаза} many{Отмечено {count} намазов} other{Отмечено {count} намаза}}"
 }

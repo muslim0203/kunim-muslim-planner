@@ -34,6 +34,8 @@ import 'package:kunim/features/habits/domain/habit_schedule.dart';
 import 'package:kunim/features/habits/domain/local_day.dart';
 import 'package:kunim/features/health/data/health_log_repository.dart';
 import 'package:kunim/features/mood/data/mood_log_repository.dart';
+import 'package:kunim/features/prayer/data/prayer_log_repository.dart';
+import 'package:kunim/features/prayer/domain/prayer_log_status.dart';
 import 'package:kunim/features/sleep/data/sleep_log_repository.dart';
 import 'package:kunim/features/tasks/data/task_category_repository.dart';
 import 'package:kunim/features/tasks/data/task_repository.dart';
@@ -269,6 +271,12 @@ void main() {
         note: 'Oila bilan kechki ovqat',
         userId: userId,
       );
+    });
+
+    // --- prayer_logs ------------------------------------------------------
+    final prayers = PrayerLogRepository(db, onLocalWrite: () {}, now: nowFn);
+    payloads['prayer_logs'] = await _capture(db, 'prayer_logs', () async {
+      await prayers.mark(day, 'fajr', PrayerLogStatus.jamaah, userId: userId);
     });
 
     // --- compare or regenerate -------------------------------------------

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kunim/app/l10n/gen/app_localizations.dart';
 import 'package:kunim/core/db/app_database.dart';
+import 'package:kunim/core/sync/sync_triggers.dart';
 import 'package:kunim/features/prayer/application/prayer_providers.dart';
 import 'package:kunim/features/prayer/data/prayer_settings_store.dart';
 import 'package:kunim/features/prayer/domain/daily_prayer_times.dart';
@@ -17,17 +18,25 @@ import 'package:kunim/features/prayer/presentation/prayer_screen.dart';
 /// 14 September 2026, 10:00 in Tashkent.
 final _morning = DateTime.utc(2026, 9, 14, 5);
 
+/// 14 September 2026, 22:00 in Tashkent: every prayer of the day has begun.
+final _evening = DateTime.utc(2026, 9, 14, 17);
+
 Future<void> _pumpFrames(WidgetTester tester, [int frames = 10]) async {
   for (var i = 0; i < frames; i++) {
     await tester.pump(const Duration(milliseconds: 50));
   }
 }
 
-Widget _host(AppDatabase db) {
+Widget _host(AppDatabase db, {DateTime? now}) {
+  final instant = now ?? _morning;
   return ProviderScope(
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
-      prayerClockProvider.overrideWithValue(() => _morning),
+      prayerClockProvider.overrideWithValue(() => instant),
+      // The real scheduler starts timers; marks only need its write counter.
+      syncTriggerSchedulerProvider.overrideWithValue(
+        SyncTriggerScheduler(runSync: ({bool force = false}) async {}),
+      ),
     ],
     child: MaterialApp(
       locale: const Locale('uz'),
@@ -68,6 +77,12 @@ void main() {
     addTearDown(tester.view.reset);
   }
 
+  // Unmount so the marks stream is disposed and drift's close timers run.
+  Future<void> unmount(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _pumpFrames(tester, 3);
+  }
+
   testWidgets('asks for a city, then shows and saves today\'s times', (
     tester,
   ) async {
@@ -96,6 +111,7 @@ void main() {
     expect(
         find.text(_timeOf(tester, settings, PrayerKind.fajr)), findsOneWidget);
     expect((await PrayerSettingsStore(db).load()).city, PrayerCity.tashkent);
+    await unmount(tester);
   });
 
   testWidgets('changing the madhab recalculates Asr and is saved', (
@@ -119,5 +135,43 @@ void main() {
 
     expect(find.text(_timeOf(tester, shafi, PrayerKind.asr)), findsOneWidget);
     expect((await PrayerSettingsStore(db).load()).madhab, Madhab.shafi);
+    await unmount(tester);
+  });
+
+  testWidgets('a prayer whose time has begun is marked and unmarked', (
+    tester,
+  ) async {
+    useTallView(tester);
+    await PrayerSettingsStore(db)
+        .save(PrayerSettings.defaults.copyWith(city: PrayerCity.tashkent));
+    Future<List<PrayerLog>> liveMarks() =>
+        (db.select(db.prayerLogs)..where((l) => l.deletedAt.isNull())).get();
+
+    await tester.pumpWidget(_host(db, now: _evening));
+    await _pumpFrames(tester);
+    final context = tester.element(find.byType(PrayerScreen));
+    final l10n = AppLocalizations.of(context);
+    final fajr = PrayerLabels.prayer(l10n, PrayerKind.fajr);
+    expect(find.text(l10n.prayerMarkHint), findsOneWidget);
+
+    // Tomorrow's Fajr is also in the next-prayer card; the list row is last.
+    await tester.tap(find.text(fajr).last);
+    await _pumpFrames(tester);
+    await tester.tap(find.text(l10n.prayerStatusJamaah).last);
+    await _pumpFrames(tester);
+
+    final marked = await liveMarks();
+    expect(marked.single.refId, 'fajr');
+    expect(marked.single.status, 'jamaah');
+    expect(find.text(l10n.prayerStatusJamaah), findsOneWidget);
+
+    await tester.tap(find.text(fajr).last);
+    await _pumpFrames(tester);
+    await tester.tap(find.text(l10n.prayerStatusClear).last);
+    await _pumpFrames(tester, 20);
+
+    expect(await liveMarks(), isEmpty);
+    expect(find.text(l10n.prayerStatusJamaah), findsNothing);
+    await unmount(tester);
   });
 }

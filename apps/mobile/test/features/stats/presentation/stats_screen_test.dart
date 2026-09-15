@@ -12,6 +12,8 @@ import 'package:kunim/features/family/data/family_log_repository.dart';
 import 'package:kunim/features/habits/domain/local_day.dart';
 import 'package:kunim/features/health/data/health_log_repository.dart';
 import 'package:kunim/features/mood/data/mood_log_repository.dart';
+import 'package:kunim/features/prayer/data/prayer_log_repository.dart';
+import 'package:kunim/features/prayer/domain/prayer_log_status.dart';
 import 'package:kunim/features/sleep/data/sleep_log_repository.dart';
 import 'package:kunim/features/stats/presentation/stats_screen.dart';
 import 'package:kunim/shared/widgets/kunim_widgets.dart';
@@ -65,9 +67,10 @@ void main() {
   testWidgets('without entries every daily log area says so', (tester) async {
     final l10n = await pumpStats(tester);
 
-    expect(find.text(l10n.statsNoEntriesWeek), findsNWidgets(4));
-    // Only prayer and Qur'an are still waiting for their sections.
-    expect(find.byType(ComingSoonBadge), findsNWidgets(2));
+    // Mood, sleep, health, family and prayers.
+    expect(find.text(l10n.statsNoEntriesWeek), findsNWidgets(5));
+    // Only the Qur'an row is still coming soon.
+    expect(find.byType(ComingSoonBadge), findsOneWidget);
     await unmount(tester);
   });
 
@@ -86,6 +89,8 @@ void main() {
         .saveForDay(today, workoutMin: 45);
     await FamilyLogRepository(db, onLocalWrite: () {})
         .saveForDay(today, minutes: 60);
+    await PrayerLogRepository(db, onLocalWrite: () {})
+        .mark(today, 'fajr', PrayerLogStatus.alone);
 
     final l10n = await pumpStats(tester);
 
@@ -102,6 +107,7 @@ void main() {
       find.textContaining(l10n.statsFamilyTotal(l10n.durationHoursOnly(1))),
       findsOneWidget,
     );
+    expect(find.textContaining(l10n.statsPrayersMarked(1)), findsOneWidget);
     expect(find.textContaining('/5'), findsNWidgets(2));
     await unmount(tester);
   });

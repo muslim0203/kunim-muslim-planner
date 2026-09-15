@@ -959,5 +959,31 @@
   "@goalProgressValue": {
     "placeholders": {"percent": {"type": "int"}}
   },
-  "goalClearDate": "Clear date"
+  "goalClearDate": "Clear date",
+  "habitIntro": "Small, steady steps add up. Check off today's habit with one tap.",
+  "habitEdit": "Edit habit",
+  "habitManage": "See all",
+  "habitStreakWeeks": "{count, plural, one{Streak: {count} week} other{Streak: {count} weeks}}",
+  "@habitStreakWeeks": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "habitTargetPerDay": "{count, plural, one{Once a day} other{{count} times a day}}",
+  "@habitTargetPerDay": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "habitDecrease": "Decrease",
+  "habitIncrease": "Increase",
+  "habitArchiveConfirmTitle": "Delete this habit?",
+  "habitArchiveConfirmBody": "The habit will be removed from your list.",
+  "habitUndoToday": "Undo today's check-in",
+  "habitWeekdaysRequired": "Pick at least one day",
+  "prayerMarkHint": "Tap a prayer whose time has begun to mark it.",
+  "prayerStatusJamaah": "Prayed in congregation",
+  "prayerStatusAlone": "Prayed",
+  "prayerStatusQaza": "Made up (qada)",
+  "prayerStatusClear": "Remove mark",
+  "statsPrayersMarked": "{count, plural, one{{count} prayer marked} other{{count} prayers marked}}",
+  "@statsPrayersMarked": {
+    "placeholders": {"count": {"type": "int"}}
+  }
 }

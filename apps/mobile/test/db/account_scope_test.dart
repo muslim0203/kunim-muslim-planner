@@ -80,6 +80,8 @@ void main() {
     for (final table in AppDatabase.syncTables) {
       raw.execute('DROP TRIGGER stamp_user_id_$table');
     }
+    // Version 4 had no prayer_logs either.
+    raw.execute('DROP TABLE prayer_logs');
     raw.execute('PRAGMA user_version = 4');
     await current.close();
 
@@ -91,7 +93,7 @@ void main() {
         .get();
     final names = rows.map((row) => row.data['name'] as String).toSet();
 
-    expect(upgraded.schemaVersion, 5);
+    expect(upgraded.schemaVersion, 6);
     for (final table in AppDatabase.syncTables) {
       expect(names, contains('stamp_user_id_$table'));
     }

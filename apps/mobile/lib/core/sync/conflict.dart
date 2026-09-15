@@ -217,6 +217,12 @@ final Map<String, _EntityAdapter<dynamic, dynamic>> _entityAdapters = {
     fromJson: FamilyLog.fromJson,
     fromWire: _wire(dates: const ['date'], jsonText: const ['activities']),
   ),
+  'prayer_logs': _EntityAdapter<PrayerLog, $PrayerLogsTable>(
+    tableName: 'prayer_logs',
+    table: (db) => db.prayerLogs,
+    fromJson: PrayerLog.fromJson,
+    fromWire: _wire(dates: const ['date']),
+  ),
 };
 
 /// Entities this client build can apply pulled/conflict rows for — used by

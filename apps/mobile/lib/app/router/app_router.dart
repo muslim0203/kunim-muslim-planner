@@ -8,6 +8,7 @@ import '../../features/ai/presentation/ai_screen.dart';
 import '../../features/family/presentation/family_screen.dart';
 import '../../features/goals/presentation/goal_detail_screen.dart';
 import '../../features/goals/presentation/goals_screen.dart';
+import '../../features/habits/presentation/habits_screen.dart';
 import '../../features/health/presentation/health_screen.dart';
 import '../../features/mood/presentation/mood_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
@@ -46,12 +47,16 @@ abstract final class KunimRoutes {
   static const String goals = '$home/$_goals';
   static String goal(String id) => '$goals/$id';
 
+  /// All habits, from the home tab's "today's habits" section.
+  static const String habits = '$home/$_habits';
+
   static const String _prayer = 'prayer';
   static const String _mood = 'mood';
   static const String _health = 'health';
   static const String _sleep = 'sleep';
   static const String _family = 'family';
   static const String _goals = 'goals';
+  static const String _habits = 'habits';
   static const String _notifications = 'notifications';
   static const String _account = 'account';
 
@@ -95,6 +100,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: KunimRoutes._family,
                     builder: (context, state) => const FamilyScreen(),
+                  ),
+                  GoRoute(
+                    path: KunimRoutes._habits,
+                    builder: (context, state) => const HabitsScreen(),
                   ),
                   GoRoute(
                     path: KunimRoutes._goals,

@@ -55,9 +55,9 @@ Future<void> _expectLiveRowUniqueness(AppDatabase db) async {
 }
 
 void main() {
-  test('schemaVersion is 5', () {
+  test('schemaVersion is 6', () {
     final db = AppDatabase.withExecutor(NativeDatabase.memory());
-    expect(db.schemaVersion, 5);
+    expect(db.schemaVersion, 6);
   });
 
   test('a fresh install creates every sync table and natural-key index',

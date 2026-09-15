@@ -379,5 +379,22 @@
   "goalMilestoneEdit": "Босқични таҳрирлаш",
   "goalNotFound": "Бу мақсад топилмади ёки ўчирилган",
   "goalProgressValue": "{percent}%",
-  "goalClearDate": "Санани олиб ташлаш"
+  "goalClearDate": "Санани олиб ташлаш",
+  "habitIntro": "Кичик, мунтазам қадамлар катта ўзгариш ясайди. Бугунги одатни бир босишда белгиланг.",
+  "habitEdit": "Одатни таҳрирлаш",
+  "habitManage": "Барчаси",
+  "habitStreakWeeks": "{count, plural, other{Кетма-кетлик: {count} ҳафта}}",
+  "habitTargetPerDay": "{count, plural, other{Кунига {count} марта}}",
+  "habitDecrease": "Камайтириш",
+  "habitIncrease": "Кўпайтириш",
+  "habitArchiveConfirmTitle": "Одат ўчирилсинми?",
+  "habitArchiveConfirmBody": "Одат рўйхатдан олиб ташланади.",
+  "habitUndoToday": "Бугунги белгини бекор қилиш",
+  "habitWeekdaysRequired": "Камида битта кунни танланг",
+  "prayerMarkHint": "Вақти кирган намозни белгилаш учун унинг устига босинг.",
+  "prayerStatusJamaah": "Жамоат билан ўқилди",
+  "prayerStatusAlone": "Ўқилди",
+  "prayerStatusQaza": "Қазо",
+  "prayerStatusClear": "Белгини олиб ташлаш",
+  "statsPrayersMarked": "{count, plural, other{{count} та намоз белгиланди}}"
 }

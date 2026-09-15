@@ -379,5 +379,22 @@
   "goalMilestoneEdit": "Bosqichni tahrirlash",
   "goalNotFound": "Bu maqsad topilmadi yoki o‘chirilgan",
   "goalProgressValue": "{percent}%",
-  "goalClearDate": "Sanani olib tashlash"
+  "goalClearDate": "Sanani olib tashlash",
+  "habitIntro": "Kichik, muntazam qadamlar katta o‘zgarish yasaydi. Bugungi odatni bir bosishda belgilang.",
+  "habitEdit": "Odatni tahrirlash",
+  "habitManage": "Barchasi",
+  "habitStreakWeeks": "{count, plural, other{Ketma-ketlik: {count} hafta}}",
+  "habitTargetPerDay": "{count, plural, other{Kuniga {count} marta}}",
+  "habitDecrease": "Kamaytirish",
+  "habitIncrease": "Ko‘paytirish",
+  "habitArchiveConfirmTitle": "Odat o‘chirilsinmi?",
+  "habitArchiveConfirmBody": "Odat ro‘yxatdan olib tashlanadi.",
+  "habitUndoToday": "Bugungi belgini bekor qilish",
+  "habitWeekdaysRequired": "Kamida bitta kunni tanlang",
+  "prayerMarkHint": "Vaqti kirgan namozni belgilash uchun uning ustiga bosing.",
+  "prayerStatusJamaah": "Jamoat bilan o‘qildi",
+  "prayerStatusAlone": "O‘qildi",
+  "prayerStatusQaza": "Qazo",
+  "prayerStatusClear": "Belgini olib tashlash",
+  "statsPrayersMarked": "{count, plural, other{{count} ta namoz belgilandi}}"
 }

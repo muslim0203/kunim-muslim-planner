@@ -9,6 +9,7 @@ import '../../../app/theme/tokens.dart';
 import '../../../core/db/app_database.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
 import '../../habits/application/habits_today_provider.dart';
+import '../../habits/presentation/habit_editor.dart';
 import '../../prayer/application/prayer_providers.dart';
 import '../../prayer/domain/daily_prayer_times.dart';
 import '../../prayer/presentation/prayer_labels.dart';
@@ -136,7 +137,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: KunimSpacing.sm),
               _MainTasksCard(tasks: topThree),
               const SizedBox(height: KunimSpacing.xl),
-              _SectionHeader(title: l10n.homeTodaysHabits),
+              _SectionHeader(
+                title: l10n.homeTodaysHabits,
+                action: l10n.habitManage,
+                onAction: () => context.go(KunimRoutes.habits),
+              ),
               const SizedBox(height: KunimSpacing.sm),
               _TodaysHabits(habits: habits),
               const SizedBox(height: KunimSpacing.lg),
@@ -986,6 +991,7 @@ class _TodaysHabits extends StatelessWidget {
 
     if (items.isEmpty) {
       return HeritageCard(
+        onTap: () => context.go(KunimRoutes.habits),
         child: Row(
           children: [
             Icon(
@@ -1021,18 +1027,19 @@ class _TodaysHabits extends StatelessWidget {
   }
 }
 
-class _HabitCard extends StatelessWidget {
+class _HabitCard extends ConsumerWidget {
   const _HabitCard({required this.habit});
 
   final HabitToday habit;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final target = habit.habit.targetCount;
     final count = habit.loggedCount;
     final progress = target == 0 ? 0.0 : (count / target).clamp(0.0, 1.0);
     return HeritageCard(
+      onTap: () => toggleHabitToday(ref, habit),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

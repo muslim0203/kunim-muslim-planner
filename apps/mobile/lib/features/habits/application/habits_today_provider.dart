@@ -61,3 +61,22 @@ final habitsForTodayProvider = StreamProvider<List<HabitToday>>((ref) {
     return result;
   });
 });
+
+/// Every active habit with today's progress, whether or not it is scheduled
+/// today (the habits screen lists them all), oldest first.
+final allHabitsWithTodayProvider = StreamProvider<List<HabitToday>>((ref) {
+  final repo = ref.watch(habitRepositoryProvider);
+  final today = LocalDay.now();
+  return repo.watchActiveHabitsWithLogOnDay(today).map((rows) {
+    final result = [
+      for (final row in rows)
+        HabitToday(
+          habit: row.habit,
+          schedule: HabitSchedule.fromJson(row.habit.frequency),
+          day: today,
+          loggedCount: row.log?.count ?? 0,
+        ),
+    ]..sort((a, b) => a.habit.createdAt.compareTo(b.habit.createdAt));
+    return result;
+  });
+});

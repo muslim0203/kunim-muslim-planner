@@ -20,6 +20,7 @@ import 'tables/goals_table.dart';
 import 'tables/habits_table.dart';
 import 'tables/health_logs_table.dart';
 import 'tables/mood_logs_table.dart';
+import 'tables/prayer_logs_table.dart';
 import 'tables/preferences_table.dart';
 import 'tables/sleep_logs_table.dart';
 import 'tables/tasks_table.dart';
@@ -68,6 +69,7 @@ class KeyValue extends Table {
     SleepLogs,
     HealthLogs,
     FamilyLogs,
+    PrayerLogs,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -78,7 +80,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   /// Version 1 → 2: adds the phase-2 sync tables — `tasks`,
   /// `task_categories`, `calendar_events`, `habits`, `habit_logs`, `goals`,
@@ -103,6 +105,9 @@ class AppDatabase extends _$AppDatabase {
   ///
   /// Version 4 → 5: the `stamp_user_id_*` triggers ([_stampUserIdTrigger])
   /// that give rows inserted while an account is signed in to that account.
+  ///
+  /// Version 5 → 6: adds `prayer_logs` (ADR-0002 rule 10) with its live-row
+  /// natural-key index ([_prayerLogNaturalKeyIndex]) and stamping trigger.
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
@@ -111,6 +116,7 @@ class AppDatabase extends _$AppDatabase {
           for (final table in dailyLogTables) {
             await customStatement(_dailyLogNaturalKeyIndex(table));
           }
+          await customStatement(_prayerLogNaturalKeyIndex);
           for (final table in syncTables) {
             await customStatement(_stampUserIdTrigger(table));
           }
@@ -167,6 +173,19 @@ class AppDatabase extends _$AppDatabase {
               await customStatement(_stampUserIdTrigger(table));
             }
           }
+          if (from < 6) {
+            await m.createTable(prayerLogs);
+            await customStatement(_prayerLogNaturalKeyIndex);
+            // Same guard as the version 5 step: the trigger reads
+            // `key_value`.
+            final keyValue = await customSelect(
+              'SELECT 1 FROM sqlite_master '
+              "WHERE type = 'table' AND name = 'key_value'",
+            ).get();
+            if (keyValue.isNotEmpty) {
+              await customStatement(_stampUserIdTrigger('prayer_logs'));
+            }
+          }
         },
       );
 
@@ -201,6 +220,13 @@ class AppDatabase extends _$AppDatabase {
       "ON $table (COALESCE(user_id, ''), COALESCE(ref_id, ''), date) "
       'WHERE deleted_at IS NULL';
 
+  /// Live-row uniqueness for `prayer_logs`' natural key `(user_id, ref_id,
+  /// date)`; `ref_id` (the prayer key) is never null there.
+  static const String _prayerLogNaturalKeyIndex =
+      'CREATE UNIQUE INDEX IF NOT EXISTS ux_prayer_logs_natural_key '
+      "ON prayer_logs (COALESCE(user_id, ''), ref_id, date) "
+      'WHERE deleted_at IS NULL';
+
   /// Every synced table, i.e. every table with `SyncColumns`.
   static const List<String> syncTables = [
     'task_categories',
@@ -215,6 +241,7 @@ class AppDatabase extends _$AppDatabase {
     'sleep_logs',
     'health_logs',
     'family_logs',
+    'prayer_logs',
   ];
 
   /// `key_value` entry holding the signed-in account's user id

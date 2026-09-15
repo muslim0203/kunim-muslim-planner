@@ -1,5 +1,5 @@
-/// This week's mood, sleep, health and family numbers, computed only from
-/// entries the user actually recorded.
+/// This week's mood, sleep, health, family and prayer numbers, computed only
+/// from entries the user actually recorded.
 ///
 /// Averages use the days that have a value, never all seven: a day without
 /// an entry is "not recorded", not zero. Nothing is inferred, scored or
@@ -23,6 +23,8 @@ class WellbeingWeek {
     required this.workoutTotalMin,
     required this.familyDays,
     required this.familyTotalMin,
+    this.prayerDays = 0,
+    this.prayersMarked = 0,
   });
 
   final int moodDays;
@@ -44,7 +46,14 @@ class WellbeingWeek {
   final int familyDays;
   final int? familyTotalMin;
 
-  bool get hasAny => moodDays + sleepNights + healthDays + familyDays > 0;
+  /// Days with at least one marked prayer.
+  final int prayerDays;
+
+  /// Prayers marked this week, whatever the mark.
+  final int prayersMarked;
+
+  bool get hasAny =>
+      moodDays + sleepNights + healthDays + familyDays + prayerDays > 0;
 
   /// The seven local days ending with [today].
   static WellbeingWeek compute({
@@ -52,6 +61,7 @@ class WellbeingWeek {
     required List<SleepLog> sleeps,
     required List<HealthLog> healths,
     required List<FamilyLog> families,
+    List<PrayerLog> prayers = const [],
     required LocalDay today,
   }) {
     final firstDay = today.addDays(-6);
@@ -77,6 +87,10 @@ class WellbeingWeek {
       for (final log in families)
         if (inWeek(log.date, log.deletedAt)) log,
     ];
+    final weekPrayers = [
+      for (final log in prayers)
+        if (inWeek(log.date, log.deletedAt) && log.status != 'none') log,
+    ];
 
     return WellbeingWeek(
       moodDays: weekMoods.length,
@@ -98,6 +112,8 @@ class WellbeingWeek {
       familyDays: weekFamily.length,
       familyTotalMin:
           _sum(weekFamily.map((log) => log.minutes).whereType<int>()),
+      prayerDays: weekPrayers.map((log) => log.date).toSet().length,
+      prayersMarked: weekPrayers.length,
     );
   }
 

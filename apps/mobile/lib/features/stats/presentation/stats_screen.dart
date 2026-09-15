@@ -281,10 +281,16 @@ class _AreasCard extends StatelessWidget {
             onTap: () => context.go(KunimRoutes.family),
           ),
           const Divider(height: KunimSpacing.xl),
-          _ComingSoonRow(
+          _WellbeingRow(
             label: l10n.statsPrayer,
             icon: Icons.mosque_outlined,
             color: KunimModuleColors.prayer,
+            days: week?.prayerDays ?? 0,
+            details: [
+              if ((week?.prayersMarked ?? 0) > 0)
+                l10n.statsPrayersMarked(week!.prayersMarked),
+            ],
+            onTap: () => context.go(KunimRoutes.prayer),
           ),
           _ComingSoonRow(
             label: l10n.statsQuran,

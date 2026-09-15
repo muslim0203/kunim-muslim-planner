@@ -1,6 +1,6 @@
-/// The prayer module: today's times for the chosen city, the next prayer and
-/// the calculation settings. Times are calculated on the device, so the
-/// screen works fully offline.
+/// The prayer module: today's times for the chosen city, the next prayer,
+/// marks for the prayers whose time has begun, and the calculation settings.
+/// Times are calculated on the device, so the screen works fully offline.
 library;
 
 import 'package:adhan_dart/adhan_dart.dart' show Madhab;
@@ -11,9 +11,12 @@ import '../../../app/l10n/gen/app_localizations.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
+import '../../habits/domain/local_day.dart';
+import '../application/prayer_log_providers.dart';
 import '../application/prayer_providers.dart';
 import '../domain/daily_prayer_times.dart';
 import '../domain/prayer_city.dart';
+import '../domain/prayer_log_status.dart';
 import '../domain/prayer_settings.dart';
 import 'prayer_labels.dart';
 
@@ -26,6 +29,12 @@ class PrayerScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final settingsAsync = ref.watch(prayerSettingsProvider);
     final day = ref.watch(todayPrayerProvider).value;
+    final marks = day == null
+        ? const <String, PrayerLogStatus>{}
+        : ref
+                .watch(prayerMarksProvider(_localDay(day).toUtcMidnight()))
+                .value ??
+            const <String, PrayerLogStatus>{};
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.modulePrayer)),
@@ -43,8 +52,20 @@ class PrayerScreen extends ConsumerWidget {
                 _NextPrayerCard(day: day),
                 const SizedBox(height: KunimSpacing.xl),
                 _SectionTitle(l10n.prayerToday),
+                const SizedBox(height: KunimSpacing.xs),
+                Text(
+                  l10n.prayerMarkHint,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: KunimSpacing.sm),
-                _TimesCard(day: day),
+                _TimesCard(
+                  day: day,
+                  marks: marks,
+                  onMark: (slot, current) =>
+                      _mark(context, ref, day, slot, current),
+                ),
               ],
               const SizedBox(height: KunimSpacing.xl),
               _SectionTitle(l10n.prayerSettingsSection),
@@ -83,8 +104,44 @@ class PrayerScreen extends ConsumerWidget {
     );
   }
 
+  /// The city's calendar day the times belong to.
+  static LocalDay _localDay(PrayerDay day) =>
+      LocalDay(day.now.year, day.now.month, day.now.day);
+
   PrayerSettings _current(WidgetRef ref) =>
       ref.read(prayerSettingsProvider).value ?? PrayerSettings.defaults;
+
+  Future<void> _mark(
+    BuildContext context,
+    WidgetRef ref,
+    PrayerDay day,
+    PrayerSlot slot,
+    PrayerLogStatus? current,
+  ) async {
+    final key = prayerLogKey(slot.kind);
+    if (key == null) return;
+    final l10n = AppLocalizations.of(context);
+    final picked = await showKunimChoiceSheet<_Mark>(
+      context: context,
+      title: PrayerLabels.prayer(l10n, slot.kind),
+      selected: current == null ? null : _Mark.of(current),
+      options: [
+        (_Mark.jamaah, l10n.prayerStatusJamaah),
+        (_Mark.alone, l10n.prayerStatusAlone),
+        (_Mark.qaza, l10n.prayerStatusQaza),
+        if (current != null) (_Mark.clear, l10n.prayerStatusClear),
+      ],
+    );
+    if (picked == null) return;
+
+    final repository = ref.read(prayerLogRepositoryProvider);
+    final status = picked.status;
+    if (status == null) {
+      await repository.clear(_localDay(day), key);
+    } else {
+      await repository.mark(_localDay(day), key, status);
+    }
+  }
 
   Future<void> _pickCity(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
@@ -143,6 +200,37 @@ class PrayerScreen extends ConsumerWidget {
           .edit((settings) => settings.copyWith(madhab: picked));
     }
   }
+}
+
+/// A choice in the mark sheet; [clear] takes a mark back.
+enum _Mark {
+  jamaah(PrayerLogStatus.jamaah),
+  alone(PrayerLogStatus.alone),
+  qaza(PrayerLogStatus.qaza),
+  clear(null);
+
+  const _Mark(this.status);
+
+  final PrayerLogStatus? status;
+
+  static _Mark? of(PrayerLogStatus status) {
+    return switch (status) {
+      PrayerLogStatus.jamaah => _Mark.jamaah,
+      PrayerLogStatus.alone => _Mark.alone,
+      PrayerLogStatus.qaza => _Mark.qaza,
+      PrayerLogStatus.none => null,
+    };
+  }
+}
+
+/// A mark's label, or `null` for no mark.
+String? _statusLabel(AppLocalizations l10n, PrayerLogStatus? status) {
+  return switch (status) {
+    PrayerLogStatus.jamaah => l10n.prayerStatusJamaah,
+    PrayerLogStatus.alone => l10n.prayerStatusAlone,
+    PrayerLogStatus.qaza => l10n.prayerStatusQaza,
+    PrayerLogStatus.none || null => null,
+  };
 }
 
 class _SetupCard extends StatelessWidget {
@@ -260,9 +348,17 @@ class _NextPrayerCard extends StatelessWidget {
 }
 
 class _TimesCard extends StatelessWidget {
-  const _TimesCard({required this.day});
+  const _TimesCard({
+    required this.day,
+    required this.marks,
+    required this.onMark,
+  });
 
   final PrayerDay day;
+
+  /// Today's marks, keyed by prayer key.
+  final Map<String, PrayerLogStatus> marks;
+  final void Function(PrayerSlot slot, PrayerLogStatus? current) onMark;
 
   @override
   Widget build(BuildContext context) {
@@ -271,18 +367,41 @@ class _TimesCard extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < day.slots.length; i++)
-            _TimeRow(slot: day.slots[i], isNext: day.nextIndex == i),
+            _row(day.slots[i], isNext: day.nextIndex == i),
         ],
       ),
+    );
+  }
+
+  Widget _row(PrayerSlot slot, {required bool isNext}) {
+    final key = prayerLogKey(slot.kind);
+    // A prayer can be marked once its time has begun; sunrise never.
+    final markable = key != null && !slot.time.isAfter(day.now);
+    final status = key == null ? null : marks[key];
+    return _TimeRow(
+      slot: slot,
+      isNext: isNext,
+      markable: markable,
+      status: status,
+      onTap: markable ? () => onMark(slot, status) : null,
     );
   }
 }
 
 class _TimeRow extends StatelessWidget {
-  const _TimeRow({required this.slot, required this.isNext});
+  const _TimeRow({
+    required this.slot,
+    required this.isNext,
+    required this.markable,
+    required this.status,
+    required this.onTap,
+  });
 
   final PrayerSlot slot;
   final bool isNext;
+  final bool markable;
+  final PrayerLogStatus? status;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -290,40 +409,68 @@ class _TimeRow extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final color = isNext ? scheme.onPrimaryContainer : scheme.onSurface;
+    final statusLabel = _statusLabel(l10n, status);
+    final marked = statusLabel != null;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: KunimSpacing.md,
-        vertical: KunimSpacing.md,
-      ),
-      decoration: isNext
-          ? BoxDecoration(
-              color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(KunimRadii.medium),
-            )
-          : null,
-      child: Row(
-        children: [
-          Icon(
-            PrayerLabels.icon(slot.kind),
-            color: isNext ? scheme.onPrimaryContainer : scheme.secondary,
+    return Material(
+      color: isNext ? scheme.primaryContainer : Colors.transparent,
+      borderRadius: BorderRadius.circular(KunimRadii.medium),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(KunimRadii.medium),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: KunimSpacing.md,
+            vertical: KunimSpacing.md,
           ),
-          const SizedBox(width: KunimSpacing.md),
-          Expanded(
-            child: Text(
-              PrayerLabels.prayer(l10n, slot.kind),
-              style: theme.textTheme.titleSmall?.copyWith(color: color),
-            ),
+          child: Row(
+            children: [
+              Icon(
+                PrayerLabels.icon(slot.kind),
+                color: isNext ? scheme.onPrimaryContainer : scheme.secondary,
+              ),
+              const SizedBox(width: KunimSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      PrayerLabels.prayer(l10n, slot.kind),
+                      style: theme.textTheme.titleSmall?.copyWith(color: color),
+                    ),
+                    if (marked)
+                      Text(
+                        statusLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isNext
+                              ? scheme.onPrimaryContainer
+                              : scheme.primary,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: KunimSpacing.sm),
+              Text(
+                PrayerLabels.time(context, slot.time),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: color,
+                  fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+              if (markable) ...[
+                const SizedBox(width: KunimSpacing.sm),
+                Icon(
+                  marked
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 22,
+                  color: scheme.primary,
+                ),
+              ],
+            ],
           ),
-          const SizedBox(width: KunimSpacing.sm),
-          Text(
-            PrayerLabels.time(context, slot.time),
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: color,
-              fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
