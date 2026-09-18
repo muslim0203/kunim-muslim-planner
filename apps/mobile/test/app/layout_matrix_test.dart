@@ -32,6 +32,7 @@ import 'package:kunim/features/mood/presentation/mood_screen.dart';
 import 'package:kunim/features/notifications/presentation/notifications_screen.dart';
 import 'package:kunim/features/prayer/presentation/prayer_screen.dart';
 import 'package:kunim/features/settings/presentation/settings_screen.dart';
+import 'package:kunim/features/social/presentation/leaderboard_screen.dart';
 import 'package:kunim/features/sleep/presentation/sleep_screen.dart';
 import 'package:kunim/features/stats/presentation/stats_screen.dart';
 
@@ -226,6 +227,7 @@ void main() {
     'family': () => const FamilyScreen(),
     'account': () => const AccountScreen(),
     'goals': () => const GoalsScreen(),
+    'leaderboard': () => const LeaderboardScreen(),
     'habits': () => const HabitsScreen(),
     'goal-missing': () => const GoalDetailScreen(goalId: 'missing'),
   };

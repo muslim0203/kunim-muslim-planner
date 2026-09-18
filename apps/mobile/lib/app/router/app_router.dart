@@ -14,6 +14,7 @@ import '../../features/mood/presentation/mood_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/prayer/presentation/prayer_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/social/presentation/leaderboard_screen.dart';
 import '../../features/sleep/presentation/sleep_screen.dart';
 import '../../features/stats/presentation/stats_screen.dart';
 import '../../features/tasks/presentation/tasks_screen.dart';
@@ -50,6 +51,9 @@ abstract final class KunimRoutes {
   /// All habits, from the home tab's "today's habits" section.
   static const String habits = '$home/$_habits';
 
+  /// Friends and the global board, from the statistics tab.
+  static const String leaderboard = '$stats/$_leaderboard';
+
   static const String _prayer = 'prayer';
   static const String _mood = 'mood';
   static const String _health = 'health';
@@ -57,6 +61,7 @@ abstract final class KunimRoutes {
   static const String _family = 'family';
   static const String _goals = 'goals';
   static const String _habits = 'habits';
+  static const String _leaderboard = 'leaderboard';
   static const String _notifications = 'notifications';
   static const String _account = 'account';
 
@@ -134,6 +139,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: KunimRoutes.stats,
                 builder: (context, state) => const StatsScreen(),
+                routes: [
+                  GoRoute(
+                    path: KunimRoutes._leaderboard,
+                    builder: (context, state) => const LeaderboardScreen(),
+                  ),
+                ],
               ),
             ],
           ),

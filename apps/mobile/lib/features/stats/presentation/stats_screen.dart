@@ -73,6 +73,31 @@ class StatsScreen extends ConsumerWidget {
       Text(l10n.statsDailyTitle, style: theme.textTheme.titleLarge),
       const SizedBox(height: KunimSpacing.md),
       const DailyAnalysisCard(),
+      const SizedBox(height: KunimSpacing.lg),
+      HeritageCard(
+        onTap: () => context.go(KunimRoutes.leaderboard),
+        child: Row(
+          children: [
+            Icon(Icons.emoji_events_outlined, color: KunimColors.gold),
+            const SizedBox(width: KunimSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.socialTitle, style: theme.textTheme.titleSmall),
+                  Text(
+                    l10n.socialStatsHint,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded),
+          ],
+        ),
+      ),
       const SizedBox(height: KunimSpacing.xl),
       Text(l10n.statsDirections, style: theme.textTheme.titleLarge),
       const SizedBox(height: KunimSpacing.md),

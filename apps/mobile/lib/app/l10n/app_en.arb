@@ -1057,5 +1057,48 @@
   },
   "statsDayDoneTitle": "Done",
   "statsDayMissedTitle": "Missed",
-  "statsDayFree": "Nothing was planned for this day"
+  "statsDayFree": "Nothing was planned for this day",
+  "socialTitle": "Leaderboard",
+  "socialStatsHint": "Compare points with friends",
+  "socialTabFriends": "Friends",
+  "socialTabGlobal": "Global",
+  "socialSignedOut": "Sign in to take part in the leaderboard.",
+  "socialAddFriend": "Add a friend",
+  "socialMyCode": "My code",
+  "socialGetCode": "Get a code",
+  "socialCodeCopied": "Code copied",
+  "socialCodeExpires": "The code works until {date}",
+  "@socialCodeExpires": {
+    "placeholders": {"date": {"type": "String"}}
+  },
+  "socialEnterCode": "Enter a friend's code",
+  "socialSendCode": "Add",
+  "socialFriendAdded": "Friend added",
+  "socialFriendsEmpty": "No friends yet. Share your code or enter a friend's.",
+  "socialGlobalEmpty": "Nobody has joined yet",
+  "socialJoinTitle": "Join the global board",
+  "socialJoinBody": "Pick a nickname — that is what others see. Your email is never shown.",
+  "socialNicknameLabel": "Nickname",
+  "socialNicknameHint": "lowercase letters, digits and _ only",
+  "socialJoin": "Join",
+  "socialNoName": "No name",
+  "socialPointsTotal": "{count, plural, one{{count} point in total} other{{count} points in total}}",
+  "@socialPointsTotal": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "socialMyRank": "Your place: {rank}",
+  "@socialMyRank": {
+    "placeholders": {"rank": {"type": "int"}}
+  },
+  "socialRemoveFriend": "Remove",
+  "socialRemoveConfirm": "Remove this friend from your list?",
+  "socialErrorCodeNotFound": "No such code",
+  "socialErrorCodeSpent": "The code is used or expired",
+  "socialErrorOwnCode": "This is your own code",
+  "socialErrorNicknameTaken": "That nickname is taken",
+  "socialLeading": "You are in front",
+  "socialGapAhead": "{count, plural, one{{name} is {count} point ahead of you} other{{name} is {count} points ahead of you}}",
+  "@socialGapAhead": {
+    "placeholders": {"name": {"type": "String"}, "count": {"type": "int"}}
+  }
 }
