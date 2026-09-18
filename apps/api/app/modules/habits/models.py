@@ -64,6 +64,15 @@ class Habit(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
     target: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
     color: Mapped[str | None] = mapped_column(String(20), nullable=True, default=None)
 
+    # A habit doubles as a home widget on the client. `kind` is a plain slug,
+    # not a database enum: clients ship new widget kinds before the server
+    # knows them, and an unknown kind must still round-trip. `total_target` is
+    # the amount that finishes the widget (a book's pages, the ayahs to
+    # memorise); null means open-ended. Progress towards it is the sum of the
+    # habit's `habit_logs.count`, so it is not stored twice.
+    kind: Mapped[str] = mapped_column(String(32), nullable=False, server_default="custom")
+    total_target: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+
     def __repr__(self) -> str:  # pragma: no cover - debugging aid, no secrets
         return f"<Habit id={self.id} user_id={self.user_id}>"
 

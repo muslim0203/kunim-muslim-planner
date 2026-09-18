@@ -442,6 +442,19 @@ ADR_ENTITY_POLICIES: dict[str, MergePolicy] = {
             FieldRule("note", MergeStrategy.lww, adr_rule=25),
         ),
     ),
+    # Rule 26 -- daily_scores (appended after 1-25): one row per user per day.
+    # Every number is max-wins: two devices may each have logged part of the
+    # day, and the one that saw more work is the one that is right. LWW would
+    # let a device that synced late erase work it never saw.
+    "daily_scores": MergePolicy(
+        adr_rules=(26, 14),
+        natural_key=("user_id", "date"),
+        field_rules=(
+            FieldRule("points", MergeStrategy.max_wins, adr_rule=26),
+            FieldRule("done", MergeStrategy.max_wins, adr_rule=26),
+            FieldRule("planned", MergeStrategy.max_wins, adr_rule=26),
+        ),
+    ),
     # Rules 15 & 16 -- quran_progress: one row per user, totals never shrink.
     "quran_progress": MergePolicy(
         adr_rules=(15, 16),

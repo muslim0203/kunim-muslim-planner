@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
+from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, StringConstraints
 
 from app.modules.habits.models import Habit, HabitLog
 from app.modules.sync.merge import ADR_ENTITY_POLICIES
@@ -31,6 +32,17 @@ from app.modules.sync.registry import (
 )
 from app.modules.sync.schemas import SyncRowBase
 
+WidgetKind = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=32, pattern=r"^[a-z][a-z0-9_]*$"),
+]
+"""What a habit widget tracks (`book`, `quran`, `zikr`, ...).
+
+Deliberately a shape constraint and not an allow-list: the client ships new
+widget kinds ahead of the server, and rejecting one it has not heard of
+would break sync for that habit entirely.
+"""
+
 
 class HabitSyncRow(SyncRowBase):
     """Wire shape of a `habits` row: title, a JSON schedule, and a target."""
@@ -40,6 +52,9 @@ class HabitSyncRow(SyncRowBase):
     schedule: dict = Field(default_factory=dict)
     target: int = 1
     color: str | None = None
+    kind: WidgetKind = "custom"
+    # The amount that finishes the widget; null is an open-ended one.
+    total_target: int | None = Field(default=None, ge=1)
 
 
 class HabitLogSyncRow(SyncRowBase):

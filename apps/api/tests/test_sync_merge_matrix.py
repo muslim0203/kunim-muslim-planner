@@ -671,13 +671,16 @@ def test_rule_25_family_logs_natural_key_collision_merges_fields_per_rule_25() -
 
 # --- the matrix itself is data ----------------------------------------------
 
-ADR_MATRIX_ROWS = 25
-"""Rows in the ADR-0002 conflict matrix; row 25 (`family_logs`) was appended after 1-24."""
+ADR_MATRIX_ROWS = 26
+"""Rows in the ADR-0002 conflict matrix.
+
+Rows 25 (`family_logs`) and 26 (`daily_scores`) were appended after 1-24.
+"""
 
 
-def test_every_adr_matrix_row_8_to_22_and_25_has_a_policy_entry() -> None:
+def test_every_adr_matrix_row_8_to_22_and_25_26_has_a_policy_entry() -> None:
     covered = {adr_rule for policy in ADR_ENTITY_POLICIES.values() for adr_rule in policy.adr_rules}
-    assert covered >= (set(range(8, 23)) | {25}) - {14}  # 14 is a cross-entity rule
+    assert covered >= (set(range(8, 23)) | {25, 26}) - {14}  # 14 is a cross-entity rule
     assert 14 in covered
 
 
