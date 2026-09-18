@@ -985,5 +985,77 @@
   "statsPrayersMarked": "{count, plural, one{{count} prayer marked} other{{count} prayers marked}}",
   "@statsPrayersMarked": {
     "placeholders": {"count": {"type": "int"}}
-  }
+  },
+  "accountDelete": "Delete account",
+  "accountDeleteTitle": "Delete your account?",
+  "accountDeleteBody": "Your account is closed right away and all your data on the server is permanently deleted after 7 days. The data on this phone stays. Enter your password to confirm.",
+  "accountDeleteConfirm": "Delete",
+  "accountDeleteWrongPassword": "Incorrect password",
+  "accountDeleted": "Account deleted",
+  "habitKindCustom": "Other",
+  "habitKindBook": "Reading a book",
+  "habitKindQuran": "Memorising Qur'an",
+  "habitKindStudy": "Study",
+  "habitKindZikr": "Dhikr",
+  "habitKindSport": "Exercise",
+  "habitKindWater": "Water",
+  "habitUnitPages": "{count, plural, one{{count} page} other{{count} pages}}",
+  "@habitUnitPages": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "habitUnitAyahs": "{count, plural, one{{count} ayah} other{{count} ayahs}}",
+  "@habitUnitAyahs": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "habitUnitMinutes": "{count, plural, one{{count} minute} other{{count} minutes}}",
+  "@habitUnitMinutes": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "habitUnitTimes": "{count, plural, one{{count} time} other{{count} times}}",
+  "@habitUnitTimes": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "habitUnitGlasses": "{count, plural, one{{count} glass} other{{count} glasses}}",
+  "@habitUnitGlasses": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "habitWidgetType": "Widget type",
+  "habitDailyLabel": "Daily amount",
+  "habitTotalLabel": "Total goal",
+  "habitTotalHint": "For example: the pages in the book",
+  "habitFinishInDays": "{count, plural, one{Finishes in {count} day at this pace} other{Finishes in {count} days at this pace}}",
+  "@habitFinishInDays": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "habitFinished": "Finished",
+  "statsPointsTitle": "Points",
+  "statsPointsToday": "{count, plural, one{{count} point today} other{{count} points today}}",
+  "@statsPointsToday": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "statsPointsWeek": "{count, plural, one{{count} point this week} other{{count} points this week}}",
+  "@statsPointsWeek": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "statsLevel": "Level {level}",
+  "@statsLevel": {
+    "placeholders": {"level": {"type": "int"}}
+  },
+  "statsToNextLevel": "{count, plural, one{{count} point to the next level} other{{count} points to the next level}}",
+  "@statsToNextLevel": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "statsDailyTitle": "Daily analysis",
+  "statsDailyIntro": "Each square is a day. Tap one to see what was done and what was missed that day.",
+  "statsLegendDone": "All done",
+  "statsLegendPartial": "Partly done",
+  "statsLegendMissed": "Missed",
+  "statsLegendFree": "Nothing planned",
+  "statsDaySummary": "{done} of {planned} done",
+  "@statsDaySummary": {
+    "placeholders": {"done": {"type": "int"}, "planned": {"type": "int"}}
+  },
+  "statsDayDoneTitle": "Done",
+  "statsDayMissedTitle": "Missed",
+  "statsDayFree": "Nothing was planned for this day"
 }

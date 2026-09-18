@@ -1,4 +1,5 @@
-/// The API's `/auth/*` endpoints (`apps/api/app/modules/auth/router.py`).
+/// The API's `/auth/*` endpoints (`apps/api/app/modules/auth/router.py`) and
+/// account deletion (`DELETE /users/me`).
 ///
 /// Uses its own [Dio] ([authDioProvider]) without the shared client's retry
 /// or auth interceptors: a refresh token is valid exactly once, so a retried
@@ -82,6 +83,13 @@ abstract interface class AuthApi {
   Future<void> logout({required String refreshToken});
 
   Future<AuthUser> me(String accessToken);
+
+  /// Closes the account, confirmed with its password. A wrong password is
+  /// [AuthErrorKind.invalidCredentials].
+  Future<void> deleteAccount({
+    required String accessToken,
+    required String password,
+  });
 }
 
 class DioAuthApi implements AuthApi {
@@ -151,6 +159,20 @@ class DioAuthApi implements AuthApi {
       ),
     );
     return AuthUser(id: data!['id'] as String, email: data['email'] as String);
+  }
+
+  @override
+  Future<void> deleteAccount({
+    required String accessToken,
+    required String password,
+  }) async {
+    await _send(
+      () => _dio.delete<Object?>(
+        '/users/me',
+        data: {'password': password},
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      ),
+    );
   }
 
   static Future<T?> _send<T>(Future<Response<T>> Function() call) async {

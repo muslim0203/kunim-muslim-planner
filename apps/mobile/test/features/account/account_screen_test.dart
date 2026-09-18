@@ -157,4 +157,45 @@ void main() {
     expect(tokens.value, isNull);
     await unmount(tester);
   });
+
+  testWidgets('deleting the account asks for the password, then signs out',
+      (tester) async {
+    final l10n = await pumpAccount(tester);
+    await fill(tester, l10n, email: 'aziza@example.com', password: 'secret123');
+    await tester.tap(find.widgetWithText(FilledButton, l10n.authSignInButton));
+    await _pumpFrames(tester, 20);
+
+    await tester.tap(find.text(l10n.accountDelete));
+    await _pumpFrames(tester);
+    expect(find.text(l10n.accountDeleteTitle), findsOneWidget);
+    final confirm =
+        find.widgetWithText(FilledButton, l10n.accountDeleteConfirm);
+    expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
+    final passwordField = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    );
+
+    api.deleteError = AuthErrorKind.invalidCredentials;
+    await tester.enterText(passwordField, 'not-it');
+    await _pumpFrames(tester, 2);
+    await tester.tap(confirm);
+    await _pumpFrames(tester);
+    expect(find.text(l10n.accountDeleteWrongPassword), findsOneWidget);
+
+    api.deleteError = null;
+    await tester.enterText(passwordField, 'secret123');
+    await _pumpFrames(tester, 2);
+    await tester.tap(confirm);
+    await _pumpFrames(tester, 20);
+
+    expect(api.lastDeletePassword, 'secret123');
+    expect(find.text(l10n.accountDeleted), findsOneWidget);
+    expect(
+      find.widgetWithText(FilledButton, l10n.authSignInButton),
+      findsOneWidget,
+    );
+    expect(tokens.value, isNull);
+    await unmount(tester);
+  });
 }

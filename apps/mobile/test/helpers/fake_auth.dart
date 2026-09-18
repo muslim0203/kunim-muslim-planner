@@ -28,14 +28,18 @@ class FakeAuthApi implements AuthApi {
   AuthErrorKind? registerError;
   AuthErrorKind? loginError;
   AuthErrorKind? refreshError;
+  AuthErrorKind? deleteError;
 
   int registerCalls = 0;
   int loginCalls = 0;
   int refreshCalls = 0;
   int logoutCalls = 0;
+  int deleteCalls = 0;
   String? lastDeviceId;
   String? lastLogoutToken;
   String? lastRegisteredLocale;
+  String? lastDeleteAccessToken;
+  String? lastDeletePassword;
 
   var _issued = 0;
 
@@ -90,4 +94,15 @@ class FakeAuthApi implements AuthApi {
 
   @override
   Future<AuthUser> me(String accessToken) async => user;
+
+  @override
+  Future<void> deleteAccount({
+    required String accessToken,
+    required String password,
+  }) async {
+    deleteCalls++;
+    lastDeleteAccessToken = accessToken;
+    lastDeletePassword = password;
+    if (deleteError != null) throw AuthApiException(deleteError!);
+  }
 }

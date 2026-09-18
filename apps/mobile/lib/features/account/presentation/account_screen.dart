@@ -14,6 +14,7 @@ import '../../../core/network/error_mapper.dart';
 import '../../../core/settings/app_settings.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
+import 'delete_account_dialog.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -137,6 +138,16 @@ class _SignedInView extends ConsumerWidget {
           onPressed: () => _confirmSignOut(context, ref),
           icon: const Icon(Icons.logout_rounded),
           label: Text(l10n.authSignOut),
+        ),
+        const SizedBox(height: KunimSpacing.sm),
+        TextButton.icon(
+          style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+          onPressed: () => showDialog<void>(
+            context: context,
+            builder: (_) => const DeleteAccountDialog(),
+          ),
+          icon: const Icon(Icons.delete_forever_outlined),
+          label: Text(l10n.accountDelete),
         ),
       ],
     );

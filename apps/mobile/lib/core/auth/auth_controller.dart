@@ -130,6 +130,21 @@ class AuthController extends Notifier<AuthState> {
     if (ref.mounted) state = const AuthSignedOut();
   }
 
+  /// Closes the account on the server, then forgets the session. The data on
+  /// this device stays, as after signing out, and the sync cursor is reset
+  /// so a later account starts from a full pull.
+  ///
+  /// Throws [AuthApiException]; a wrong password is
+  /// [AuthErrorKind.invalidCredentials].
+  Future<void> deleteAccount({required String password}) async {
+    final token = await accessToken();
+    if (token == null) throw const AuthApiException(AuthErrorKind.network);
+    await _api.deleteAccount(accessToken: token, password: password);
+    await _clearSession();
+    await _syncState.setCursor(0);
+    if (ref.mounted) state = const AuthSignedOut();
+  }
+
   /// An access token for an API call, renewed first when it is missing,
   /// about to expire or [forceRefresh] is set. `null` when signed out or
   /// when no token could be obtained.

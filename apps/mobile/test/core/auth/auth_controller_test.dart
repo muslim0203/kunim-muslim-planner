@@ -179,4 +179,34 @@ void main() {
     expect(api.lastRegisteredLocale, 'uz');
     expect(state(), isA<AuthSignedIn>());
   });
+
+  test('deleting the account closes it on the server and signs out', () async {
+    await signIn();
+    await SyncStateStore(db).setCursor(42);
+
+    await controller().deleteAccount(password: 'secret123');
+
+    expect(api.deleteCalls, 1);
+    expect(api.lastDeletePassword, 'secret123');
+    expect(api.lastDeleteAccessToken, 'a1');
+    final signedOut = state();
+    expect(signedOut, isA<AuthSignedOut>());
+    expect((signedOut as AuthSignedOut).sessionExpired, isFalse);
+    expect(tokens.value, isNull);
+    expect(await LocalAccountStore(db).read(), isNull);
+    expect(await SyncStateStore(db).getCursor(), 0);
+  });
+
+  test('a wrong password keeps the account and the session', () async {
+    await signIn();
+    api.deleteError = AuthErrorKind.invalidCredentials;
+
+    await expectLater(
+      controller().deleteAccount(password: 'not-it'),
+      throwsA(isA<AuthApiException>()),
+    );
+
+    expect(state(), isA<AuthSignedIn>());
+    expect(tokens.value, 'r1');
+  });
 }
