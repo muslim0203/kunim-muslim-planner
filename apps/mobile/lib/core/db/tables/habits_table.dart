@@ -13,7 +13,16 @@ class Habits extends Table with SyncColumns {
   /// (`docs/plan.md` §12 phase-2 scope) and it is not sync/merge-critical
   /// (ADR-0002 conflict matrix rule 20: plain LWW).
   TextColumn get frequency => text().withDefault(const Constant('daily'))();
+
+  /// Daily amount: pages, ayahs, repetitions, minutes, glasses.
   IntColumn get targetCount => integer().withDefault(const Constant(1))();
+
+  /// Widget type (`HabitKind.code`); an unknown code reads as `custom`.
+  TextColumn get kind => text().withDefault(const Constant('custom'))();
+
+  /// The amount that finishes this widget (a book's pages, the ayahs to
+  /// memorise), or null for an open-ended one.
+  IntColumn get totalTarget => integer().nullable()();
   TextColumn get color => text().nullable()();
 
   @override

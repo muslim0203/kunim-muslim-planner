@@ -20,6 +20,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/base_repository.dart';
 import '../../../core/sync/conflict.dart' show toRfc3339Millis;
+import '../domain/habit_kind.dart';
 import '../domain/habit_schedule.dart';
 import '../domain/local_day.dart';
 import 'habit_local_write_hook.dart';
@@ -116,6 +117,8 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
     HabitSchedule schedule = HabitSchedule.defaultSchedule,
     int targetCount = 1,
     String? color,
+    HabitKind kind = HabitKind.custom,
+    int? totalTarget,
   }) async {
     final id = const Uuid().v4();
     final now = DateTime.now().toUtc();
@@ -139,6 +142,8 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
         'schedule': _scheduleObject(scheduleJson),
         'target': targetCount,
         'color': color,
+        'kind': kind.code,
+        'total_target': totalTarget,
       },
       write: () => db.into(db.habits).insert(
             HabitsCompanion.insert(
@@ -151,6 +156,8 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
               frequency: Value(scheduleJson),
               targetCount: Value(targetCount),
               color: Value(color),
+              kind: Value(kind.code),
+              totalTarget: Value(totalTarget),
             ),
           ),
     );
@@ -167,6 +174,8 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
     Value<HabitSchedule> schedule = const Value.absent(),
     Value<int> targetCount = const Value.absent(),
     Value<String?> color = const Value.absent(),
+    Value<HabitKind> kind = const Value.absent(),
+    Value<int?> totalTarget = const Value.absent(),
   }) async {
     final current = await findById(id);
     if (current == null) {
@@ -185,6 +194,8 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
           : const Value.absent(),
       targetCount: targetCount,
       color: color,
+      kind: kind.present ? Value(kind.value.code) : const Value.absent(),
+      totalTarget: totalTarget,
     );
     final merged = current.copyWithCompanion(patch);
 
@@ -247,6 +258,8 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
         'schedule': _scheduleObject(row.frequency),
         'target': row.targetCount,
         'color': row.color,
+        'kind': row.kind,
+        'total_target': row.totalTarget,
       };
 
   /// Decodes the locally stored schedule string into the wire object.

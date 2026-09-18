@@ -9,7 +9,11 @@ import '../../../app/theme/tokens.dart';
 import '../../../core/db/app_database.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
 import '../../habits/application/habits_today_provider.dart';
+import '../../habits/application/habit_totals_provider.dart';
+import '../../habits/domain/habit_kind.dart';
+import '../../habits/domain/habit_progress.dart';
 import '../../habits/presentation/habit_editor.dart';
+import '../../habits/presentation/habit_kind_labels.dart';
 import '../../prayer/application/prayer_providers.dart';
 import '../../prayer/domain/daily_prayer_times.dart';
 import '../../prayer/presentation/prayer_labels.dart';
@@ -1034,8 +1038,17 @@ class _HabitCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final target = habit.habit.targetCount;
+    final total = habit.habit.totalTarget;
+    final towardsTotal = total == null
+        ? null
+        : HabitProgress(
+            done: ref.watch(habitTotalsProvider)[habit.habit.id] ?? 0,
+            total: total,
+            perDay: target,
+          );
     final count = habit.loggedCount;
     final progress = target == 0 ? 0.0 : (count / target).clamp(0.0, 1.0);
     return HeritageCard(
@@ -1075,6 +1088,18 @@ class _HabitCard extends ConsumerWidget {
             color: theme.colorScheme.primary,
             borderRadius: BorderRadius.circular(99),
           ),
+          if (towardsTotal != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              '${towardsTotal.done} / '
+              '${habitAmount(l10n, HabitKind.fromCode(habit.habit.kind), total!)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ],
       ),
     );

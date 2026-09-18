@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/habit_log_repository.dart';
 import '../data/habit_repository.dart';
+import '../domain/habit_kind.dart';
 import '../domain/habit_schedule.dart';
 import '../domain/local_day.dart';
 import 'habit_repositories.dart';
@@ -35,6 +36,8 @@ class HabitMutationController extends AsyncNotifier<void> {
     HabitSchedule schedule = HabitSchedule.defaultSchedule,
     int targetCount = 1,
     String? color,
+    HabitKind kind = HabitKind.custom,
+    int? totalTarget,
   }) {
     return _run(
       () => _habits.createHabit(
@@ -44,6 +47,8 @@ class HabitMutationController extends AsyncNotifier<void> {
         schedule: schedule,
         targetCount: targetCount,
         color: color,
+        kind: kind,
+        totalTarget: totalTarget,
       ),
     );
   }
@@ -55,6 +60,8 @@ class HabitMutationController extends AsyncNotifier<void> {
     HabitSchedule? schedule,
     int? targetCount,
     String? Function()? color,
+    HabitKind? kind,
+    int? Function()? totalTarget,
   }) {
     return _run(
       () => _habits.updateHabit(
@@ -66,6 +73,9 @@ class HabitMutationController extends AsyncNotifier<void> {
         targetCount:
             targetCount == null ? const Value.absent() : Value(targetCount),
         color: color == null ? const Value.absent() : Value(color()),
+        kind: kind == null ? const Value.absent() : Value(kind),
+        totalTarget:
+            totalTarget == null ? const Value.absent() : Value(totalTarget()),
       ),
     );
   }

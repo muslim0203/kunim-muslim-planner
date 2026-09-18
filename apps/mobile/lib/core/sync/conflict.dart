@@ -129,6 +129,13 @@ _WireToLocal _wire({
   };
 }
 
+/// A `habits` row from a server that predates the widget fields carries no
+/// `kind`; the local column is not nullable, so it defaults here the same way
+/// a new widget does.
+void _habitWidgetDefaults(Map<String, dynamic> row) {
+  row['kind'] ??= 'custom';
+}
+
 /// `tasks.priority` is the enum NAME on the wire and its index locally.
 void _taskPriorityFromWire(Map<String, dynamic> row) {
   final priority = row['priority'];
@@ -168,6 +175,7 @@ final Map<String, _EntityAdapter<dynamic, dynamic>> _entityAdapters = {
     fromWire: _wire(
       renames: const {'schedule': 'frequency', 'target': 'target_count'},
       jsonText: const ['frequency'],
+      also: _habitWidgetDefaults,
     ),
   ),
   'habit_logs': _EntityAdapter<HabitLog, $HabitLogsTable>(
@@ -221,6 +229,12 @@ final Map<String, _EntityAdapter<dynamic, dynamic>> _entityAdapters = {
     tableName: 'prayer_logs',
     table: (db) => db.prayerLogs,
     fromJson: PrayerLog.fromJson,
+    fromWire: _wire(dates: const ['date']),
+  ),
+  'daily_scores': _EntityAdapter<DailyScore, $DailyScoresTable>(
+    tableName: 'daily_scores',
+    table: (db) => db.dailyScores,
+    fromJson: DailyScore.fromJson,
     fromWire: _wire(dates: const ['date']),
   ),
 };

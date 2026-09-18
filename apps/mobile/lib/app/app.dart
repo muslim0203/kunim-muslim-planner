@@ -5,6 +5,7 @@ import '../core/auth/auth_controller.dart';
 import '../core/settings/app_settings.dart';
 import '../core/sync/sync_triggers.dart';
 import '../features/notifications/application/notification_providers.dart';
+import '../features/stats/application/daily_score_writer.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
@@ -28,6 +29,8 @@ class KunimApp extends ConsumerWidget {
     // sync triggers; a cycle only runs while an account is signed in.
     ref.listen(authControllerProvider, (previous, next) {});
     ref.watch(syncTriggerSchedulerProvider);
+    // Records today's points as the day's work changes.
+    ref.watch(dailyScoreWriterProvider);
 
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,

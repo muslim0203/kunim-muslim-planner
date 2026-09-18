@@ -13,6 +13,7 @@ import '../application/weekly_stats_provider.dart';
 import '../application/wellbeing_week_provider.dart';
 import '../domain/weekly_stats.dart';
 import '../domain/wellbeing_week.dart';
+import 'daily_analysis.dart';
 
 /// Weekly statistics from real local data only. Areas without a data source
 /// yet are shown as coming soon, never with sample numbers.
@@ -66,6 +67,12 @@ class StatsScreen extends ConsumerWidget {
         _ConsistencyCard(stats: stats)
       else
         const _NoDataCard(),
+      const SizedBox(height: KunimSpacing.lg),
+      const ScoreCard(),
+      const SizedBox(height: KunimSpacing.xl),
+      Text(l10n.statsDailyTitle, style: theme.textTheme.titleLarge),
+      const SizedBox(height: KunimSpacing.md),
+      const DailyAnalysisCard(),
       const SizedBox(height: KunimSpacing.xl),
       Text(l10n.statsDirections, style: theme.textTheme.titleLarge),
       const SizedBox(height: KunimSpacing.md),

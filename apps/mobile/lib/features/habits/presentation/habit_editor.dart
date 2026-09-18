@@ -10,9 +10,13 @@ import '../../../app/theme/tokens.dart';
 import '../../../core/db/app_database.dart';
 import '../../../shared/widgets/daily_log_screen.dart';
 import '../application/habit_mutation_controller.dart';
+import '../application/habit_totals_provider.dart';
 import '../application/habits_today_provider.dart';
+import '../domain/habit_kind.dart';
+import '../domain/habit_progress.dart';
 import '../domain/habit_schedule.dart';
 import '../domain/streak.dart';
+import 'habit_kind_labels.dart';
 
 const int habitMaxTitleLength = 200;
 const int habitMaxTargetCount = 99;
@@ -80,6 +84,8 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
   late Set<int> _weekdays;
   late int _timesPerWeek;
   late int _target;
+  late HabitKind _kind;
+  late final TextEditingController _total;
   String? _error;
   bool _busy = false;
 
@@ -96,6 +102,11 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
         ? schedule.timesPerWeek
         : 3;
     _target = (habit?.targetCount ?? 1).clamp(1, habitMaxTargetCount);
+    _kind = HabitKind.fromCode(habit?.kind);
+    _total = TextEditingController(
+      text: habit?.totalTarget?.toString() ?? '',
+    );
+    _total.addListener(_onTitleChanged);
     _title.addListener(_onTitleChanged);
   }
 
@@ -104,7 +115,16 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
   @override
   void dispose() {
     _title.dispose();
+    _total.dispose();
     super.dispose();
+  }
+
+  /// The total this widget works towards, or null when it is open-ended
+  /// or the field is empty.
+  int? get _totalTarget {
+    if (!_kind.hasTotal) return null;
+    final value = int.tryParse(_total.text.trim());
+    return value == null || value < 1 ? null : value;
   }
 
   HabitSchedule get _schedule => switch (_type) {
@@ -144,6 +164,27 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
           ),
         ),
         const SizedBox(height: KunimSpacing.lg),
+        DailyLogSection(
+          title: l10n.habitWidgetType,
+          child: Wrap(
+            spacing: KunimSpacing.sm,
+            runSpacing: KunimSpacing.sm,
+            children: [
+              for (final kind in HabitKind.values)
+                ChoiceChip(
+                  avatar: Icon(habitKindIcon(kind), size: 18),
+                  label: Text(habitKindName(l10n, kind)),
+                  selected: _kind == kind,
+                  onSelected: (_) => setState(() {
+                    _kind = kind;
+                    // A fresh widget starts from its kind's own daily
+                    // amount; an edit keeps what the user already set.
+                    if (!editing) _target = kind.dailyTarget;
+                  }),
+                ),
+            ],
+          ),
+        ),
         DailyLogSection(
           title: l10n.habitScheduleLabel,
           child: Column(
@@ -215,17 +256,54 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
           ),
         ),
         DailyLogSection(
-          title: l10n.habitTargetLabel,
+          title: l10n.habitDailyLabel,
           child: HabitStepper(
-            label: l10n.habitTargetPerDay(_target),
+            label: habitAmount(l10n, _kind, _target),
             value: _target,
             min: 1,
             max: habitMaxTargetCount,
             onChanged: (value) => setState(() => _target = value),
           ),
         ),
+        if (_kind.hasTotal)
+          DailyLogSection(
+            title: l10n.habitTotalLabel,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _total,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: l10n.habitTotalHint,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                if (_finishInDays case final days?) ...[
+                  const SizedBox(height: KunimSpacing.xs),
+                  Text(
+                    l10n.habitFinishInDays(days),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
       ],
     );
+  }
+
+  /// How long the widget would take from where it stands now, or null
+  /// when there is no usable total yet.
+  int? get _finishInDays {
+    final total = _totalTarget;
+    if (total == null) return null;
+    final done = widget.habit == null
+        ? 0
+        : ref.watch(habitTotalsProvider)[widget.habit!.id] ?? 0;
+    return HabitProgress(done: done, total: total, perDay: _target).daysLeft;
   }
 
   Future<void> _save() async {
@@ -244,6 +322,8 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
         title: title,
         schedule: _schedule,
         targetCount: _target,
+        kind: _kind,
+        totalTarget: _totalTarget,
       );
     } else {
       await controller.updateHabit(
@@ -251,6 +331,8 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
         title: title,
         schedule: _schedule,
         targetCount: _target,
+        kind: _kind,
+        totalTarget: () => _totalTarget,
       );
     }
 

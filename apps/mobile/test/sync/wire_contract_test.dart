@@ -37,6 +37,7 @@ import 'package:kunim/features/mood/data/mood_log_repository.dart';
 import 'package:kunim/features/prayer/data/prayer_log_repository.dart';
 import 'package:kunim/features/prayer/domain/prayer_log_status.dart';
 import 'package:kunim/features/sleep/data/sleep_log_repository.dart';
+import 'package:kunim/features/stats/data/daily_score_repository.dart';
 import 'package:kunim/features/tasks/data/task_category_repository.dart';
 import 'package:kunim/features/tasks/data/task_repository.dart';
 
@@ -277,6 +278,12 @@ void main() {
     final prayers = PrayerLogRepository(db, onLocalWrite: () {}, now: nowFn);
     payloads['prayer_logs'] = await _capture(db, 'prayer_logs', () async {
       await prayers.mark(day, 'fajr', PrayerLogStatus.jamaah, userId: userId);
+    });
+
+    // --- daily_scores -----------------------------------------------------
+    final scores = DailyScoreRepository(db, onLocalWrite: () {}, now: nowFn);
+    payloads['daily_scores'] = await _capture(db, 'daily_scores', () async {
+      await scores.saveForDay(day, points: 35, done: 1, planned: 1);
     });
 
     // --- compare or regenerate -------------------------------------------

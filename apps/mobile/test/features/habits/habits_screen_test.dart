@@ -112,6 +112,35 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('creates a book widget and shows its progress', (tester) async {
+    final l10n = await pumpHabits(tester);
+
+    await tester.tap(find.text(l10n.habitNew));
+    await _pumpFrames(tester);
+    await tester.tap(find.text(l10n.habitKindBook));
+    await _pumpFrames(tester);
+    await tester.enterText(
+      find.widgetWithText(TextField, l10n.habitNameLabel),
+      'Sokin zehn',
+    );
+    await tester.enterText(find.byType(TextField).last, '300');
+    await _pumpFrames(tester);
+    // 300 pages at the book default of 10 a day.
+    expect(find.text(l10n.habitFinishInDays(30)), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, l10n.logSave));
+    await _pumpFrames(tester);
+
+    final habit = (await liveHabits()).single;
+    expect(habit.kind, 'book');
+    expect(habit.totalTarget, 300);
+    expect(habit.targetCount, 10);
+    expect(
+      find.text('0 / ${l10n.habitUnitPages(300)}'),
+      findsOneWidget,
+    );
+    await unmount(tester);
+  });
+
   testWidgets('checks a habit off for today and undoes it', (tester) async {
     final habitId = await seedHabit();
     final l10n = await pumpHabits(tester);
@@ -140,7 +169,8 @@ void main() {
       await tester.tap(find.byTooltip(l10n.habitIncrease).last);
       await _pumpFrames(tester, 2);
     }
-    expect(find.text(l10n.habitTargetPerDay(3)), findsOneWidget);
+    // The stepper now shows the amount in the widget's own unit.
+    expect(find.text(l10n.habitUnitTimes(3)), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, l10n.logSave));
     await _pumpFrames(tester);
 

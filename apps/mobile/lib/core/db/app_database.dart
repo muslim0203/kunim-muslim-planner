@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart'; // ignore: unused_import
 
 import 'tables/calendar_events_table.dart';
+import 'tables/daily_scores_table.dart';
 import 'tables/family_logs_table.dart';
 import 'tables/goals_table.dart';
 import 'tables/habits_table.dart';
@@ -70,6 +71,7 @@ class KeyValue extends Table {
     HealthLogs,
     FamilyLogs,
     PrayerLogs,
+    DailyScores,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -80,7 +82,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 8;
 
   /// Version 1 → 2: adds the phase-2 sync tables — `tasks`,
   /// `task_categories`, `calendar_events`, `habits`, `habit_logs`, `goals`,
@@ -108,6 +110,12 @@ class AppDatabase extends _$AppDatabase {
   ///
   /// Version 5 → 6: adds `prayer_logs` (ADR-0002 rule 10) with its live-row
   /// natural-key index ([_prayerLogNaturalKeyIndex]) and stamping trigger.
+  ///
+  /// Version 6 → 7: adds `habits.kind` and `habits.total_target`, which turn
+  /// a habit into a home widget (`HabitKind`). Purely additive.
+  ///
+  /// Version 7 → 8: adds `daily_scores` (ADR-0002 rule 26) with its live-row
+  /// natural-key index ([_dailyScoreNaturalKeyIndex]) and stamping trigger.
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
@@ -117,6 +125,7 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(_dailyLogNaturalKeyIndex(table));
           }
           await customStatement(_prayerLogNaturalKeyIndex);
+          await customStatement(_dailyScoreNaturalKeyIndex);
           for (final table in syncTables) {
             await customStatement(_stampUserIdTrigger(table));
           }
@@ -186,6 +195,36 @@ class AppDatabase extends _$AppDatabase {
               await customStatement(_stampUserIdTrigger('prayer_logs'));
             }
           }
+          if (from < 7) {
+            // Only when this install has a `habits` table that predates the
+            // columns: the `from < 2` step above creates the table from the
+            // current definition, columns included, and an install from
+            // before phase 2 never had the table at all. `pragma_table_info`
+            // answers both questions at once -- it returns nothing for a
+            // table that does not exist.
+            final columns = await customSelect(
+              "SELECT name FROM pragma_table_info('habits')",
+            ).get();
+            final names =
+                columns.map((row) => row.read<String>('name')).toSet();
+            if (names.isNotEmpty && !names.contains('kind')) {
+              await m.addColumn(habits, habits.kind);
+              await m.addColumn(habits, habits.totalTarget);
+            }
+          }
+          if (from < 8) {
+            await m.createTable(dailyScores);
+            await customStatement(_dailyScoreNaturalKeyIndex);
+            // Same guard as the version 5 step: the trigger reads
+            // `key_value`.
+            final keyValue = await customSelect(
+              'SELECT 1 FROM sqlite_master '
+              "WHERE type = 'table' AND name = 'key_value'",
+            ).get();
+            if (keyValue.isNotEmpty) {
+              await customStatement(_stampUserIdTrigger('daily_scores'));
+            }
+          }
         },
       );
 
@@ -227,6 +266,13 @@ class AppDatabase extends _$AppDatabase {
       "ON prayer_logs (COALESCE(user_id, ''), ref_id, date) "
       'WHERE deleted_at IS NULL';
 
+  /// Live-row uniqueness for `daily_scores`' natural key `(user_id, date)`:
+  /// a day has exactly one score.
+  static const String _dailyScoreNaturalKeyIndex =
+      'CREATE UNIQUE INDEX IF NOT EXISTS ux_daily_scores_natural_key '
+      "ON daily_scores (COALESCE(user_id, ''), date) "
+      'WHERE deleted_at IS NULL';
+
   /// Every synced table, i.e. every table with `SyncColumns`.
   static const List<String> syncTables = [
     'task_categories',
@@ -242,6 +288,7 @@ class AppDatabase extends _$AppDatabase {
     'health_logs',
     'family_logs',
     'prayer_logs',
+    'daily_scores',
   ];
 
   /// `key_value` entry holding the signed-in account's user id
