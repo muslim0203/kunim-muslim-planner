@@ -1,0 +1,7 @@
+# Copy to `key.properties` (gitignored) and fill in with your own values.
+# The keystore stays OUTSIDE the repository -- use an absolute path.
+# Full instructions: docs/release-android.md
+storeFile=D:/Dasturlarim/keys/kunim-upload.jks
+storePassword=
+keyAlias=kunim-upload
+keyPassword=

@@ -1,4 +1,21 @@
-## Setup verification — 2026-09-12 (latest, supersedes environment notes below)
+## Release signing verification — 2026-09-18
+
+- Android release signing wired in `apps/mobile/android/app/build.gradle.kts`:
+  `android/key.properties` (gitignored) or the `KUNIM_ANDROID_*` environment
+  variables; without either, release builds fall back to the debug key.
+  Procedure: `docs/release-android.md`.
+- Verified on this machine with a disposable throwaway key (deleted afterwards):
+  `flutter build appbundle --release` produced a 60.5 MB bundle and
+  `keytool -printcert -jarfile` reported that test certificate, not the debug one.
+  A `key.properties` missing a password fails during configuration with a
+  message naming the missing key.
+- `flutter build apk --release` without any key still builds (65.8 MB, debug cert).
+- `.github/workflows/release-mobile.yml` builds a signed bundle from four
+  repository secrets. **Not run yet** — the secrets do not exist.
+- No real upload key has been created: that step belongs to the user, since the
+  keystore password must not pass through this session.
+
+## Setup verification — 2026-09-12 (supersedes the environment notes below)
 
 - GitHub: main pushed to private muslim0203/kunim-muslim-planner; origin/main tracking configured.
 - WSL 2.7.14.0 installed. Docker Desktop 4.90.0, Engine 29.7.2, Compose 5.5.1 installed and running. Windows reported a restart recommendation during WSL setup, but Docker Linux containers work in this session.

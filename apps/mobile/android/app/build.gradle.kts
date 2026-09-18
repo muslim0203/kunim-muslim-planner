@@ -1,8 +1,31 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Release signing (docs/release-android.md). The key itself never lives in the
+// repository: `android/key.properties` points at a file outside it, or, on CI,
+// the KUNIM_ANDROID_* environment variables do. Both are read here so a local
+// build and a workflow run use the same code path.
+val keyProperties = Properties().apply {
+    val file = rootProject.file("key.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun signingValue(key: String, variable: String): String? =
+    keyProperties.getProperty(key) ?: System.getenv(variable)
+
+fun requireSigningValue(key: String, variable: String): String =
+    signingValue(key, variable)
+        ?: throw GradleException(
+            "Release signing: `$key` is missing from android/key.properties " +
+                "and `$variable` is not set (see docs/release-android.md).",
+        )
+
+val keystorePath = signingValue("storeFile", "KUNIM_ANDROID_KEYSTORE")
 
 android {
     namespace = "com.kunim.app"
@@ -35,14 +58,32 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (keystorePath != null) {
+            create("release") {
+                storeFile = file(keystorePath)
+                // Missing on purpose rather than empty: an empty password
+                // fails inside the signer with an unreadable message, so say
+                // what is wrong while the build is still being configured.
+                storePassword = requireSigningValue("storePassword", "KUNIM_ANDROID_STORE_PASSWORD")
+                keyAlias = requireSigningValue("keyAlias", "KUNIM_ANDROID_KEY_ALIAS")
+                keyPassword = requireSigningValue("keyPassword", "KUNIM_ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Without a key configured the release build is signed with the
+            // debug key, so `flutter run --release` and a quick APK for a test
+            // phone keep working. Play refuses a debug certificate, so such a
+            // build cannot reach users by accident.
+            signingConfig = signingConfigs.findByName("release")
+                ?: signingConfigs.getByName("debug")
         }
     }
 }
+
 
 kotlin {
     compilerOptions {

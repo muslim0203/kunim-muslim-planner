@@ -23,7 +23,7 @@ else
 endif
 
 .PHONY: help up down logs ps api api-install migrate revision mobile gen \
-	test test-api test-mobile lint format l10n clean
+	apk aab test test-api test-mobile lint format l10n clean
 
 help: ## Shu yordam matnini ko'rsatish (default)
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -81,6 +81,16 @@ gen: ## Kod generatsiyasi: freezed/drift/riverpod (build_runner)
 	cd apps/mobile && dart run build_runner build --delete-conflicting-outputs
 	# TODO (phase 2): pigeon platform-channel kod generatsiyasi shu yerga qo'shiladi
 	# TODO (phase 6): OpenAPI client generatsiyasi (apps/api sxemasidan apps/mobile uchun) shu yerga qo'shiladi
+
+apk: ## Release APK yig'ish (test telefoni uchun; docs/release-android.md)
+	@command -v flutter >/dev/null 2>&1 || { echo "Flutter o'rnatilmagan"; exit 1; }
+	cd apps/mobile && flutter build apk --release
+
+aab: ## Play uchun imzolangan app bundle yig'ish (docs/release-android.md)
+	@command -v flutter >/dev/null 2>&1 || { echo "Flutter o'rnatilmagan"; exit 1; }
+	@[ -f apps/mobile/android/key.properties ] || [ -n "$$KUNIM_ANDROID_KEYSTORE" ] || \
+		{ echo "Imzo kaliti sozlanmagan — docs/release-android.md"; exit 1; }
+	cd apps/mobile && flutter build appbundle --release
 
 # --- Tests --------------------------------------------------------------------
 
