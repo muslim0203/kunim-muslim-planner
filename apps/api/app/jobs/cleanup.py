@@ -54,3 +54,24 @@ async def sync_retention(ctx: dict[str, Any]) -> dict[str, int]:  # noqa: ARG001
         tombstones=stats["tombstones"],
     )
     return stats
+
+
+async def account_purge(ctx: dict[str, Any]) -> int:  # noqa: ARG001
+    """Hard-delete accounts whose 7-day grace period has passed.
+
+    Same failure handling as `sync_retention`: logged without exception text,
+    then re-raised, so a failing purge is noticed instead of silently keeping
+    closed accounts' data.
+    """
+    from app.modules.account.service import purge_deleted_accounts
+
+    session_factory = get_sessionmaker()
+    async with session_factory() as session:
+        try:
+            purged = await purge_deleted_accounts(session)
+        except Exception as exc:
+            logger.error("account_purge_failed", **safe_exception_fields(exc))
+            raise
+
+    logger.info("account_purge", purged=purged)
+    return purged

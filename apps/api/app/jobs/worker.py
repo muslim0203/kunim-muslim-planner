@@ -19,7 +19,7 @@ from arq.connections import RedisSettings
 from app.core.config import check_jwt_secret, get_settings
 from app.core.logging import configure_logging
 from app.db.types import get_field_cipher
-from app.jobs.cleanup import sync_retention
+from app.jobs.cleanup import account_purge, sync_retention
 
 
 async def startup(ctx: dict[str, Any]) -> None:  # noqa: ARG001
@@ -43,13 +43,16 @@ async def ping(ctx: dict[str, Any]) -> str:  # noqa: ARG001
 class WorkerSettings:
     """arq worker configuration."""
 
-    functions: list[Any] = [ping, sync_retention]
+    functions: list[Any] = [ping, sync_retention, account_purge]
 
     # 03:00 UTC daily: off the daily-review window (user-local 21:00) so a
     # long sweep cannot delay user-facing jobs. `run_retention` is idempotent,
     # so a missed or repeated run is harmless.
+    # 03:30 UTC daily: hard-delete accounts past their 7-day grace period;
+    # also idempotent, and kept apart from the retention sweep.
     cron_jobs: list[Any] = [
         cron(sync_retention, hour=3, minute=0, run_at_startup=False),
+        cron(account_purge, hour=3, minute=30, run_at_startup=False),
     ]
     on_startup = startup
     on_shutdown = shutdown

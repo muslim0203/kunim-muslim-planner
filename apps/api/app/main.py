@@ -13,6 +13,7 @@ from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.db.types import get_field_cipher
 from app.middleware.request_id import RequestIDMiddleware
+from app.modules.account.router import router as account_router
 from app.modules.auth.router import router as auth_router
 from app.modules.health.router import router as health_router
 from app.modules.preferences.router import router as preferences_router
@@ -59,6 +60,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(profile_router)
+    app.include_router(account_router)
     app.include_router(preferences_router)
     app.include_router(sync_router)
 
