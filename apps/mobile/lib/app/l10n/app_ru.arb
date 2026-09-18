@@ -466,5 +466,14 @@
   "socialErrorOwnCode": "Это ваш собственный код",
   "socialErrorNicknameTaken": "Этот псевдоним занят",
   "socialLeading": "Вы впереди",
-  "socialGapAhead": "{count, plural, one{{name} впереди вас на {count} балл} few{{name} впереди вас на {count} балла} many{{name} впереди вас на {count} баллов} other{{name} впереди вас на {count} балла}}"
+  "socialGapAhead": "{count, plural, one{{name} впереди вас на {count} балл} few{{name} впереди вас на {count} балла} many{{name} впереди вас на {count} баллов} other{{name} впереди вас на {count} балла}}",
+  "authForgotTitle": "Сброс пароля",
+  "authForgotBody": "Мы отправим 6-значный код на вашу почту.",
+  "authForgotSend": "Отправить код",
+  "authForgotSent": "Код отправлен. Проверьте почту.",
+  "authResetCodeLabel": "Код",
+  "authResetNewPassword": "Новый пароль",
+  "authResetSubmit": "Обновить пароль",
+  "authResetDone": "Пароль обновлён",
+  "authResetErrorCode": "Код неверный или истёк"
 }

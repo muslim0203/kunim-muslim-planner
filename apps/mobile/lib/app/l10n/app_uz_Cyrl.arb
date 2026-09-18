@@ -466,5 +466,14 @@
   "socialErrorOwnCode": "Бу сизнинг кодингиз",
   "socialErrorNicknameTaken": "Бу тахаллус банд",
   "socialLeading": "Сиз олдиндасиз",
-  "socialGapAhead": "{count, plural, other{{name} сиздан {count} балл олдинда}}"
+  "socialGapAhead": "{count, plural, other{{name} сиздан {count} балл олдинда}}",
+  "authForgotTitle": "Паролни тиклаш",
+  "authForgotBody": "Эмайлингизга 6 хонали код юборамиз.",
+  "authForgotSend": "Код юбориш",
+  "authForgotSent": "Код юборилди. Почтангизни текширинг.",
+  "authResetCodeLabel": "Код",
+  "authResetNewPassword": "Янги парол",
+  "authResetSubmit": "Паролни янгилаш",
+  "authResetDone": "Парол янгиланди",
+  "authResetErrorCode": "Код нотўғри ёки муддати ўтган"
 }

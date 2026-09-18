@@ -90,6 +90,22 @@ abstract interface class AuthApi {
     required String accessToken,
     required String password,
   });
+
+  /// Asks the server to email a reset code. It answers the same way
+  /// whether or not the address has an account, so nothing here can be
+  /// used to find out which addresses are registered.
+  Future<void> requestPasswordReset({
+    required String email,
+    required String locale,
+  });
+
+  /// Sets a new password from an emailed code. A wrong, spent or expired
+  /// code is [AuthErrorKind.invalidInput].
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  });
 }
 
 class DioAuthApi implements AuthApi {
@@ -171,6 +187,37 @@ class DioAuthApi implements AuthApi {
         '/users/me',
         data: {'password': password},
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      ),
+    );
+  }
+
+  @override
+  Future<void> requestPasswordReset({
+    required String email,
+    required String locale,
+  }) async {
+    await _send(
+      () => _dio.post<Object?>(
+        '/auth/forgot-password',
+        data: {'email': email, 'locale': locale},
+      ),
+    );
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await _send(
+      () => _dio.post<Object?>(
+        '/auth/reset-password',
+        data: {
+          'email': email,
+          'code': code,
+          'new_password': newPassword,
+        },
       ),
     );
   }

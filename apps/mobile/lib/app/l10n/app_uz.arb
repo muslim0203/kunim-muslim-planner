@@ -466,5 +466,14 @@
   "socialErrorOwnCode": "Bu sizning kodingiz",
   "socialErrorNicknameTaken": "Bu taxallus band",
   "socialLeading": "Siz oldindasiz",
-  "socialGapAhead": "{count, plural, other{{name} sizdan {count} ball oldinda}}"
+  "socialGapAhead": "{count, plural, other{{name} sizdan {count} ball oldinda}}",
+  "authForgotTitle": "Parolni tiklash",
+  "authForgotBody": "Emailingizga 6 xonali kod yuboramiz.",
+  "authForgotSend": "Kod yuborish",
+  "authForgotSent": "Kod yuborildi. Pochtangizni tekshiring.",
+  "authResetCodeLabel": "Kod",
+  "authResetNewPassword": "Yangi parol",
+  "authResetSubmit": "Parolni yangilash",
+  "authResetDone": "Parol yangilandi",
+  "authResetErrorCode": "Kod noto‘g‘ri yoki muddati o‘tgan"
 }

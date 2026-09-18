@@ -1100,5 +1100,14 @@
   "socialGapAhead": "{count, plural, one{{name} is {count} point ahead of you} other{{name} is {count} points ahead of you}}",
   "@socialGapAhead": {
     "placeholders": {"name": {"type": "String"}, "count": {"type": "int"}}
-  }
+  },
+  "authForgotTitle": "Reset your password",
+  "authForgotBody": "We will email you a 6-digit code.",
+  "authForgotSend": "Send the code",
+  "authForgotSent": "Code sent. Check your email.",
+  "authResetCodeLabel": "Code",
+  "authResetNewPassword": "New password",
+  "authResetSubmit": "Update the password",
+  "authResetDone": "Password updated",
+  "authResetErrorCode": "The code is wrong or has expired"
 }

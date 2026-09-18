@@ -29,6 +29,8 @@ class FakeAuthApi implements AuthApi {
   AuthErrorKind? loginError;
   AuthErrorKind? refreshError;
   AuthErrorKind? deleteError;
+  AuthErrorKind? forgotError;
+  AuthErrorKind? resetError;
 
   int registerCalls = 0;
   int loginCalls = 0;
@@ -40,6 +42,13 @@ class FakeAuthApi implements AuthApi {
   String? lastRegisteredLocale;
   String? lastDeleteAccessToken;
   String? lastDeletePassword;
+  String? lastForgotEmail;
+  String? lastForgotLocale;
+  String? lastResetEmail;
+  String? lastResetCode;
+  String? lastResetPassword;
+  int forgotCalls = 0;
+  int resetCalls = 0;
 
   var _issued = 0;
 
@@ -104,5 +113,29 @@ class FakeAuthApi implements AuthApi {
     lastDeleteAccessToken = accessToken;
     lastDeletePassword = password;
     if (deleteError != null) throw AuthApiException(deleteError!);
+  }
+
+  @override
+  Future<void> requestPasswordReset({
+    required String email,
+    required String locale,
+  }) async {
+    forgotCalls++;
+    lastForgotEmail = email;
+    lastForgotLocale = locale;
+    if (forgotError != null) throw AuthApiException(forgotError!);
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    resetCalls++;
+    lastResetEmail = email;
+    lastResetCode = code;
+    lastResetPassword = newPassword;
+    if (resetError != null) throw AuthApiException(resetError!);
   }
 }

@@ -197,6 +197,34 @@ void main() {
     expect(await SyncStateStore(db).getCursor(), 0);
   });
 
+  test('asking for a reset code trims the address', () async {
+    await controller().requestPasswordReset(
+      email: ' aziza@example.com ',
+      locale: 'uz',
+    );
+
+    expect(api.forgotCalls, 1);
+    expect(api.lastForgotEmail, 'aziza@example.com');
+    expect(api.lastForgotLocale, 'uz');
+  });
+
+  test('a reset leaves this device signed in until the token is used', () async {
+    await signIn();
+
+    await controller().resetPassword(
+      email: ' aziza@example.com ',
+      code: ' 123456 ',
+      newPassword: 'yangi-parol-123',
+    );
+
+    expect(api.lastResetEmail, 'aziza@example.com');
+    expect(api.lastResetCode, '123456');
+    expect(api.lastResetPassword, 'yangi-parol-123');
+    // The server ends every session; the state here only changes once a
+    // refresh is refused.
+    expect(state(), isA<AuthSignedIn>());
+  });
+
   test('a wrong password keeps the account and the session', () async {
     await signIn();
     api.deleteError = AuthErrorKind.invalidCredentials;

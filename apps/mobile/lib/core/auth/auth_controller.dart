@@ -145,6 +145,31 @@ class AuthController extends Notifier<AuthState> {
     if (ref.mounted) state = const AuthSignedOut();
   }
 
+  /// Asks for a reset code by email. Throws [AuthApiException] when the
+  /// server cannot be reached; an unknown address is not an error, because
+  /// the server does not say whether the address has an account.
+  Future<void> requestPasswordReset({
+    required String email,
+    required String locale,
+  }) {
+    return _api.requestPasswordReset(email: email.trim(), locale: locale);
+  }
+
+  /// Sets a new password from an emailed code. The session is untouched:
+  /// the server ends every session of that account, so the user signs in
+  /// again with the new password.
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) {
+    return _api.resetPassword(
+      email: email.trim(),
+      code: code.trim(),
+      newPassword: newPassword,
+    );
+  }
+
   /// An access token for an API call, renewed first when it is missing,
   /// about to expire or [forceRefresh] is set. `null` when signed out or
   /// when no token could be obtained.

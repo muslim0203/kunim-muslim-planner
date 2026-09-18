@@ -15,6 +15,7 @@ import '../../../core/settings/app_settings.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
 import 'delete_account_dialog.dart';
+import 'password_reset_sheet.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -272,6 +273,16 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
             ),
           ),
         ],
+        if (!_signUp)
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton(
+              onPressed: _busy
+                  ? null
+                  : () => showPasswordResetSheet(context, email: _email.text),
+              child: Text(l10n.authForgotPassword),
+            ),
+          ),
         if (_error != null) ...[
           const SizedBox(height: KunimSpacing.md),
           Text(_error!, style: errorStyle),
