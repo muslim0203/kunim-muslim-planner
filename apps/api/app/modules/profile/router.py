@@ -14,14 +14,18 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import CurrentUser
 from app.db.session import get_session
 from app.modules.profile.repository import ProfileRepository
 from app.modules.profile.schemas import ProfileOut, ProfileUpdate
-from app.modules.profile.service import ProfileService
+from app.modules.profile.service import (
+    NicknameRequiredError,
+    NicknameTakenError,
+    ProfileService,
+)
 
 router = APIRouter(prefix="/users", tags=["profile"])
 
@@ -44,5 +48,16 @@ async def get_profile(user: CurrentUser) -> ProfileOut:
 async def update_profile(
     payload: ProfileUpdate, user: CurrentUser, service: ProfileServiceDep
 ) -> ProfileOut:
-    updated = await service.update_profile(user, payload)
+    try:
+        updated = await service.update_profile(user, payload)
+    except NicknameTakenError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This nickname is already taken.",
+        ) from exc
+    except NicknameRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Choose a nickname before joining the leaderboard.",
+        ) from exc
     return ProfileOut.model_validate(updated)

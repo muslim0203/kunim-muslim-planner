@@ -18,6 +18,7 @@ from app.modules.auth.router import router as auth_router
 from app.modules.health.router import router as health_router
 from app.modules.preferences.router import router as preferences_router
 from app.modules.profile.router import router as profile_router
+from app.modules.social.router import router as social_router
 from app.modules.sync.router import router as sync_router
 
 
@@ -63,6 +64,7 @@ def create_app() -> FastAPI:
     app.include_router(account_router)
     app.include_router(preferences_router)
     app.include_router(sync_router)
+    app.include_router(social_router)
 
     mount_admin(app, settings)
 

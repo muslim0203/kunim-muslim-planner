@@ -23,6 +23,12 @@ ALLOWED_LOCALES = ("uz", "uz_Cyrl", "ru", "en")
 Gender = Literal["male", "female", "other", "prefer_not_to_say"]
 
 DisplayName = Annotated[str, Field(max_length=100)]
+# Lowercase and plain, so a name on a board cannot be confused with
+# another one (no spaces, no mixed scripts, no look-alike padding).
+Nickname = Annotated[
+    str,
+    Field(min_length=3, max_length=24, pattern=r"^[a-z0-9_]+$"),
+]
 AvatarUrl = Annotated[str, Field(max_length=2048)]
 # Plausible birth-year range; loose on purpose (no product requirement pins it).
 BirthYear = Annotated[int, Field(ge=1900, le=2100)]
@@ -73,6 +79,8 @@ class ProfileOut(BaseModel):
     gender: Gender | None
     birth_year: int | None
     avatar_url: str | None
+    nickname: str | None
+    leaderboard_opt_in: bool
     created_at: datetime
 
 
@@ -93,6 +101,8 @@ class ProfileUpdate(BaseModel):
     gender: Gender | None = None
     birth_year: BirthYear | None = None
     avatar_url: AvatarUrl | None = None
+    nickname: Nickname | None = None
+    leaderboard_opt_in: bool | None = None
     # TODO(storage): avatar upload (multipart -> object storage) is out of
     # scope for Phase 1 -- no object storage is configured yet. Clients pass
     # a URL they already host; nothing here validates reachability.

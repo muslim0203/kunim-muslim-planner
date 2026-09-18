@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import Boolean, DateTime, Enum, Integer, String
+from sqlalchemy import Boolean, DateTime, Enum, Integer, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -57,6 +57,19 @@ class User(UUIDPk, Timestamps, SoftDelete, Base):
     # storage configured). This column only stores a URL the client already
     # hosts elsewhere; nothing here uploads or validates reachability.
     avatar_url: Mapped[str | None] = mapped_column(String(2048), nullable=True, default=None)
+
+    # --- Added with the leaderboard (`app/modules/social/`).
+    # `nickname` is the name shown to other users, unique so two people
+    # cannot claim the same one; null until the user picks one.
+    # `leaderboard_opt_in` is false by default: the global board lists only
+    # users who turned it on AND chose a nickname, so nobody is ever listed
+    # under a name they did not pick.
+    nickname: Mapped[str | None] = mapped_column(
+        String(24), nullable=True, unique=True, default=None
+    )
+    leaderboard_opt_in: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
 
     def __repr__(self) -> str:
         return f"<User id={self.id} email={self.email!r}>"

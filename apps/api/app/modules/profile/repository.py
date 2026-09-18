@@ -10,8 +10,10 @@ without reshaping the service layer.
 
 from __future__ import annotations
 
+import uuid
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.users.models import User
@@ -20,6 +22,11 @@ from app.modules.users.models import User
 class ProfileRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def nickname_taken(self, nickname: str, *, except_user: uuid.UUID) -> bool:
+        """Whether another account already shows that name."""
+        stmt = select(User.id).where(User.nickname == nickname, User.id != except_user)
+        return (await self._session.execute(stmt)).first() is not None
 
     async def update(self, user: User, fields: dict[str, Any]) -> User:
         """Apply already-validated field assignments to `user` and persist."""
