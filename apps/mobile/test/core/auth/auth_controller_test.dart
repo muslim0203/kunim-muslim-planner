@@ -208,7 +208,8 @@ void main() {
     expect(api.lastForgotLocale, 'uz');
   });
 
-  test('a reset leaves this device signed in until the token is used', () async {
+  test('a reset leaves this device signed in until the token is used',
+      () async {
     await signIn();
 
     await controller().resetPassword(

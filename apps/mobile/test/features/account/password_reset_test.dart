@@ -40,7 +40,8 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           authApiProvider.overrideWithValue(api),
-          refreshTokenStoreProvider.overrideWithValue(MemoryRefreshTokenStore()),
+          refreshTokenStoreProvider
+              .overrideWithValue(MemoryRefreshTokenStore()),
           syncApiProvider.overrideWithValue(FakeSyncServer()),
         ],
         child: MaterialApp(
@@ -76,8 +77,8 @@ void main() {
     await _pumpFrames(tester);
   }
 
-  Finder inSheet(Type type) =>
-      find.descendant(of: find.byType(BottomSheet), matching: find.byType(type));
+  Finder inSheet(Type type) => find.descendant(
+      of: find.byType(BottomSheet), matching: find.byType(type));
 
   testWidgets('asks for a code, then sets the new password', (tester) async {
     final l10n = await pumpAccount(tester);
