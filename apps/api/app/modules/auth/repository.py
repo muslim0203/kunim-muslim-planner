@@ -154,6 +154,27 @@ class AuthRepository:
         await self._session.flush()
         return token
 
+    async def invalidate_verification_tokens(
+        self, *, user_id: uuid.UUID, purpose: VerificationPurpose, when: datetime
+    ) -> int:
+        """Consume every still-open token of one purpose for one user.
+
+        Issuing a new code invalidates the previous ones, so a code read from
+        an older email cannot be used after a fresh one was asked for.
+        """
+        stmt = (
+            update(VerificationToken)
+            .where(
+                VerificationToken.user_id == user_id,
+                VerificationToken.purpose == purpose,
+                VerificationToken.consumed_at.is_(None),
+            )
+            .values(consumed_at=when)
+        )
+        result = await self._session.execute(stmt)
+        await self._session.flush()
+        return int(result.rowcount or 0)
+
     async def get_verification_token_by_hash(self, token_hash: str) -> VerificationToken | None:
         stmt = select(VerificationToken).where(VerificationToken.token_hash == token_hash)
         return (await self._session.execute(stmt)).scalar_one_or_none()

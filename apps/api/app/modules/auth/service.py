@@ -33,6 +33,7 @@ user ids and device ids only.
 
 from __future__ import annotations
 
+import secrets
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -52,6 +53,8 @@ from app.core.security import (
     password_needs_rehash,
     verify_password,
 )
+from app.integrations.email import get_email_sender
+from app.modules.auth.emails import password_reset_email
 from app.modules.auth.models import RefreshToken, VerificationPurpose
 from app.modules.auth.repository import AuthRepository
 from app.modules.auth.schemas import RegisterResponse, TokenPair
@@ -101,6 +104,11 @@ class IssuedTokens:
             expires_in=self.access_expires_in,
             refresh_expires_in=self.refresh_expires_in,
         )
+
+
+def _reset_code_hash(user_id: uuid.UUID, code: str) -> str:
+    """Digest of the code bound to one account (see `request_password_reset`)."""
+    return hash_refresh_token(f"{user_id}:{code.strip()}")
 
 
 class AuthService:
@@ -359,6 +367,86 @@ class AuthService:
         # TODO(email): enqueue the reset mail carrying `raw` once a provider exists.
         logger.info("auth_password_reset_token_created", user_id=str(user.id))
         return raw
+
+    async def request_password_reset(self, *, email: str, locale: str = "en") -> None:
+        """Send a reset code, if the address belongs to an account.
+
+        Always returns quietly: whether an address has an account is not
+        something an unauthenticated caller may learn.
+
+        The code is stored as a digest of `user_id:code`, not of the code
+        alone: six digits hashed by themselves would be a lookup table of a
+        million entries, and would collide across accounts. Redeeming it
+        therefore needs the email as well as the code.
+        """
+        now = self._now()
+        user = await self._repo.get_user_by_email(email)
+        if user is None:
+            logger.info("auth_password_reset_requested", known_email=False)
+            return
+
+        await self._repo.invalidate_verification_tokens(
+            user_id=user.id,
+            purpose=VerificationPurpose.password_reset,
+            when=now,
+        )
+        code = f"{secrets.randbelow(1_000_000):06d}"
+        await self._repo.add_verification_token(
+            user_id=user.id,
+            purpose=VerificationPurpose.password_reset,
+            token_hash=_reset_code_hash(user.id, code),
+            expires_at=now + timedelta(minutes=PASSWORD_RESET_TTL_MINUTES),
+            created_at=now,
+        )
+        await self._session.commit()
+
+        sent = await get_email_sender().send(
+            password_reset_email(
+                to=user.email,
+                code=code,
+                minutes=PASSWORD_RESET_TTL_MINUTES,
+                locale=user.locale,
+            )
+        )
+        logger.info("auth_password_reset_requested", known_email=True, sent=sent)
+
+    async def reset_password_with_code(self, *, email: str, code: str, new_password: str) -> None:
+        """Set a new password from a code, then end every session.
+
+        Revoking all refresh tokens is the point of a reset: if it was asked
+        for because someone else had access, leaving their sessions alive
+        would defeat it.
+        """
+        now = self._now()
+        user = await self._repo.get_user_by_email(email)
+        # An unknown address answers exactly like a wrong code.
+        stored = (
+            None
+            if user is None
+            else await self._repo.get_verification_token_by_hash(_reset_code_hash(user.id, code))
+        )
+        if (
+            user is None
+            or stored is None
+            or stored.purpose != VerificationPurpose.password_reset
+            or stored.consumed_at is not None
+            or stored.expires_at <= now
+        ):
+            logger.info("auth_password_reset_failed")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired code.",
+            )
+
+        await self._repo.consume_verification_token(stored, when=now)
+        await self._repo.set_password_hash(user, hash_password(new_password))
+        revoked = await self._repo.revoke_all_for_user(user_id=user.id, when=now)
+        await self._session.commit()
+        logger.info(
+            "auth_password_reset_completed",
+            user_id=str(user.id),
+            revoked_tokens=revoked,
+        )
 
     async def _consume(self, raw_token: str, purpose: VerificationPurpose) -> User:
         """Validate and burn a verification token, returning its owner."""

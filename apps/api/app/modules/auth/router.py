@@ -25,11 +25,13 @@ from app.core.deps import CurrentUser
 from app.db.session import get_session
 from app.modules.auth.ratelimit import auth_rate_limit
 from app.modules.auth.schemas import (
+    ForgotPasswordRequest,
     LoginRequest,
     LogoutRequest,
     RefreshRequest,
     RegisterRequest,
     RegisterResponse,
+    ResetPasswordRequest,
     TokenPair,
     UserOut,
 )
@@ -119,6 +121,33 @@ async def logout(payload: LogoutRequest, service: AuthServiceDep) -> Response:
 )
 async def logout_all(user: CurrentUser, service: AuthServiceDep) -> Response:
     await service.logout_all(user=user)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/forgot-password",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_class=Response,
+    summary="Send a password-reset code to an email address",
+)
+async def forgot_password(payload: ForgotPasswordRequest, service: AuthServiceDep) -> Response:
+    """Always 202: whether the address has an account is not disclosed."""
+    await service.request_password_reset(email=payload.email, locale=payload.locale)
+    return Response(status_code=status.HTTP_202_ACCEPTED)
+
+
+@router.post(
+    "/reset-password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    summary="Set a new password with a reset code",
+)
+async def reset_password(payload: ResetPasswordRequest, service: AuthServiceDep) -> Response:
+    await service.reset_password_with_code(
+        email=payload.email,
+        code=payload.code,
+        new_password=payload.new_password,
+    )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

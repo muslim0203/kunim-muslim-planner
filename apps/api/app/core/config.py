@@ -58,6 +58,13 @@ class Settings(BaseSettings):
 
     APP_NAME: str = "KUNIM API"
 
+    # Mail, used today only for password-reset codes. Without an API key
+    # nothing is sent and the endpoints still answer -- the message is logged
+    # as not sent (see `app.integrations.email`), so a deploy that forgot the
+    # key is visible instead of silently swallowing resets.
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "KUNIM <onboarding@resend.dev>"
+
     @model_validator(mode="after")
     def _debug_follows_env_unless_set(self) -> Settings:
         if "DEBUG" not in self.model_fields_set and self.ENV == "dev":

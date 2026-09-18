@@ -20,6 +20,10 @@ from app.modules.users.models import UserRole
 # password from turning argon2 into a denial-of-service vector.
 Password = Annotated[str, Field(min_length=8, max_length=128)]
 DeviceId = Annotated[str, Field(min_length=1, max_length=128)]
+# A reset code is short enough to read out of an email and type back in;
+# what keeps it safe is the short expiry, the single use, the binding to one
+# account and the rate limiter on the route.
+ResetCode = Annotated[str, Field(pattern=r"^\d{6}$")]
 OpaqueToken = Annotated[str, Field(min_length=1, max_length=512)]
 
 
@@ -91,3 +95,16 @@ class UserOut(BaseModel):
     locale: str
     email_verified_at: datetime | None
     created_at: datetime
+
+
+class ForgotPasswordRequest(_EmailNormalising):
+    """Ask for a reset code. The answer never says whether the address exists."""
+
+    locale: Annotated[str, Field(max_length=10)] = "en"
+
+
+class ResetPasswordRequest(_EmailNormalising):
+    """Redeem a code and set the new password."""
+
+    code: ResetCode
+    new_password: Password
