@@ -42,6 +42,7 @@ def test_a_row_without_the_widget_fields_still_validates() -> None:
     parsed = HabitSyncRow.model_validate(habit_row())
     assert parsed.kind == "custom"
     assert parsed.total_target is None
+    assert parsed.reminder_minutes is None
 
 
 @pytest.mark.parametrize("kind", ["book", "quran", "zikr", "sport", "water", "study"])
@@ -59,6 +60,21 @@ def test_a_book_carries_the_pages_that_finish_it() -> None:
     assert parsed.total_target == 300
 
 
+def test_a_widget_carries_the_time_of_day_its_task_belongs_to() -> None:
+    """07:30 is 450 minutes from local midnight."""
+    parsed = HabitSyncRow.model_validate(habit_row(reminder_minutes=450))
+    assert parsed.reminder_minutes == 450
+
+
+@pytest.mark.parametrize("minutes", [0, 1439])
+def test_midnight_and_the_last_minute_of_the_day_are_inside_the_range(
+    minutes: int,
+) -> None:
+    assert HabitSyncRow.model_validate(habit_row(reminder_minutes=minutes)).reminder_minutes == (
+        minutes
+    )
+
+
 @pytest.mark.parametrize(
     "payload",
     [
@@ -67,8 +83,18 @@ def test_a_book_carries_the_pages_that_finish_it() -> None:
         habit_row(kind=None),
         habit_row(total_target=0),
         habit_row(total_target=-5),
+        habit_row(reminder_minutes=-1),
+        habit_row(reminder_minutes=1440),
     ],
-    ids=["not-a-slug", "too-long", "null-kind", "zero-total", "negative-total"],
+    ids=[
+        "not-a-slug",
+        "too-long",
+        "null-kind",
+        "zero-total",
+        "negative-total",
+        "before-midnight",
+        "past-the-last-minute",
+    ],
 )
 def test_invalid_widget_fields_are_rejected(payload: dict[str, Any]) -> None:
     with pytest.raises(ValidationError):
@@ -81,3 +107,5 @@ def test_the_columns_match_the_wire_fields() -> None:
     assert columns["kind"].nullable is False
     assert isinstance(columns["total_target"].type, Integer)
     assert columns["total_target"].nullable is True
+    assert isinstance(columns["reminder_minutes"].type, Integer)
+    assert columns["reminder_minutes"].nullable is True

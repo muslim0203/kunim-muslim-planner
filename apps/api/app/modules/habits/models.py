@@ -73,6 +73,13 @@ class Habit(UUIDPk, Timestamps, SoftDelete, Versioned, Base):
     kind: Mapped[str] = mapped_column(String(32), nullable=False, server_default="custom")
     total_target: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
 
+    # When the widget's task belongs in the day, as minutes from local
+    # midnight (0..1439); null is a widget with no fixed time. Minutes, not
+    # a TIME or an instant: the client raises the reminder in whatever local
+    # time the device is in, so a timezone would have to be carried too and
+    # would be wrong the moment the user travels.
+    reminder_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+
     def __repr__(self) -> str:  # pragma: no cover - debugging aid, no secrets
         return f"<Habit id={self.id} user_id={self.user_id}>"
 

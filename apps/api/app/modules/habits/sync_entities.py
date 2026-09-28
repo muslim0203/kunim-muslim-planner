@@ -56,6 +56,9 @@ class HabitSyncRow(SyncRowBase):
     # The amount that finishes the widget; null is an open-ended one.
     total_target: int | None = Field(default=None, ge=1)
 
+    # Minutes from local midnight; null is a widget with no fixed time.
+    reminder_minutes: int | None = Field(default=None, ge=0, le=1439)
+
 
 class HabitLogSyncRow(SyncRowBase):
     """Wire shape of a `habit_logs` row."""
