@@ -370,14 +370,14 @@ void main() {
     Color tileColor() {
       final material = find
           .ancestor(
-            of: find.text(l10n.modulePrayer),
+            of: find.text(l10n.homeAllModules),
             matching: find.byType(Material),
           )
           .first;
       return tester.widget<Material>(material).color!;
     }
 
-    expect(tileColor(), KunimTheme.light.colorScheme.surfaceContainerHigh);
+    expect(tileColor(), KunimTheme.light.colorScheme.surfaceContainerLow);
 
     final container = ProviderScope.containerOf(
       tester.element(find.byType(HomeScreen)),
@@ -387,7 +387,7 @@ void main() {
         .setThemeMode(ThemeMode.dark);
     await _pumpFrames(tester, 12);
 
-    expect(tileColor(), KunimTheme.dark.colorScheme.surfaceContainerHigh);
+    expect(tileColor(), KunimTheme.dark.colorScheme.surfaceContainerLow);
 
     await _unmount(tester);
   });

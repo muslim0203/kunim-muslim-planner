@@ -20,5 +20,6 @@
   "target": 1,
   "color": "#1565C0",
   "kind": "custom",
-  "total_target": null
+  "total_target": null,
+  "reminder_minutes": 450
 }

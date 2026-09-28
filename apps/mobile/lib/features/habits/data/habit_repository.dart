@@ -119,6 +119,7 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
     String? color,
     HabitKind kind = HabitKind.custom,
     int? totalTarget,
+    int? reminderMinutes,
   }) async {
     final id = const Uuid().v4();
     final now = DateTime.now().toUtc();
@@ -144,6 +145,7 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
         'color': color,
         'kind': kind.code,
         'total_target': totalTarget,
+        'reminder_minutes': reminderMinutes,
       },
       write: () => db.into(db.habits).insert(
             HabitsCompanion.insert(
@@ -158,6 +160,7 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
               color: Value(color),
               kind: Value(kind.code),
               totalTarget: Value(totalTarget),
+              reminderMinutes: Value(reminderMinutes),
             ),
           ),
     );
@@ -176,6 +179,7 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
     Value<String?> color = const Value.absent(),
     Value<HabitKind> kind = const Value.absent(),
     Value<int?> totalTarget = const Value.absent(),
+    Value<int?> reminderMinutes = const Value.absent(),
   }) async {
     final current = await findById(id);
     if (current == null) {
@@ -196,6 +200,7 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
       color: color,
       kind: kind.present ? Value(kind.value.code) : const Value.absent(),
       totalTarget: totalTarget,
+      reminderMinutes: reminderMinutes,
     );
     final merged = current.copyWithCompanion(patch);
 
@@ -260,6 +265,7 @@ class HabitRepository extends SyncableRepository with HabitLocalWriteHook {
         'color': row.color,
         'kind': row.kind,
         'total_target': row.totalTarget,
+        'reminder_minutes': row.reminderMinutes,
       };
 
   /// Decodes the locally stored schedule string into the wire object.

@@ -156,6 +156,8 @@ void main() {
       schedule: const HabitSchedule.specificWeekdays({1, 2, 3, 4, 5}),
       targetCount: 1,
       color: '#1565C0',
+      // 07:30 — the widget's time of day, so the golden covers it too.
+      reminderMinutes: 450,
       userId: userId,
     );
     // Re-capture through the update path so the golden covers `_payloadOf`

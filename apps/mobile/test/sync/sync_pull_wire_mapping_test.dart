@@ -74,6 +74,7 @@ void main() {
         },
         'target': 2,
         'color': null,
+        'reminder_minutes': 450,
       })
       ..seedServerRow('habit_logs', {
         ..._base('hl-1'),
@@ -106,6 +107,8 @@ void main() {
       const HabitSchedule.specificWeekdays({1, 3}).toJson(),
     );
     expect(habit.targetCount, 2);
+    // 07:30 on the wire is 07:30 in the local column, minutes and all.
+    expect(habit.reminderMinutes, 450);
 
     // The pulled log must be found by the same day query a local write uses.
     final log = await HabitLogRepository(db, onLocalWrite: () {})

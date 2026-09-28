@@ -317,7 +317,7 @@
   "@habitScreenTitle": {
     "description": "Title of the habits list screen."
   },
-  "habitNew": "New Habit",
+  "habitNew": "New widget",
   "@habitNew": {
     "description": "Label for the button that creates a new habit."
   },
@@ -961,7 +961,7 @@
   },
   "goalClearDate": "Clear date",
   "habitIntro": "Small, steady steps add up. Check off today's habit with one tap.",
-  "habitEdit": "Edit habit",
+  "habitEdit": "Widget settings",
   "habitManage": "See all",
   "habitStreakWeeks": "{count, plural, one{Streak: {count} week} other{Streak: {count} weeks}}",
   "@habitStreakWeeks": {
@@ -1109,5 +1109,26 @@
   "authResetNewPassword": "New password",
   "authResetSubmit": "Update the password",
   "authResetDone": "Password updated",
-  "authResetErrorCode": "The code is wrong or has expired"
+  "authResetErrorCode": "The code is wrong or has expired",
+  "reminderChannelHabit": "Task reminders",
+  "reminderChannelHabitDescription": "Reminds you when a widget's task is due",
+  "reminderHabitBody": "Planned for {time}",
+  "@reminderHabitBody": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+  "habitKindFamily": "Family",
+  "habitKindMood": "Mood",
+  "habitKindSleep": "Sleep",
+  "habitTimeLabel": "Time",
+  "habitTimeNone": "No time set",
+  "habitTimeClear": "Clear the time",
+  "habitTimeHelp": "A reminder arrives at this time",
+  "habitCatalogTitle": "Choose a widget",
+  "homeWidgetAdd": "Add a widget",
+  "homeAllModules": "All sections",
+  "homeWidgetsEmpty": "Add your daily tasks as widgets",
+  "homeWidgetsDoneOf": "{done}/{total} done",
+  "@homeWidgetsDoneOf": {
+    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+  }
 }

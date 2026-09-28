@@ -56,9 +56,67 @@ void main() {
 
       expect(localWriteCalls, 1);
     });
+
+    test('carries the widget time to the server, in minutes', () async {
+      final id = await repo.createHabit(
+        title: 'Kitob o‘qish',
+        reminderMinutes: 450,
+      );
+
+      final row = await repo.findById(id);
+      expect(row!.reminderMinutes, 450);
+      final outbox = await db.select(db.syncOutbox).get();
+      final payload = jsonDecode(outbox.single.payload) as Map<String, dynamic>;
+      expect(payload['reminder_minutes'], 450);
+    });
+
+    test('a widget with no time sends null, not a missing field', () async {
+      await repo.createHabit(title: 'Zikr');
+
+      final outbox = await db.select(db.syncOutbox).get();
+      final payload = jsonDecode(outbox.single.payload) as Map<String, dynamic>;
+      expect(payload.containsKey('reminder_minutes'), isTrue);
+      expect(payload['reminder_minutes'], isNull);
+    });
   });
 
   group('updateHabit', () {
+    test('clearing the time reaches the server as null', () async {
+      final id = await repo.createHabit(
+        title: 'Kitob o‘qish',
+        reminderMinutes: 450,
+      );
+
+      await repo.updateHabit(id: id, reminderMinutes: const Value(null));
+
+      expect((await repo.findById(id))!.reminderMinutes, isNull);
+      final outbox = await (db.select(
+        db.syncOutbox,
+      )..where((t) => t.rowId.equals(id)))
+          .get();
+      final latest = outbox.reduce((a, b) => a.seq > b.seq ? a : b);
+      final payload = jsonDecode(latest.payload) as Map<String, dynamic>;
+      expect(payload['reminder_minutes'], isNull);
+    });
+
+    test('an untouched time survives an unrelated edit', () async {
+      final id = await repo.createHabit(
+        title: 'Kitob o‘qish',
+        reminderMinutes: 450,
+      );
+
+      await repo.updateHabit(id: id, title: const Value('Kitob'));
+
+      expect((await repo.findById(id))!.reminderMinutes, 450);
+      final outbox = await (db.select(
+        db.syncOutbox,
+      )..where((t) => t.rowId.equals(id)))
+          .get();
+      final latest = outbox.reduce((a, b) => a.seq > b.seq ? a : b);
+      final payload = jsonDecode(latest.payload) as Map<String, dynamic>;
+      expect(payload['reminder_minutes'], 450);
+    });
+
     test('patches only the given fields, writes one outbox upsert entry',
         () async {
       final id = await repo.createHabit(title: 'Original title');

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/auth/auth_controller.dart';
 import '../core/settings/app_settings.dart';
 import '../core/sync/sync_triggers.dart';
+import '../features/notifications/application/habit_reminder_scheduler.dart';
 import '../features/notifications/application/notification_providers.dart';
 import '../features/stats/application/daily_score_writer.dart';
 import 'l10n/gen/app_localizations.dart';
@@ -25,6 +26,7 @@ class KunimApp extends ConsumerWidget {
     final uzbekCyrillic = settings.language == AppLanguage.uzCyrl;
     // Arms prayer reminder scheduling for the lifetime of the app.
     ref.watch(prayerReminderSchedulerProvider);
+    ref.watch(habitReminderSchedulerProvider);
     // Restores a saved session (which syncs it) and arms the automatic
     // sync triggers; a cycle only runs while an account is signed in.
     ref.listen(authControllerProvider, (previous, next) {});

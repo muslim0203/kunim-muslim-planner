@@ -66,14 +66,16 @@ void main() {
     expect(find.text(l10n.homeMainTasks), findsOneWidget);
     expect(find.text(l10n.homeChooseTopThree), findsOneWidget);
 
-    // The habits block sits below the fold; bring it into view first.
+    // The widget grid: with no widgets set up yet it invites the user to
+    // add one, and still offers every life area.
     await tester.scrollUntilVisible(
-      find.text(l10n.habitEmptyState),
+      find.text(l10n.homeWidgetsEmpty),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text(l10n.homeTodaysHabits), findsOneWidget);
-    expect(find.text(l10n.habitEmptyState), findsOneWidget);
+    expect(find.text(l10n.homeModules), findsOneWidget);
+    expect(find.text(l10n.homeWidgetAdd), findsOneWidget);
+    expect(find.text(l10n.homeAllModules), findsOneWidget);
 
     // Unmount so ProviderScope disposes the Drift stream subscriptions.
     // Closing them schedules zero-duration timers inside drift's

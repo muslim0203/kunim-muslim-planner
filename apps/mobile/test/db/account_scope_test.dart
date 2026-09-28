@@ -93,7 +93,7 @@ void main() {
         .get();
     final names = rows.map((row) => row.data['name'] as String).toSet();
 
-    expect(upgraded.schemaVersion, 8);
+    expect(upgraded.schemaVersion, 9);
     for (final table in AppDatabase.syncTables) {
       expect(names, contains('stamp_user_id_$table'));
     }

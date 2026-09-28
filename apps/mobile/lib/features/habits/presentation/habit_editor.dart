@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/l10n/gen/app_localizations.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/db/app_database.dart';
+import '../../../core/notifications/local_notifier.dart';
 import '../../../shared/widgets/daily_log_screen.dart';
 import '../application/habit_mutation_controller.dart';
 import '../application/habit_totals_provider.dart';
@@ -20,6 +21,18 @@ import 'habit_kind_labels.dart';
 
 const int habitMaxTitleLength = 200;
 const int habitMaxTargetCount = 99;
+
+/// The stored minutes-from-midnight of a widget's time, or null when it has
+/// none. Local time throughout: see `Habits.reminderMinutes`.
+int? habitReminderMinutes(TimeOfDay? time) =>
+    time == null ? null : time.hour * 60 + time.minute;
+
+/// Reverses [habitReminderMinutes]. Out-of-range values (a newer client, a
+/// hand-edited row) read as "no time" rather than throwing.
+TimeOfDay? habitTimeOfDay(int? minutes) {
+  if (minutes == null || minutes < 0 || minutes > 1439) return null;
+  return TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
+}
 
 /// Today's one-tap action: adds one to today's count until the target is
 /// reached; on a habit already done today it clears today's check-in.
@@ -63,29 +76,52 @@ String habitStreakLabel(AppLocalizations l10n, StreakResult streak) {
   };
 }
 
-/// Creates a habit, or edits [habit] when given.
-Future<void> showHabitEditor(BuildContext context, {Habit? habit}) {
-  return showDailyLogEditor(context, HabitEditor(habit: habit));
+/// Creates a habit, or edits [habit] when given. [kind] and [title] set a
+/// new widget up from the catalogue; both are ignored when editing.
+Future<void> showHabitEditor(
+  BuildContext context, {
+  Habit? habit,
+  HabitKind? kind,
+  String? title,
+}) {
+  return showDailyLogEditor(
+    context,
+    HabitEditor(habit: habit, initialKind: kind, initialTitle: title),
+  );
 }
 
 class HabitEditor extends ConsumerStatefulWidget {
-  const HabitEditor({super.key, this.habit});
+  const HabitEditor({
+    super.key,
+    this.habit,
+    this.initialKind,
+    this.initialTitle,
+  });
 
   final Habit? habit;
+
+  /// What a new widget tracks, as picked in the catalogue.
+  final HabitKind? initialKind;
+
+  /// The name a new widget starts with, so the catalogue's choice does not
+  /// have to be typed out again.
+  final String? initialTitle;
 
   @override
   ConsumerState<HabitEditor> createState() => _HabitEditorState();
 }
 
 class _HabitEditorState extends ConsumerState<HabitEditor> {
-  late final TextEditingController _title =
-      TextEditingController(text: widget.habit?.title ?? '');
+  late final TextEditingController _title = TextEditingController(
+    text: widget.habit?.title ?? widget.initialTitle ?? '',
+  );
   late HabitScheduleType _type;
   late Set<int> _weekdays;
   late int _timesPerWeek;
   late int _target;
   late HabitKind _kind;
   late final TextEditingController _total;
+  TimeOfDay? _time;
   String? _error;
   bool _busy = false;
 
@@ -101,11 +137,17 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
     _timesPerWeek = schedule.type == HabitScheduleType.timesPerWeek
         ? schedule.timesPerWeek
         : 3;
-    _target = (habit?.targetCount ?? 1).clamp(1, habitMaxTargetCount);
-    _kind = HabitKind.fromCode(habit?.kind);
+    _kind = habit != null
+        ? HabitKind.fromCode(habit.kind)
+        : widget.initialKind ?? HabitKind.custom;
+    // A new widget starts from its kind's own daily amount; an edit keeps
+    // whatever the user already set.
+    _target =
+        (habit?.targetCount ?? _kind.dailyTarget).clamp(1, habitMaxTargetCount);
     _total = TextEditingController(
       text: habit?.totalTarget?.toString() ?? '',
     );
+    _time = habitTimeOfDay(habit?.reminderMinutes);
     _total.addListener(_onTitleChanged);
     _title.addListener(_onTitleChanged);
   }
@@ -265,6 +307,48 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
             onChanged: (value) => setState(() => _target = value),
           ),
         ),
+        DailyLogSection(
+          title: l10n.habitTimeLabel,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _pickTime,
+                      icon: const Icon(Icons.schedule_rounded),
+                      label: Text(
+                        _time == null
+                            ? l10n.habitTimeNone
+                            : MaterialLocalizations.of(context).formatTimeOfDay(
+                                _time!,
+                                alwaysUse24HourFormat: true,
+                              ),
+                      ),
+                    ),
+                  ),
+                  if (_time != null)
+                    IconButton(
+                      tooltip: l10n.habitTimeClear,
+                      onPressed: () => setState(() => _time = null),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                ],
+              ),
+              if (_time != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: KunimSpacing.xs),
+                  child: Text(
+                    l10n.habitTimeHelp,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
         if (_kind.hasTotal)
           DailyLogSection(
             title: l10n.habitTotalLabel,
@@ -293,6 +377,29 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
           ),
       ],
     );
+  }
+
+  Future<void> _pickTime() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _time ?? const TimeOfDay(hour: 7, minute: 0),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _time = picked);
+
+    // The time is worth keeping either way — it says when the task belongs
+    // in the day — but without permission no reminder will arrive, and the
+    // user should hear that now rather than wonder tomorrow.
+    final notifier = ref.read(localNotifierProvider);
+    final allowed =
+        await notifier.areEnabled() || await notifier.requestPermission();
+    if (!allowed) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.notifPermissionDenied)));
+    }
   }
 
   /// How long the widget would take from where it stands now, or null
@@ -324,6 +431,7 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
         targetCount: _target,
         kind: _kind,
         totalTarget: _totalTarget,
+        reminderMinutes: habitReminderMinutes(_time),
       );
     } else {
       await controller.updateHabit(
@@ -333,6 +441,7 @@ class _HabitEditorState extends ConsumerState<HabitEditor> {
         targetCount: _target,
         kind: _kind,
         totalTarget: () => _totalTarget,
+        reminderMinutes: () => habitReminderMinutes(_time),
       );
     }
 

@@ -82,7 +82,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   /// Version 1 → 2: adds the phase-2 sync tables — `tasks`,
   /// `task_categories`, `calendar_events`, `habits`, `habit_logs`, `goals`,
@@ -223,6 +223,19 @@ class AppDatabase extends _$AppDatabase {
             ).get();
             if (keyValue.isNotEmpty) {
               await customStatement(_stampUserIdTrigger('daily_scores'));
+            }
+          }
+          if (from < 9) {
+            // Same `pragma_table_info` guard as the version 7 step: an
+            // install whose `habits` table was created from the current
+            // definition already has the column.
+            final columns = await customSelect(
+              "SELECT name FROM pragma_table_info('habits')",
+            ).get();
+            final names =
+                columns.map((row) => row.read<String>('name')).toSet();
+            if (names.isNotEmpty && !names.contains('reminder_minutes')) {
+              await m.addColumn(habits, habits.reminderMinutes);
             }
           }
         },

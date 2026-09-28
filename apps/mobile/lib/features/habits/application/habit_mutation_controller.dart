@@ -38,6 +38,7 @@ class HabitMutationController extends AsyncNotifier<void> {
     String? color,
     HabitKind kind = HabitKind.custom,
     int? totalTarget,
+    int? reminderMinutes,
   }) {
     return _run(
       () => _habits.createHabit(
@@ -49,6 +50,7 @@ class HabitMutationController extends AsyncNotifier<void> {
         color: color,
         kind: kind,
         totalTarget: totalTarget,
+        reminderMinutes: reminderMinutes,
       ),
     );
   }
@@ -62,6 +64,7 @@ class HabitMutationController extends AsyncNotifier<void> {
     String? Function()? color,
     HabitKind? kind,
     int? Function()? totalTarget,
+    int? Function()? reminderMinutes,
   }) {
     return _run(
       () => _habits.updateHabit(
@@ -76,6 +79,9 @@ class HabitMutationController extends AsyncNotifier<void> {
         kind: kind == null ? const Value.absent() : Value(kind),
         totalTarget:
             totalTarget == null ? const Value.absent() : Value(totalTarget()),
+        reminderMinutes: reminderMinutes == null
+            ? const Value.absent()
+            : Value(reminderMinutes()),
       ),
     );
   }

@@ -13,7 +13,10 @@ enum HabitKind {
   study('study', dailyTarget: 20, hasTotal: true),
   zikr('zikr', dailyTarget: 100),
   sport('sport', dailyTarget: 30),
-  water('water', dailyTarget: 8);
+  water('water', dailyTarget: 8),
+  family('family', dailyTarget: 30),
+  mood('mood', dailyTarget: 1),
+  sleep('sleep', dailyTarget: 1);
 
   const HabitKind(
     this.code, {

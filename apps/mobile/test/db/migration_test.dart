@@ -55,9 +55,9 @@ Future<void> _expectLiveRowUniqueness(AppDatabase db) async {
 }
 
 void main() {
-  test('schemaVersion is 8', () {
+  test('schemaVersion is 9', () {
     final db = AppDatabase.withExecutor(NativeDatabase.memory());
-    expect(db.schemaVersion, 8);
+    expect(db.schemaVersion, 9);
   });
 
   test('a fresh install creates every sync table and natural-key index',
@@ -250,6 +250,49 @@ void main() {
         .getSingle();
     expect(marker.value, 'kept-across-v4');
     await _expectLiveRowUniqueness(db);
+
+    await db.close();
+  });
+
+  test('upgrading from schema v8 gives habits their reminder time', () async {
+    // A v8 `habits` table: everything the widget fields added in v7, and
+    // nothing of the time of day, with one row already in it.
+    final raw = sqlite3.sqlite3.openInMemory();
+    raw.execute('''
+      CREATE TABLE habits (
+        id TEXT NOT NULL,
+        user_id TEXT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        deleted_at TEXT NULL,
+        server_version INTEGER NOT NULL DEFAULT 0,
+        dirty INTEGER NOT NULL DEFAULT 1,
+        title TEXT NOT NULL,
+        description TEXT NULL,
+        frequency TEXT NOT NULL DEFAULT 'daily',
+        target_count INTEGER NOT NULL DEFAULT 1,
+        kind TEXT NOT NULL DEFAULT 'custom',
+        total_target INTEGER NULL,
+        color TEXT NULL,
+        PRIMARY KEY (id)
+      );
+    ''');
+    raw.execute(
+      'INSERT INTO habits (id, created_at, updated_at, title) '
+      "VALUES ('h-1', '2026-09-20T08:00:00.000Z', "
+      "'2026-09-20T08:00:00.000Z', 'Kitob')",
+    );
+    raw.execute('PRAGMA user_version = 8');
+
+    final db = AppDatabase.withExecutor(
+      NativeDatabase.opened(raw, enableMigrations: true),
+    );
+
+    final habit = await (db.select(db.habits)..where((h) => h.id.equals('h-1')))
+        .getSingle();
+    expect(habit.title, 'Kitob');
+    // The column is there and the existing widget simply has no time yet.
+    expect(habit.reminderMinutes, isNull);
 
     await db.close();
   });

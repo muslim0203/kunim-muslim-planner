@@ -9,11 +9,6 @@ import '../../../app/theme/tokens.dart';
 import '../../../core/db/app_database.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
 import '../../habits/application/habits_today_provider.dart';
-import '../../habits/application/habit_totals_provider.dart';
-import '../../habits/domain/habit_kind.dart';
-import '../../habits/domain/habit_progress.dart';
-import '../../habits/presentation/habit_editor.dart';
-import '../../habits/presentation/habit_kind_labels.dart';
 import '../../prayer/application/prayer_providers.dart';
 import '../../prayer/domain/daily_prayer_times.dart';
 import '../../prayer/presentation/prayer_labels.dart';
@@ -21,6 +16,7 @@ import '../../tasks/application/task_mutation_controller.dart';
 import '../../tasks/application/task_providers.dart';
 import '../../tasks/application/top_three_providers.dart';
 import '../../tasks/domain/task_status.dart';
+import 'widget_grid.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -129,9 +125,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               _TodayProgress(tasks: tasks),
               const SizedBox(height: KunimSpacing.lg),
-              _SectionHeader(title: l10n.homeModules),
+              _SectionHeader(
+                title: l10n.homeModules,
+                action: l10n.habitManage,
+                onAction: () => context.go(KunimRoutes.habits),
+              ),
+              _WidgetProgressLine(habits: habits),
               const SizedBox(height: KunimSpacing.md),
-              const _ModuleGrid(),
+              HomeWidgetGrid(habits: habits),
               const SizedBox(height: KunimSpacing.xl),
               _SectionHeader(
                 title: l10n.homeMainTasks,
@@ -140,14 +141,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: KunimSpacing.sm),
               _MainTasksCard(tasks: topThree),
-              const SizedBox(height: KunimSpacing.xl),
-              _SectionHeader(
-                title: l10n.homeTodaysHabits,
-                action: l10n.habitManage,
-                onAction: () => context.go(KunimRoutes.habits),
-              ),
-              const SizedBox(height: KunimSpacing.sm),
-              _TodaysHabits(habits: habits),
               const SizedBox(height: KunimSpacing.lg),
               const _DailyInsight(),
             ],
@@ -543,6 +536,28 @@ class _TodayProgress extends StatelessWidget {
   }
 }
 
+/// "3/8 done" under the grid's header, so the day's state reads at a glance.
+class _WidgetProgressLine extends StatelessWidget {
+  const _WidgetProgressLine({required this.habits});
+
+  final AsyncValue<List<HabitToday>> habits;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = habits.value ?? const <HabitToday>[];
+    if (items.isEmpty) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final done = items.where((habit) => habit.isDone).length;
+    return Text(
+      l10n.homeWidgetsDoneOf(done, items.length),
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+}
+
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title, this.action, this.onAction});
 
@@ -560,338 +575,6 @@ class _SectionHeader extends StatelessWidget {
         if (action != null)
           TextButton(onPressed: onAction, child: Text(action!)),
       ],
-    );
-  }
-}
-
-class _Module {
-  const _Module({
-    required this.title,
-    required this.meta,
-    required this.icon,
-    required this.color,
-    this.route,
-  });
-
-  final String title;
-  final String meta;
-  final IconData icon;
-  final Color color;
-
-  /// `null` while the section has no screen yet.
-  final String? route;
-}
-
-class _ModuleGrid extends StatelessWidget {
-  const _ModuleGrid();
-
-  static const double _gap = KunimSpacing.sm;
-  static const double _tilePadding = KunimSpacing.sm;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final modules = [
-      _Module(
-        title: l10n.modulePrayer,
-        meta: l10n.modulePrayerMeta,
-        icon: Icons.mosque_outlined,
-        color: KunimModuleColors.prayer,
-        route: KunimRoutes.prayer,
-      ),
-      _Module(
-        title: l10n.moduleQuran,
-        meta: l10n.moduleQuranMeta,
-        icon: Icons.menu_book_rounded,
-        color: KunimModuleColors.quran,
-      ),
-      _Module(
-        title: l10n.moduleMood,
-        meta: l10n.moduleMoodMeta,
-        icon: Icons.spa_outlined,
-        color: KunimModuleColors.mood,
-        route: KunimRoutes.mood,
-      ),
-      _Module(
-        title: l10n.moduleFamily,
-        meta: l10n.moduleFamilyMeta,
-        icon: Icons.favorite_outline_rounded,
-        color: KunimModuleColors.family,
-        route: KunimRoutes.family,
-      ),
-      _Module(
-        title: l10n.moduleHealth,
-        meta: l10n.moduleHealthMeta,
-        icon: Icons.fitness_center_rounded,
-        color: KunimModuleColors.health,
-        route: KunimRoutes.health,
-      ),
-      _Module(
-        title: l10n.moduleWork,
-        meta: l10n.moduleWorkMeta,
-        icon: Icons.work_outline_rounded,
-        color: KunimModuleColors.work,
-        route: KunimRoutes.day,
-      ),
-      _Module(
-        title: l10n.moduleGrowth,
-        meta: l10n.moduleGrowthMeta,
-        icon: Icons.track_changes_rounded,
-        color: KunimModuleColors.mood,
-        route: KunimRoutes.goals,
-      ),
-      _Module(
-        title: l10n.moduleSleep,
-        meta: l10n.moduleSleepMeta,
-        icon: Icons.dark_mode_outlined,
-        color: KunimModuleColors.sleep,
-        route: KunimRoutes.sleep,
-      ),
-    ];
-
-    final theme = Theme.of(context);
-    final titleStyle = _ModuleTile.titleStyle(theme);
-    final metaStyle = _ModuleTile.metaStyle(theme);
-    final largeText = MediaQuery.textScalerOf(context).scale(10) > 13;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double contentWidthFor(int columns) =>
-            (constraints.maxWidth - _gap * (columns - 1)) / columns -
-            _tilePadding * 2;
-
-        // Four narrow tiles only while every label fits one at a readable
-        // size, without a broken word or a cut-off line; otherwise two wide
-        // tiles (a long word such as "Хотиржамлик" needs them).
-        var perRow = largeText ? 2 : 4;
-        if (perRow == 4) {
-          final narrow = contentWidthFor(4);
-          final fits = modules.every(
-            (module) =>
-                _FitWordText.fitsWithin(
-                  context,
-                  module.title,
-                  titleStyle,
-                  narrow,
-                  maxLines: _ModuleTile.titleMaxLines,
-                ) &&
-                _FitWordText.fitsWithin(
-                  context,
-                  module.meta,
-                  metaStyle,
-                  narrow,
-                  maxLines: _ModuleTile.metaMaxLines,
-                ),
-          );
-          if (!fits) perRow = 2;
-        }
-        final contentWidth = contentWidthFor(perRow);
-        return Column(
-          children: [
-            for (var start = 0; start < modules.length; start += perRow)
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: start + perRow < modules.length ? _gap : 0,
-                ),
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var i = start; i < start + perRow; i++) ...[
-                        if (i > start) const SizedBox(width: _gap),
-                        Expanded(
-                          child: i < modules.length
-                              ? _ModuleTile(
-                                  module: modules[i],
-                                  contentWidth: contentWidth,
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ModuleTile extends StatelessWidget {
-  const _ModuleTile({required this.module, required this.contentWidth});
-
-  final _Module module;
-  final double contentWidth;
-
-  static const int titleMaxLines = 2;
-  static const int metaMaxLines = 3;
-
-  static TextStyle titleStyle(ThemeData theme) =>
-      theme.textTheme.labelMedium!.copyWith(
-        fontWeight: FontWeight.w800,
-        height: 1.15,
-      );
-
-  static TextStyle metaStyle(ThemeData theme) =>
-      theme.textTheme.labelSmall!.copyWith(
-        height: 1.15,
-        color: theme.colorScheme.onSurfaceVariant,
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final route = module.route;
-
-    return Material(
-      color: scheme.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(KunimRadii.medium),
-        side: BorderSide(color: scheme.outlineVariant),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: route != null
-            ? () => context.go(route)
-            : () => ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(content: Text(l10n.moduleComingSoon(module.title))),
-              ),
-        child: Padding(
-          padding: const EdgeInsets.all(_ModuleGrid._tilePadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: module.color,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(module.icon, color: Colors.white, size: 20),
-              ),
-              const SizedBox(height: KunimSpacing.md),
-              _FitWordText(
-                module.title,
-                maxWidth: contentWidth,
-                maxLines: titleMaxLines,
-                style: titleStyle(theme),
-              ),
-              const SizedBox(height: 2),
-              _FitWordText(
-                module.meta,
-                maxWidth: contentWidth,
-                maxLines: metaMaxLines,
-                style: metaStyle(theme),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Text that shrinks (down to [minShrink]) when its longest word would not
-/// fit [maxWidth], so narrow tiles never break a word in the middle.
-class _FitWordText extends StatelessWidget {
-  const _FitWordText(
-    this.text, {
-    required this.maxWidth,
-    required this.style,
-    this.maxLines = 2,
-  });
-
-  /// Smallest scale that stays readable (a 12sp label becomes ~10sp).
-  static const double minShrink = 0.85;
-
-  /// Headroom below [maxWidth]: a word scaled to exactly the line width can
-  /// still be broken by sub-pixel rounding in the text engine.
-  static const double _fitMargin = 2;
-
-  final String text;
-  final double maxWidth;
-  final TextStyle style;
-  final int maxLines;
-
-  /// Width of the widest single word in [text], as it would render.
-  static double widestWord(
-    BuildContext context,
-    String text,
-    TextStyle style,
-  ) {
-    final resolved = DefaultTextStyle.of(context).style.merge(style);
-    final scaler = MediaQuery.textScalerOf(context);
-    final direction = Directionality.of(context);
-    var widest = 0.0;
-    for (final word in text.split(RegExp(r'\s+'))) {
-      final painter = TextPainter(
-        text: TextSpan(text: word, style: resolved),
-        textDirection: direction,
-        textScaler: scaler,
-        maxLines: 1,
-      )..layout();
-      if (painter.width > widest) widest = painter.width;
-      painter.dispose();
-    }
-    return widest;
-  }
-
-  /// The style [text] renders with inside [maxWidth]: shrunk just enough for
-  /// its widest word, but never below [minShrink].
-  static TextStyle effectiveStyle(
-    BuildContext context,
-    String text,
-    TextStyle style,
-    double maxWidth,
-  ) {
-    final resolved = DefaultTextStyle.of(context).style.merge(style);
-    final widest = widestWord(context, text, style);
-    final target = maxWidth - _fitMargin;
-    if (target <= 0 || widest <= target) return resolved;
-    final factor = (target / widest).clamp(minShrink, 1.0);
-    return resolved.copyWith(fontSize: (resolved.fontSize ?? 14) * factor);
-  }
-
-  /// Whether [text] fits [maxWidth] without breaking a word or needing more
-  /// than [maxLines] lines.
-  static bool fitsWithin(
-    BuildContext context,
-    String text,
-    TextStyle style,
-    double maxWidth, {
-    required int maxLines,
-  }) {
-    if (widestWord(context, text, style) * minShrink > maxWidth - _fitMargin) {
-      return false;
-    }
-    final painter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: effectiveStyle(context, text, style, maxWidth),
-      ),
-      textDirection: Directionality.of(context),
-      textScaler: MediaQuery.textScalerOf(context),
-      maxLines: maxLines,
-    )..layout(maxWidth: maxWidth);
-    final fits = !painter.didExceedMaxLines;
-    painter.dispose();
-    return fits;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      maxLines: maxLines,
-      overflow: TextOverflow.ellipsis,
-      style: effectiveStyle(context, text, style, maxWidth),
     );
   }
 }
@@ -976,130 +659,6 @@ class _CompactTaskRow extends ConsumerWidget {
           if (task.isOverdue())
             Icon(Icons.schedule_rounded, size: 18, color: scheme.error),
           const SizedBox(width: 14),
-        ],
-      ),
-    );
-  }
-}
-
-class _TodaysHabits extends StatelessWidget {
-  const _TodaysHabits({required this.habits});
-
-  final AsyncValue<List<HabitToday>> habits;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final items = habits.value ?? const <HabitToday>[];
-
-    if (items.isEmpty) {
-      return HeritageCard(
-        onTap: () => context.go(KunimRoutes.habits),
-        child: Row(
-          children: [
-            Icon(
-              Icons.check_circle_outline_rounded,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: KunimSpacing.md),
-            Expanded(
-              child: Text(
-                l10n.habitEmptyState,
-                style: theme.textTheme.bodyMedium,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var i = 0; i < items.length; i++) ...[
-              if (i > 0) const SizedBox(width: KunimSpacing.sm),
-              SizedBox(width: 150, child: _HabitCard(habit: items[i])),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HabitCard extends ConsumerWidget {
-  const _HabitCard({required this.habit});
-
-  final HabitToday habit;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final target = habit.habit.targetCount;
-    final total = habit.habit.totalTarget;
-    final towardsTotal = total == null
-        ? null
-        : HabitProgress(
-            done: ref.watch(habitTotalsProvider)[habit.habit.id] ?? 0,
-            total: total,
-            perDay: target,
-          );
-    final count = habit.loggedCount;
-    final progress = target == 0 ? 0.0 : (count / target).clamp(0.0, 1.0);
-    return HeritageCard(
-      onTap: () => toggleHabitToday(ref, habit),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                habit.isDone
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked,
-                color: theme.colorScheme.primary,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  habit.habit.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: KunimSpacing.md),
-          Text('$count/$target', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: progress,
-            minHeight: 5,
-            color: theme.colorScheme.primary,
-            borderRadius: BorderRadius.circular(99),
-          ),
-          if (towardsTotal != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              '${towardsTotal.done} / '
-              '${habitAmount(l10n, HabitKind.fromCode(habit.habit.kind), total!)}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
         ],
       ),
     );

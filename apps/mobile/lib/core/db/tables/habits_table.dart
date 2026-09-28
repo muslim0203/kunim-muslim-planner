@@ -23,6 +23,13 @@ class Habits extends Table with SyncColumns {
   /// The amount that finishes this widget (a book's pages, the ayahs to
   /// memorise), or null for an open-ended one.
   IntColumn get totalTarget => integer().nullable()();
+
+  /// When the widget's task belongs in the day, as minutes from local
+  /// midnight (0..1439), or null for a widget with no fixed time. Minutes
+  /// rather than an instant: the reminder fires in whatever local time the
+  /// device is in, so a stored timezone would be wrong as soon as the user
+  /// travels.
+  IntColumn get reminderMinutes => integer().nullable()();
   TextColumn get color => text().nullable()();
 
   @override
