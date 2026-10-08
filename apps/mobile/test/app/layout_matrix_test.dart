@@ -22,6 +22,9 @@ import 'package:kunim/core/settings/app_settings.dart';
 import 'package:kunim/core/sync/sync_triggers.dart';
 import 'package:kunim/features/ai/presentation/ai_screen.dart';
 import 'package:kunim/features/account/presentation/account_screen.dart';
+import 'package:kunim/features/profile/application/profile_providers.dart';
+import 'package:kunim/features/profile/domain/profile.dart';
+import 'package:kunim/features/profile/presentation/profile_screen.dart';
 import 'package:kunim/features/family/presentation/family_screen.dart';
 import 'package:kunim/features/goals/presentation/goal_detail_screen.dart';
 import 'package:kunim/features/goals/presentation/goals_screen.dart';
@@ -146,6 +149,17 @@ Future<void> _unmount(WidgetTester tester) async {
   }
 }
 
+/// The widest plausible profile: a three-part Uzbek name, a full handle and
+/// every optional number set.
+const _longestProfile = Profile(
+  id: 'u-1',
+  email: 'muslimjon.zarifjonov@example.com',
+  displayName: 'Muslimjon Zarifjonov Abdurahmonovich',
+  nickname: 'muslimjon_zarifjon',
+  birthYear: 1995,
+  heightCm: 178,
+);
+
 ProviderScope _scope({
   required AppDatabase db,
   required AppSettings settings,
@@ -158,6 +172,10 @@ ProviderScope _scope({
         SyncTriggerScheduler(runSync: ({bool force = false}) async {}),
       ),
       initialAppSettingsProvider.overrideWithValue(settings),
+      // A filled-in profile, with a long name on purpose: an empty form
+      // cannot overflow, so it would prove nothing.
+      profileProvider.overrideWith((ref) => _longestProfile),
+      latestWeightProvider.overrideWithValue(const AsyncValue.data(72.5)),
     ],
     child: child,
   );
@@ -226,6 +244,7 @@ void main() {
     'sleep': () => const SleepScreen(),
     'family': () => const FamilyScreen(),
     'account': () => const AccountScreen(),
+    'profile': () => const ProfileScreen(),
     'goals': () => const GoalsScreen(),
     'leaderboard': () => const LeaderboardScreen(),
     'habits': () => const HabitsScreen(),

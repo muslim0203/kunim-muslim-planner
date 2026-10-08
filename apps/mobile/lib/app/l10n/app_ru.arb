@@ -495,5 +495,35 @@
   "homeWidgetAdd": "Добавить виджет",
   "homeAllModules": "Все разделы",
   "homeWidgetsEmpty": "Добавьте ежедневные задачи как виджеты",
-  "homeWidgetsDoneOf": "{done}/{total} выполнено"
+  "homeWidgetsDoneOf": "{done}/{total} выполнено",
+  "profileTitle": "Данные аккаунта",
+  "profileFullName": "Имя и фамилия",
+  "profileFullNameHint": "Как вас зовут",
+  "profileUsername": "Имя пользователя",
+  "profileUsernameRule": "строчные буквы, цифры и _",
+  "profileBirthYear": "Год рождения",
+  "profileBirthYearHint": "например, 1995",
+  "profileAgeNow": "В этом году {age} лет",
+  "@profileAgeNow": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "profileHeight": "Рост (см)",
+  "profileHeightHint": "например, 178",
+  "profileWeight": "Вес (кг)",
+  "profileWeightHint": "например, 72.5",
+  "profileWeightHelper": "Сохраняется в сегодняшний журнал здоровья, чтобы график совпадал",
+  "profileSave": "Сохранить",
+  "profileSaving": "Сохранение…",
+  "profileSaved": "Сохранено",
+  "profileRetry": "Повторить",
+  "profileAvatarLabel": "Фото профиля",
+  "profileErrorNetwork": "Нет связи с сервером. Ничего не сохранено.",
+  "profileErrorSignedOut": "Сессия завершена. Войдите снова.",
+  "profileErrorNicknameTaken": "Это имя пользователя занято.",
+  "profileErrorInvalid": "Часть введённого сохранить не удалось. Проверьте данные.",
+  "profileOpen": "Данные аккаунта"
 }

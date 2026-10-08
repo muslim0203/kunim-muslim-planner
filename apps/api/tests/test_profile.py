@@ -214,3 +214,56 @@ async def test_user_cannot_see_or_modify_another_users_profile(client: AsyncClie
     assert profile_b["display_name"] is None
     assert profile_a["id"] != profile_b["id"]
     assert profile_a["email"] != profile_b["email"]
+
+
+# --- height -------------------------------------------------------------------
+
+
+async def test_height_defaults_to_unset(client: AsyncClient) -> None:
+    tokens = await register_and_login(client, "height-default@example.com")
+    response = await client.get("/users/me", headers=auth_header(tokens))
+    assert response.status_code == 200
+    assert response.json()["height_cm"] is None
+
+
+async def test_height_round_trips(client: AsyncClient) -> None:
+    tokens = await register_and_login(client, "height-set@example.com")
+    response = await client.patch("/users/me", headers=auth_header(tokens), json={"height_cm": 178})
+    assert response.status_code == 200
+    assert response.json()["height_cm"] == 178
+
+    # And it is stored, not just echoed.
+    again = await client.get("/users/me", headers=auth_header(tokens))
+    assert again.json()["height_cm"] == 178
+
+
+async def test_height_can_be_cleared(client: AsyncClient) -> None:
+    tokens = await register_and_login(client, "height-clear@example.com")
+    await client.patch("/users/me", headers=auth_header(tokens), json={"height_cm": 170})
+    response = await client.patch(
+        "/users/me", headers=auth_header(tokens), json={"height_cm": None}
+    )
+    assert response.status_code == 200
+    assert response.json()["height_cm"] is None
+
+
+async def test_implausible_heights_are_rejected(client: AsyncClient) -> None:
+    """A typo must not become a stored body measurement."""
+    tokens = await register_and_login(client, "height-range@example.com")
+    for value in (0, 49, 261, 1780):
+        response = await client.patch(
+            "/users/me", headers=auth_header(tokens), json={"height_cm": value}
+        )
+        assert response.status_code == 422, f"{value} cm should be rejected"
+
+
+async def test_weight_is_not_a_profile_field(client: AsyncClient) -> None:
+    """Weight stays a dated `health_logs` measurement.
+
+    Accepting it here would create a second copy that goes stale and then
+    disagrees with the weight chart.
+    """
+    tokens = await register_and_login(client, "no-profile-weight@example.com")
+    body = (await client.get("/users/me", headers=auth_header(tokens))).json()
+    assert "weight_kg" not in body
+    assert "weight" not in body

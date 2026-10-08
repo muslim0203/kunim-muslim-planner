@@ -15,6 +15,7 @@ import '../../../core/network/error_mapper.dart';
 import '../../../core/settings/app_settings.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
+import '../../profile/presentation/profile_screen.dart';
 import 'delete_account_dialog.dart';
 import 'password_reset_sheet.dart';
 
@@ -98,6 +99,26 @@ class _SignedInView extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: KunimSpacing.md),
+        // The account's own details: name, handle, year of birth, height.
+        // Only shown when signed in — they live on the server, so there is
+        // nothing to edit before there is an account to edit it on.
+        HeritageCard(
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              Icons.badge_outlined,
+              color: theme.colorScheme.primary,
+            ),
+            title: Text(l10n.profileOpen),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ProfileScreen(),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: KunimSpacing.md),

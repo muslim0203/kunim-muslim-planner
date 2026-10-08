@@ -495,5 +495,35 @@
   "homeWidgetAdd": "Vidjet qo‘shish",
   "homeAllModules": "Barcha bo‘limlar",
   "homeWidgetsEmpty": "Kunlik vazifalaringizni vidjet qilib qo‘shing",
-  "homeWidgetsDoneOf": "{done}/{total} bajarildi"
+  "homeWidgetsDoneOf": "{done}/{total} bajarildi",
+  "profileTitle": "Hisob ma’lumotlari",
+  "profileFullName": "Ism sharifi",
+  "profileFullNameHint": "Sizni qanday chaqirishadi",
+  "profileUsername": "Foydalanuvchi nomi",
+  "profileUsernameRule": "kichik harflar, raqamlar va _",
+  "profileBirthYear": "Tug‘ilgan yil",
+  "profileBirthYearHint": "masalan, 1995",
+  "profileAgeNow": "Bu yil {age} yosh",
+  "@profileAgeNow": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "profileHeight": "Bo‘y (sm)",
+  "profileHeightHint": "masalan, 178",
+  "profileWeight": "Vazn (kg)",
+  "profileWeightHint": "masalan, 72.5",
+  "profileWeightHelper": "Bugungi sog‘liq jurnaliga yoziladi, shunda grafik bilan mos qoladi",
+  "profileSave": "Saqlash",
+  "profileSaving": "Saqlanmoqda…",
+  "profileSaved": "Saqlandi",
+  "profileRetry": "Qayta urinish",
+  "profileAvatarLabel": "Profil surati",
+  "profileErrorNetwork": "Serverga ulanib bo‘lmadi. Hech narsa saqlanmadi.",
+  "profileErrorSignedOut": "Sessiya tugadi. Qaytadan kiring.",
+  "profileErrorNicknameTaken": "Bu foydalanuvchi nomi band.",
+  "profileErrorInvalid": "Kiritilganlarning ba’zisi saqlanmadi. Tekshirib ko‘ring.",
+  "profileOpen": "Hisob ma’lumotlari"
 }
