@@ -114,7 +114,11 @@ class DailyAnalysisCard extends ConsumerWidget {
             spacing: KunimSpacing.xs,
             runSpacing: KunimSpacing.xs,
             children: [
-              for (final day in history.days) _DaySquare(day: day),
+              for (final day in history.days)
+                _DaySquare(
+                  day: day,
+                  isToday: day.day == history.days.last.day,
+                ),
             ],
           ),
           const SizedBox(height: KunimSpacing.md),
@@ -144,9 +148,14 @@ class DailyAnalysisCard extends ConsumerWidget {
 
 enum _DayState { complete, partial, missed, free }
 
-_DayState _stateOf(ActivityDay day) {
+_DayState _stateOf(ActivityDay day, {required bool isToday}) {
   if (day.isFree) return _DayState.free;
   if (day.isComplete) return _DayState.complete;
+  // A day still being lived has not been missed. Marking today red the
+  // moment it starts calls a failure on work the user still has hours to
+  // do, and this app's own rule is that these indicators exist to help
+  // someone decide, never to blame them (CLAUDE.md, TZ section 78).
+  if (isToday) return _DayState.partial;
   return day.done == 0 ? _DayState.missed : _DayState.partial;
 }
 
@@ -160,14 +169,19 @@ Color _dayColor(ThemeData theme, _DayState state) {
 }
 
 class _DaySquare extends StatelessWidget {
-  const _DaySquare({required this.day});
+  const _DaySquare({required this.day, required this.isToday});
 
   final ActivityDay day;
+
+  /// Taken from the history's own last entry rather than read off the clock
+  /// here, so the square and the history it came from can never disagree
+  /// about which day is today.
+  final bool isToday;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final state = _stateOf(day);
+    final state = _stateOf(day, isToday: isToday);
     final label = MaterialLocalizations.of(context).formatMediumDate(
       DateTime(day.day.year, day.day.month, day.day.day),
     );
