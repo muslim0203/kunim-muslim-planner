@@ -734,11 +734,22 @@
   "prayerNext": "Next prayer",
   "prayerInHoursMinutes": "in {hours} h {minutes} min",
   "@prayerInHoursMinutes": {
-    "placeholders": {"hours": {"type": "int"}, "minutes": {"type": "int"}}
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "prayerInMinutes": "in {minutes} min",
   "@prayerInMinutes": {
-    "placeholders": {"minutes": {"type": "int"}}
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "prayerTomorrow": "tomorrow",
   "prayerToday": "Today’s times",
@@ -784,7 +795,11 @@
   "notifLeadAtTime": "At the prayer time",
   "notifLeadMinutes": "{minutes} min before",
   "@notifLeadMinutes": {
-    "placeholders": {"minutes": {"type": "int"}}
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "notifPermissionDenied": "Notifications are not allowed. Allow them in your phone settings.",
   "notifExactTitle": "Reminders may be late",
@@ -795,19 +810,44 @@
   "reminderChannelPrayerDescription": "Reminds you when a prayer time begins or shortly before",
   "reminderPrayerNowTitle": "It is time for {prayer}",
   "@reminderPrayerNowTitle": {
-    "placeholders": {"prayer": {"type": "String"}}
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
   },
   "reminderPrayerNowBody": "{city}, {time}",
   "@reminderPrayerNowBody": {
-    "placeholders": {"city": {"type": "String"}, "time": {"type": "String"}}
+    "placeholders": {
+      "city": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "reminderPrayerSoonTitle": "{prayer} in {minutes} min",
   "@reminderPrayerSoonTitle": {
-    "placeholders": {"prayer": {"type": "String"}, "minutes": {"type": "int"}}
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "reminderPrayerSoonBody": "{prayer} begins at {time}",
   "@reminderPrayerSoonBody": {
-    "placeholders": {"prayer": {"type": "String"}, "time": {"type": "String"}}
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "logToday": "Today",
   "logTodayEmpty": "No entry for today yet",
@@ -826,15 +866,30 @@
   "logValueInvalid": "A value is invalid or too large",
   "durationHoursMinutes": "{hours} h {minutes} min",
   "@durationHoursMinutes": {
-    "placeholders": {"hours": {"type": "int"}, "minutes": {"type": "int"}}
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "durationHoursOnly": "{hours} h",
   "@durationHoursOnly": {
-    "placeholders": {"hours": {"type": "int"}}
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
   },
   "durationMinutesOnly": "{minutes} min",
   "@durationMinutesOnly": {
-    "placeholders": {"minutes": {"type": "int"}}
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "moodIntro": "Note your mood once a day: over time you will understand yourself better.",
   "moodQuestion": "How do you feel today?",
@@ -875,23 +930,43 @@
   "healthDisclaimer": "These numbers are for personal tracking only and are not medical advice. Talk to a doctor about your health.",
   "healthWaterValue": "{ml} ml water",
   "@healthWaterValue": {
-    "placeholders": {"ml": {"type": "int"}}
+    "placeholders": {
+      "ml": {
+        "type": "int"
+      }
+    }
   },
   "healthStepsValue": "{steps} steps",
   "@healthStepsValue": {
-    "placeholders": {"steps": {"type": "int"}}
+    "placeholders": {
+      "steps": {
+        "type": "int"
+      }
+    }
   },
   "healthWorkoutValue": "{minutes} min exercise",
   "@healthWorkoutValue": {
-    "placeholders": {"minutes": {"type": "int"}}
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "healthCaloriesValue": "{kcal} kcal",
   "@healthCaloriesValue": {
-    "placeholders": {"kcal": {"type": "int"}}
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
   },
   "healthWeightValue": "{kg} kg",
   "@healthWeightValue": {
-    "placeholders": {"kg": {"type": "String"}}
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
   },
   "familyIntro": "Note the time you spend with your loved ones.",
   "familyMinutes": "Time together (min)",
@@ -907,31 +982,59 @@
   "familyNeedValue": "Add time, an activity or a note",
   "statsMoodAverage": "average {score}/5",
   "@statsMoodAverage": {
-    "placeholders": {"score": {"type": "String"}}
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
   },
   "statsSleepAverage": "{duration} on average",
   "@statsSleepAverage": {
-    "placeholders": {"duration": {"type": "String"}}
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "statsSleepQuality": "quality {score}/5",
   "@statsSleepQuality": {
-    "placeholders": {"score": {"type": "String"}}
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
   },
   "statsWaterAverage": "{ml} ml water a day",
   "@statsWaterAverage": {
-    "placeholders": {"ml": {"type": "String"}}
+    "placeholders": {
+      "ml": {
+        "type": "String"
+      }
+    }
   },
   "statsStepsAverage": "{steps} steps a day",
   "@statsStepsAverage": {
-    "placeholders": {"steps": {"type": "String"}}
+    "placeholders": {
+      "steps": {
+        "type": "String"
+      }
+    }
   },
   "statsWorkoutTotal": "{duration} of exercise",
   "@statsWorkoutTotal": {
-    "placeholders": {"duration": {"type": "String"}}
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "statsFamilyTotal": "{duration} in total",
   "@statsFamilyTotal": {
-    "placeholders": {"duration": {"type": "String"}}
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "statsNoEntriesWeek": "No entries this week",
   "settingsAccount": "Account",
@@ -957,7 +1060,11 @@
   "goalNotFound": "This goal was not found or has been deleted",
   "goalProgressValue": "{percent}%",
   "@goalProgressValue": {
-    "placeholders": {"percent": {"type": "int"}}
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
   },
   "goalClearDate": "Clear date",
   "habitIntro": "Small, steady steps add up. Check off today's habit with one tap.",
@@ -965,11 +1072,19 @@
   "habitManage": "See all",
   "habitStreakWeeks": "{count, plural, one{Streak: {count} week} other{Streak: {count} weeks}}",
   "@habitStreakWeeks": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "habitTargetPerDay": "{count, plural, one{Once a day} other{{count} times a day}}",
   "@habitTargetPerDay": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "habitDecrease": "Decrease",
   "habitIncrease": "Increase",
@@ -984,7 +1099,11 @@
   "prayerStatusClear": "Remove mark",
   "statsPrayersMarked": "{count, plural, one{{count} prayer marked} other{{count} prayers marked}}",
   "@statsPrayersMarked": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "accountDelete": "Delete account",
   "accountDeleteTitle": "Delete your account?",
@@ -1021,23 +1140,43 @@
   "habitKindWater": "Water",
   "habitUnitPages": "{count, plural, one{{count} page} other{{count} pages}}",
   "@habitUnitPages": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "habitUnitAyahs": "{count, plural, one{{count} ayah} other{{count} ayahs}}",
   "@habitUnitAyahs": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "habitUnitMinutes": "{count, plural, one{{count} minute} other{{count} minutes}}",
   "@habitUnitMinutes": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "habitUnitTimes": "{count, plural, one{{count} time} other{{count} times}}",
   "@habitUnitTimes": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "habitUnitGlasses": "{count, plural, one{{count} glass} other{{count} glasses}}",
   "@habitUnitGlasses": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "habitWidgetType": "Widget type",
   "habitDailyLabel": "Daily amount",
@@ -1045,25 +1184,45 @@
   "habitTotalHint": "For example: the pages in the book",
   "habitFinishInDays": "{count, plural, one{Finishes in {count} day at this pace} other{Finishes in {count} days at this pace}}",
   "@habitFinishInDays": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "habitFinished": "Finished",
   "statsPointsTitle": "Points",
   "statsPointsToday": "{count, plural, one{{count} point today} other{{count} points today}}",
   "@statsPointsToday": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "statsPointsWeek": "{count, plural, one{{count} point this week} other{{count} points this week}}",
   "@statsPointsWeek": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "statsLevel": "Level {level}",
   "@statsLevel": {
-    "placeholders": {"level": {"type": "int"}}
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
   },
   "statsToNextLevel": "{count, plural, one{{count} point to the next level} other{{count} points to the next level}}",
   "@statsToNextLevel": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "statsDailyTitle": "Daily analysis",
   "statsDailyIntro": "Each square is a day. Tap one to see what was done and what was missed that day.",
@@ -1073,7 +1232,14 @@
   "statsLegendFree": "Nothing planned",
   "statsDaySummary": "{done} of {planned} done",
   "@statsDaySummary": {
-    "placeholders": {"done": {"type": "int"}, "planned": {"type": "int"}}
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "planned": {
+        "type": "int"
+      }
+    }
   },
   "statsDayDoneTitle": "Done",
   "statsDayMissedTitle": "Missed",
@@ -1089,7 +1255,11 @@
   "socialCodeCopied": "Code copied",
   "socialCodeExpires": "The code works until {date}",
   "@socialCodeExpires": {
-    "placeholders": {"date": {"type": "String"}}
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   },
   "socialEnterCode": "Enter a friend's code",
   "socialSendCode": "Add",
@@ -1104,11 +1274,19 @@
   "socialNoName": "No name",
   "socialPointsTotal": "{count, plural, one{{count} point in total} other{{count} points in total}}",
   "@socialPointsTotal": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "socialMyRank": "Your place: {rank}",
   "@socialMyRank": {
-    "placeholders": {"rank": {"type": "int"}}
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
   },
   "socialRemoveFriend": "Remove",
   "socialRemoveConfirm": "Remove this friend from your list?",
@@ -1119,7 +1297,14 @@
   "socialLeading": "You are in front",
   "socialGapAhead": "{count, plural, one{{name} is {count} point ahead of you} other{{name} is {count} points ahead of you}}",
   "@socialGapAhead": {
-    "placeholders": {"name": {"type": "String"}, "count": {"type": "int"}}
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "authForgotTitle": "Reset your password",
   "authForgotBody": "We will email you a 6-digit code.",
@@ -1134,7 +1319,11 @@
   "reminderChannelHabitDescription": "Reminds you when a widget's task is due",
   "reminderHabitBody": "Planned for {time}",
   "@reminderHabitBody": {
-    "placeholders": {"time": {"type": "String"}}
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "habitKindFamily": "Family",
   "habitKindMood": "Mood",
@@ -1149,6 +1338,43 @@
   "homeWidgetsEmpty": "Add your daily tasks as widgets",
   "homeWidgetsDoneOf": "{done}/{total} done",
   "@homeWidgetsDoneOf": {
-    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
-  }
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "profileTitle": "Account details",
+  "profileFullName": "Full name",
+  "profileFullNameHint": "The name you go by",
+  "profileUsername": "Username",
+  "profileUsernameRule": "lowercase letters, digits and _",
+  "profileBirthYear": "Year of birth",
+  "profileBirthYearHint": "e.g. 1995",
+  "profileAgeNow": "{age} years old this year",
+  "@profileAgeNow": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "profileHeight": "Height (cm)",
+  "profileHeightHint": "e.g. 178",
+  "profileWeight": "Weight (kg)",
+  "profileWeightHint": "e.g. 72.5",
+  "profileWeightHelper": "Saved to today's health log, so the chart stays in step",
+  "profileSave": "Save",
+  "profileSaving": "Saving…",
+  "profileSaved": "Saved",
+  "profileRetry": "Try again",
+  "profileAvatarLabel": "Profile picture",
+  "profileErrorNetwork": "No connection to the server. Nothing was saved.",
+  "profileErrorSignedOut": "Your session has ended. Please sign in again.",
+  "profileErrorNicknameTaken": "That username is taken.",
+  "profileErrorInvalid": "Some of what you entered could not be saved. Please check it.",
+  "profileOpen": "Account details"
 }

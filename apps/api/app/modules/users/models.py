@@ -53,6 +53,10 @@ class User(UUIDPk, Timestamps, SoftDelete, Base):
     timezone: Mapped[str] = mapped_column(String(64), default="UTC", nullable=False)
     gender: Mapped[str | None] = mapped_column(String(20), nullable=True, default=None)
     birth_year: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    # Centimetres. On the profile rather than in `health_logs` because it
+    # barely changes; weight stays a dated measurement, so the profile never
+    # holds a second, staler copy of it.
+    height_cm: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     # TODO(storage): avatar upload is out of scope for Phase 1 (no object
     # storage configured). This column only stores a URL the client already
     # hosts elsewhere; nothing here uploads or validates reachability.

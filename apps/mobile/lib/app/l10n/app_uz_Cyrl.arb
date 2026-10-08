@@ -495,5 +495,35 @@
   "homeWidgetAdd": "Виджет қўшиш",
   "homeAllModules": "Барча бўлимлар",
   "homeWidgetsEmpty": "Кунлик вазифаларингизни виджет қилиб қўшинг",
-  "homeWidgetsDoneOf": "{done}/{total} бажарилди"
+  "homeWidgetsDoneOf": "{done}/{total} бажарилди",
+  "profileTitle": "Ҳисоб маълумотлари",
+  "profileFullName": "Исм шарифи",
+  "profileFullNameHint": "Сизни қандай чақиришади",
+  "profileUsername": "Фойдаланувчи номи",
+  "profileUsernameRule": "кичик ҳарфлар, рақамлар ва _",
+  "profileBirthYear": "Туғилган йил",
+  "profileBirthYearHint": "масалан, 1995",
+  "profileAgeNow": "Бу йил {age} ёш",
+  "@profileAgeNow": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "profileHeight": "Бўй (см)",
+  "profileHeightHint": "масалан, 178",
+  "profileWeight": "Вазн (кг)",
+  "profileWeightHint": "масалан, 72.5",
+  "profileWeightHelper": "Бугунги соғлиқ журналига ёзилади, шунда график билан мос қолади",
+  "profileSave": "Сақлаш",
+  "profileSaving": "Сақланмоқда…",
+  "profileSaved": "Сақланди",
+  "profileRetry": "Қайта уриниш",
+  "profileAvatarLabel": "Профил сурати",
+  "profileErrorNetwork": "Серверга уланиб бўлмади. Ҳеч нарса сақланмади.",
+  "profileErrorSignedOut": "Сессия тугади. Қайтадан киринг.",
+  "profileErrorNicknameTaken": "Бу фойдаланувчи номи банд.",
+  "profileErrorInvalid": "Киритилганларнинг баъзиси сақланмади. Текшириб кўринг.",
+  "profileOpen": "Ҳисоб маълумотлари"
 }

@@ -32,6 +32,12 @@ Nickname = Annotated[
 AvatarUrl = Annotated[str, Field(max_length=2048)]
 # Plausible birth-year range; loose on purpose (no product requirement pins it).
 BirthYear = Annotated[int, Field(ge=1900, le=2100)]
+# Height belongs on the profile because it barely changes. WEIGHT does not:
+# it is a `health_logs` measurement with a date, so the profile would only
+# ever hold a copy that goes stale and disagrees with the chart. The profile
+# screen shows the latest logged weight and writes edits back as a log.
+# Range is deliberately wide enough for a child and a very tall adult.
+HeightCm = Annotated[int, Field(ge=50, le=260)]
 
 
 def _validate_locale(value: str) -> str:
@@ -78,6 +84,7 @@ class ProfileOut(BaseModel):
     timezone: str
     gender: Gender | None
     birth_year: int | None
+    height_cm: int | None
     avatar_url: str | None
     nickname: str | None
     leaderboard_opt_in: bool
@@ -100,6 +107,7 @@ class ProfileUpdate(BaseModel):
     timezone: str | None = None
     gender: Gender | None = None
     birth_year: BirthYear | None = None
+    height_cm: HeightCm | None = None
     avatar_url: AvatarUrl | None = None
     nickname: Nickname | None = None
     leaderboard_opt_in: bool | None = None
