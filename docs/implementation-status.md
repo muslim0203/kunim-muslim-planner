@@ -1,3 +1,20 @@
+## Google sign-in — 2026-10-08
+
+- API: `POST /auth/google` verifies a Google ID token (RS256 against Google's
+  JWKS, audience in `GOOGLE_CLIENT_IDS`, `email_verified` required), then signs
+  into the linked account, links an account with the same address, or creates
+  a passwordless one. Links live in `user_identities` (migration 0015). Linking
+  an account whose email was never verified clears its password and sessions
+  (pre-registration takeover). `DELETE /users/me` also accepts a fresh
+  `google_id_token` instead of the password. `GOOGLE_CLIENT_IDS` empty → 503.
+- Mobile: `google_sign_in` 7.x, "Google orqali davom etish" on the account
+  screen, Google confirmation in the delete dialog. The web OAuth client
+  (`864078413890-el04...`) is the app's default server client id; the API
+  still needs `GOOGLE_CLIENT_IDS` set on the deploy.
+- Verified here: pytest 602 passed; `flutter analyze` clean; mobile auth and
+  account tests pass. **Not verified on a device** — no OAuth clients exist
+  yet (Google Cloud setup: `apps/mobile/PLATFORM-SETUP.md`).
+
 ## Release signing verification — 2026-09-18
 
 - Android release signing wired in `apps/mobile/android/app/build.gradle.kts`:

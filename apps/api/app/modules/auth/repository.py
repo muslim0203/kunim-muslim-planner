@@ -10,15 +10,21 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.auth.models import RefreshToken, VerificationPurpose, VerificationToken
+from app.modules.auth.models import (
+    IdentityProvider,
+    RefreshToken,
+    UserIdentity,
+    VerificationPurpose,
+    VerificationToken,
+)
 from app.modules.users.models import User, UserRole
 
 
 class AuthRepository:
-    """Thin persistence layer over `users`, `refresh_tokens`, `verification_tokens`."""
+    """Persistence over `users`, `refresh_tokens`, `verification_tokens`, `user_identities`."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -38,9 +44,10 @@ class AuthRepository:
         self,
         *,
         email: str,
-        password_hash: str,
+        password_hash: str | None,
         locale: str,
         role: UserRole = UserRole.user,
+        email_verified_at: datetime | None = None,
     ) -> User:
         user = User(
             email=email,
@@ -48,18 +55,53 @@ class AuthRepository:
             locale=locale,
             role=role,
             is_active=True,
+            email_verified_at=email_verified_at,
         )
         self._session.add(user)
         await self._session.flush()
         return user
 
-    async def set_password_hash(self, user: User, password_hash: str) -> None:
+    async def set_password_hash(self, user: User, password_hash: str | None) -> None:
         user.password_hash = password_hash
         await self._session.flush()
 
     async def mark_email_verified(self, user: User, when: datetime) -> None:
         user.email_verified_at = when
         await self._session.flush()
+
+    # --- external identities ----------------------------------------------
+
+    async def get_identity(self, provider: IdentityProvider, subject: str) -> UserIdentity | None:
+        stmt = select(UserIdentity).where(
+            UserIdentity.provider == provider, UserIdentity.subject == subject
+        )
+        return (await self._session.execute(stmt)).scalar_one_or_none()
+
+    async def add_identity(
+        self,
+        *,
+        user_id: uuid.UUID,
+        provider: IdentityProvider,
+        subject: str,
+        created_at: datetime,
+    ) -> UserIdentity:
+        identity = UserIdentity(
+            user_id=user_id, provider=provider, subject=subject, created_at=created_at
+        )
+        self._session.add(identity)
+        await self._session.flush()
+        return identity
+
+    async def delete_identity(self, identity: UserIdentity) -> None:
+        await self._session.delete(identity)
+        await self._session.flush()
+
+    async def delete_identities_for_user(self, user_id: uuid.UUID) -> int:
+        result = await self._session.execute(
+            delete(UserIdentity).where(UserIdentity.user_id == user_id)
+        )
+        await self._session.flush()
+        return int(result.rowcount or 0)
 
     # --- refresh tokens ----------------------------------------------------
 

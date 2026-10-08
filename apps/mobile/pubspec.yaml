@@ -59,7 +59,8 @@ dependencies:
   flutter_svg: ^2.0.10+1
 
   # --- Phase 1 (auth / account) ---
-  # google_sign_in             # Phase 1 — auth
+  # Google sign-in (core/auth/google_sign_in_client.dart)
+  google_sign_in: ^7.2.0
   # sign_in_with_apple         # Phase 1 — auth
   # share_plus                 # Phase 1+ — as needed
   # url_launcher               # Phase 1+ — as needed

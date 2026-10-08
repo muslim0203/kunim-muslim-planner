@@ -65,6 +65,11 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     EMAIL_FROM: str = "KUNIM <onboarding@resend.dev>"
 
+    # OAuth client ids whose Google ID tokens `/auth/google` accepts: the web
+    # client id the app passes as `serverClientId` (Android puts that in the
+    # token's `aud`), plus the iOS client id. Empty disables Google sign-in.
+    GOOGLE_CLIENT_IDS: Annotated[list[str], NoDecode] = Field(default_factory=list)
+
     @model_validator(mode="after")
     def _debug_follows_env_unless_set(self) -> Settings:
         if "DEBUG" not in self.model_fields_set and self.ENV == "dev":
@@ -74,9 +79,9 @@ class Settings(BaseSettings):
             self.DEBUG = True
         return self
 
-    @field_validator("CORS_ORIGINS", mode="before")
+    @field_validator("CORS_ORIGINS", "GOOGLE_CLIENT_IDS", mode="before")
     @classmethod
-    def _split_cors_origins(cls, value: object) -> object:
+    def _split_comma_list(cls, value: object) -> object:
         """Allow a comma-separated string in addition to a JSON list."""
         if isinstance(value, str) and not value.strip().startswith("["):
             return [origin.strip() for origin in value.split(",") if origin.strip()]

@@ -1,8 +1,9 @@
 """Account deletion (`docs/privacy/data-map.md`, "O'chirish").
 
 1. `DELETE /users/me` closes the account at once: `users.deleted_at` is set,
-   every refresh token is revoked and the email is released (replaced by a
-   placeholder), so the address can be registered again. The auth lookups
+   every refresh token is revoked, linked Google sign-ins are removed and the
+   email is released (replaced by a placeholder), so the address can be
+   registered again. The auth lookups
    ignore deleted users, so the current access token stops working on its
    next request.
 2. After the 7-day grace period `purge_deleted_accounts` hard-deletes the row.
@@ -25,6 +26,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import verify_password
+from app.modules.auth.models import IdentityProvider
 from app.modules.auth.repository import AuthRepository
 from app.modules.users.models import User
 
@@ -34,7 +36,7 @@ DELETION_GRACE_PERIOD: Final[timedelta] = timedelta(days=7)
 
 
 class WrongPasswordError(Exception):
-    """The password entered to confirm the deletion does not match."""
+    """The password (or Google account) given to confirm the deletion does not match."""
 
 
 def user_digest(user_id: uuid.UUID) -> str:
@@ -62,12 +64,27 @@ class AccountService:
         if not verify_password(user.password_hash, password):
             logger.info("account_delete_refused", user=user_digest(user.id))
             raise WrongPasswordError
+        await self._close(user)
 
+    async def delete_account_with_google(self, user: User, *, google_subject: str) -> None:
+        """Close [user]'s account, confirmed by signing in with its linked Google account."""
+        identity = await AuthRepository(self._session).get_identity(
+            IdentityProvider.google, google_subject
+        )
+        if identity is None or identity.user_id != user.id:
+            logger.info("account_delete_refused", user=user_digest(user.id))
+            raise WrongPasswordError
+        await self._close(user)
+
+    async def _close(self, user: User) -> None:
         now = self._now()
         user.deleted_at = now
         user.is_active = False
         user.email = released_email(user.id)
-        await AuthRepository(self._session).revoke_all_for_user(user_id=user.id, when=now)
+        repo = AuthRepository(self._session)
+        await repo.revoke_all_for_user(user_id=user.id, when=now)
+        # Unlinked at once, so the same Google account can sign up afresh.
+        await repo.delete_identities_for_user(user.id)
         await self._session.commit()
         logger.info("account_deleted", user=user_digest(user.id))
 

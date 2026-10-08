@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kunim/core/auth/auth_api.dart';
 import 'package:kunim/core/auth/auth_controller.dart';
+import 'package:kunim/core/auth/google_sign_in_client.dart';
 import 'package:kunim/core/auth/local_account_store.dart';
 import 'package:kunim/core/auth/refresh_token_store.dart';
 import 'package:kunim/core/db/app_database.dart';
@@ -17,6 +18,7 @@ import '../../sync/sync_engine_fake_server.dart';
 void main() {
   late AppDatabase db;
   late FakeAuthApi api;
+  late FakeGoogleSignInClient google;
   late MemoryRefreshTokenStore tokens;
   late DateTime now;
   late ProviderContainer container;
@@ -24,12 +26,14 @@ void main() {
   setUp(() {
     db = AppDatabase.withExecutor(NativeDatabase.memory());
     api = FakeAuthApi();
+    google = FakeGoogleSignInClient();
     tokens = MemoryRefreshTokenStore();
     now = DateTime.utc(2026, 9, 14, 12);
     container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
         authApiProvider.overrideWithValue(api),
+        googleSignInClientProvider.overrideWithValue(google),
         refreshTokenStoreProvider.overrideWithValue(tokens),
         syncApiProvider.overrideWithValue(FakeSyncServer()),
         authClockProvider.overrideWithValue(() => now),
@@ -237,5 +241,89 @@ void main() {
 
     expect(state(), isA<AuthSignedIn>());
     expect(tokens.value, 'r1');
+  });
+
+  test('signing in with Google sends the ID token and stores the session',
+      () async {
+    final signedIn = await controller().signInWithGoogle(locale: 'uz');
+    await settle();
+
+    expect(signedIn, isTrue);
+    expect(api.lastGoogleIdToken, 'google-id-token');
+    expect(api.lastGoogleLocale, 'uz');
+    expect(api.lastDeviceId, isNotEmpty);
+    expect(state(), isA<AuthSignedIn>());
+    expect(tokens.value, 'r1');
+  });
+
+  test('closing Google\'s account picker is not an error', () async {
+    google.failure = GoogleSignInFailure.canceled;
+
+    final signedIn = await controller().signInWithGoogle(locale: 'uz');
+    await settle();
+
+    expect(signedIn, isFalse);
+    expect(api.googleCalls, 0);
+    expect(state(), isA<AuthSignedOut>());
+  });
+
+  test('a Google sign-in failing on the device is reported', () async {
+    google.failure = GoogleSignInFailure.failed;
+
+    await expectLater(
+      controller().signInWithGoogle(locale: 'uz'),
+      throwsA(isA<GoogleSignInClientException>()),
+    );
+    expect(api.googleCalls, 0);
+  });
+
+  test('a Google token the server refuses forgets the Google account',
+      () async {
+    api.googleError = AuthErrorKind.invalidCredentials;
+
+    await expectLater(
+      controller().signInWithGoogle(locale: 'uz'),
+      throwsA(isA<AuthApiException>()),
+    );
+    await settle();
+
+    expect(google.signOutCalls, 1);
+    expect(state(), isA<AuthSignedOut>());
+    expect(tokens.value, isNull);
+  });
+
+  test('signing out also signs out of Google on this device', () async {
+    await signIn();
+
+    await controller().signOut();
+
+    expect(google.signOutCalls, 1);
+  });
+
+  test('deleting a Google account is confirmed with a fresh Google token',
+      () async {
+    await controller().signInWithGoogle(locale: 'uz');
+    await settle();
+    google.token = 'fresh-token';
+
+    final deleted = await controller().deleteAccountWithGoogle();
+
+    expect(deleted, isTrue);
+    expect(api.lastDeleteGoogleIdToken, 'fresh-token');
+    expect(api.lastDeletePassword, isNull);
+    expect(state(), isA<AuthSignedOut>());
+    expect(tokens.value, isNull);
+  });
+
+  test('closing the picker while deleting keeps the account', () async {
+    await controller().signInWithGoogle(locale: 'uz');
+    await settle();
+    google.failure = GoogleSignInFailure.canceled;
+
+    final deleted = await controller().deleteAccountWithGoogle();
+
+    expect(deleted, isFalse);
+    expect(api.deleteCalls, 0);
+    expect(state(), isA<AuthSignedIn>());
   });
 }

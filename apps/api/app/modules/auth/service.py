@@ -38,6 +38,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+import jwt
 import structlog
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
@@ -54,8 +55,14 @@ from app.core.security import (
     verify_password,
 )
 from app.integrations.email import get_email_sender
+from app.integrations.google_signin import (
+    GoogleIdentity,
+    GoogleSignInDisabled,
+    GoogleTokenVerifier,
+    InvalidGoogleToken,
+)
 from app.modules.auth.emails import password_reset_email
-from app.modules.auth.models import RefreshToken, VerificationPurpose
+from app.modules.auth.models import IdentityProvider, RefreshToken, VerificationPurpose
 from app.modules.auth.repository import AuthRepository
 from app.modules.auth.schemas import RegisterResponse, TokenPair
 from app.modules.users.models import User
@@ -86,6 +93,33 @@ def _invalid_refresh_token() -> HTTPException:
         detail="Invalid or expired refresh token.",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+
+def _invalid_google_token() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Google sign-in could not be verified.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+def _google_unavailable() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Google sign-in is not available right now.",
+    )
+
+
+async def verify_google_token(verifier: GoogleTokenVerifier, id_token: str) -> GoogleIdentity:
+    """Verify an ID token, mapping each failure to its HTTP answer."""
+    try:
+        return await verifier.verify(id_token)
+    except InvalidGoogleToken as exc:
+        raise _invalid_google_token() from exc
+    except GoogleSignInDisabled as exc:
+        raise _google_unavailable() from exc
+    except jwt.PyJWKClientConnectionError as exc:
+        raise _google_unavailable() from exc
 
 
 @dataclass(frozen=True)
@@ -220,6 +254,86 @@ class AuthService:
         await self._session.commit()
         logger.info("auth_login_succeeded", user_id=str(user.id), device_id=device_id)
         return tokens.to_schema()
+
+    # --- Google sign-in ----------------------------------------------------
+
+    async def google_sign_in(
+        self,
+        *,
+        id_token: str,
+        device_id: str,
+        locale: str,
+        verifier: GoogleTokenVerifier,
+    ) -> TokenPair:
+        """Sign in with a Google ID token, creating or linking the account.
+
+        One endpoint covers both sign-up and sign-in, which is how Google
+        sign-in reads to the user. Unlike `/auth/register` it can return
+        tokens straight away and can say an account was found: the caller has
+        proved they own the address, so there is nothing to enumerate.
+
+        * A known Google subject signs into the account it is linked to.
+        * Otherwise an account with the same verified Google address is
+          linked. If that account's email was never verified, whoever set
+          its password never proved they own the address -- it may have been
+          registered in advance by someone else, waiting for the real owner
+          to link it. Its password is therefore cleared and its sessions are
+          ended; the owner can set a password again via "forgot password".
+        * Otherwise a new passwordless account is created.
+        """
+        google = await verify_google_token(verifier, id_token)
+        try:
+            user = await self._user_for_google(google, locale=locale)
+        except IntegrityError:
+            # A concurrent first sign-in with the same Google account (or
+            # address) won the insert; the second attempt finds its row.
+            await self._session.rollback()
+            user = await self._user_for_google(google, locale=locale)
+
+        if not user.is_active:
+            logger.info("auth_google_failed", reason="inactive", user_id=str(user.id))
+            raise _invalid_google_token()
+
+        tokens = await self._issue_tokens(user, device_id=device_id, now=self._now())
+        await self._session.commit()
+        logger.info("auth_google_succeeded", user_id=str(user.id), device_id=device_id)
+        return tokens.to_schema()
+
+    async def _user_for_google(self, google: GoogleIdentity, *, locale: str) -> User:
+        now = self._now()
+        identity = await self._repo.get_identity(IdentityProvider.google, google.subject)
+        if identity is not None:
+            linked = await self._repo.get_user_by_id(identity.user_id)
+            if linked is not None:
+                return linked
+            # Linked to a closed account: free the Google account for a new one.
+            await self._repo.delete_identity(identity)
+
+        user = await self._repo.get_user_by_email(google.email)
+        if user is None:
+            user = await self._repo.create_user(
+                email=google.email,
+                password_hash=None,
+                locale=locale,
+                email_verified_at=now,
+            )
+            logger.info("auth_google_account_created", user_id=str(user.id))
+        else:
+            if user.email_verified_at is None:
+                if user.password_hash is not None:
+                    await self._repo.set_password_hash(user, None)
+                    await self._repo.revoke_all_for_user(user_id=user.id, when=now)
+                    logger.info("auth_google_unverified_password_cleared", user_id=str(user.id))
+                await self._repo.mark_email_verified(user, now)
+            logger.info("auth_google_account_linked", user_id=str(user.id))
+
+        await self._repo.add_identity(
+            user_id=user.id,
+            provider=IdentityProvider.google,
+            subject=google.subject,
+            created_at=now,
+        )
+        return user
 
     # --- refresh / rotation / reuse detection ------------------------------
 
@@ -440,6 +554,9 @@ class AuthService:
 
         await self._repo.consume_verification_token(stored, when=now)
         await self._repo.set_password_hash(user, hash_password(new_password))
+        # Reading the code out of the inbox proves the address is theirs.
+        if user.email_verified_at is None:
+            await self._repo.mark_email_verified(user, now)
         revoked = await self._repo.revoke_all_for_user(user_id=user.id, when=now)
         await self._session.commit()
         logger.info(

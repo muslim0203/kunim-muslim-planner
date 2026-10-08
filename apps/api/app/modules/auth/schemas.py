@@ -64,6 +64,19 @@ class LoginRequest(_EmailNormalising):
     device_id: DeviceId = "unknown"
 
 
+# A Google ID token is a JWT of roughly 1-1.5 KB; the bound only stops abuse.
+GoogleIdToken = Annotated[str, Field(min_length=1, max_length=4096)]
+
+
+class GoogleSignInRequest(BaseModel):
+    """An ID token from Google Sign-In on the device."""
+
+    id_token: GoogleIdToken
+    device_id: DeviceId = "unknown"
+    # Only used when the sign-in creates the account.
+    locale: Annotated[str, Field(max_length=10)] = "en"
+
+
 class RefreshRequest(BaseModel):
     refresh_token: OpaqueToken
     device_id: DeviceId = "unknown"

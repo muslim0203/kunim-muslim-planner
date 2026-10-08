@@ -10,6 +10,7 @@ import '../../../app/l10n/gen/app_localizations.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/auth/auth_api.dart';
 import '../../../core/auth/auth_controller.dart';
+import '../../../core/auth/google_sign_in_client.dart';
 import '../../../core/network/error_mapper.dart';
 import '../../../core/settings/app_settings.dart';
 import '../../../core/sync/sync_engine.dart';
@@ -312,8 +313,63 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
             textAlign: TextAlign.center,
           ),
         ),
+        if (ref.watch(googleSignInClientProvider).isAvailable) ...[
+          const SizedBox(height: KunimSpacing.md),
+          Row(
+            children: [
+              const Expanded(child: Divider()),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: KunimSpacing.sm),
+                child: Text(
+                  l10n.authOr,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const Expanded(child: Divider()),
+            ],
+          ),
+          const SizedBox(height: KunimSpacing.md),
+          OutlinedButton.icon(
+            key: const Key('google-sign-in'),
+            onPressed: _busy ? null : _signInWithGoogle,
+            icon: const Text(
+              'G',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+            ),
+            label: Text(l10n.authContinueWithGoogle),
+          ),
+        ],
       ],
     );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    final l10n = AppLocalizations.of(context);
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authControllerProvider.notifier).signInWithGoogle(
+            locale: ref.read(appSettingsProvider).language.code,
+          );
+    } on GoogleSignInClientException {
+      if (mounted) setState(() => _error = l10n.authErrorGoogle);
+    } on AuthApiException catch (error) {
+      if (mounted) {
+        setState(
+          () => _error = error.kind == AuthErrorKind.invalidCredentials ||
+                  error.kind == AuthErrorKind.server
+              ? l10n.authErrorGoogle
+              : _messageFor(l10n, error.kind),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _submit() async {

@@ -56,3 +56,23 @@ and reconcile — in particular:
   `docs/plan.md` section 12, Phase 0's Definition of Done includes "iOS
   Family Controls entitlement so'rovi yuborilgan" (approval can take
   weeks and gates Phase 6 iOS Digital Wellbeing, not this phase's build).
+
+## Google sign-in (`core/auth/google_sign_in_client.dart`)
+The button appears whenever the build has a server client id. One-time
+setup in Google Cloud Console (APIs & Services -> Credentials, after the
+OAuth consent screen is configured):
+
+1. **Web application** client -> its id is the *server client id*. Pass it
+   to the app and list it on the API:
+   - app: already the default of `kunimGoogleServerClientId`
+     (`864078413890-el04gc5octqltk6cbtqiqfj85uhflita.apps.googleusercontent.com`);
+     override with `--dart-define=KUNIM_GOOGLE_SERVER_CLIENT_ID=...`;
+   - API: `GOOGLE_CLIENT_IDS=<web client id>[,<ios client id>]`.
+2. **Android** client, package `com.kunim.app`, with the SHA-1 of every
+   signing key in use (debug keystore, upload key, and Play App Signing key
+   from Play Console). No `google-services.json` is needed.
+3. **iOS** client, bundle id of the app. Pass
+   `--dart-define=KUNIM_GOOGLE_IOS_CLIENT_ID=<ios client id>`, add its id to
+   `GOOGLE_CLIENT_IDS` on the API, and add its *reversed* client id
+   (`com.googleusercontent.apps.<...>`) as a URL scheme under
+   `CFBundleURLTypes` in `ios/Runner/Info.plist`.

@@ -1,6 +1,6 @@
 """ORM models backing authentication.
 
-Two tables live here:
+Three tables live here:
 
 * `refresh_tokens` -- one row per issued refresh token. Rotation is modelled as
   a linked list: refreshing marks the presented row `revoked_at` and points its
@@ -28,7 +28,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import TypeDecorator
 
@@ -141,3 +141,39 @@ class VerificationToken(UUIDPk, Base):
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid, no secrets
         return f"<VerificationToken id={self.id} purpose={self.purpose}>"
+
+
+class IdentityProvider(StrEnum):
+    """External sign-in providers an account can be linked to."""
+
+    google = "google"
+
+
+class UserIdentity(UUIDPk, Base):
+    """One external identity (provider + subject) belonging to one user.
+
+    `(provider, subject)` is unique: a Google account signs into exactly one
+    KUNIM account. Rows go with the user (`ON DELETE CASCADE`) and are removed
+    when the account is closed, so the same Google account can start afresh.
+    """
+
+    __tablename__ = "user_identities"
+    __table_args__ = (
+        UniqueConstraint("provider", "subject", name="uq_user_identities_provider_subject"),
+        Index("ix_user_identities_user_id", "user_id"),
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    provider: Mapped[IdentityProvider] = mapped_column(
+        Enum(IdentityProvider, name="identity_provider"), nullable=False
+    )
+    # Google's `sub`: up to 255 ASCII characters, never reused.
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        TZDateTime, server_default=func.now(), nullable=False
+    )
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid, no secrets
+        return f"<UserIdentity id={self.id} provider={self.provider}>"
