@@ -13,6 +13,7 @@ import '../../features/health/presentation/health_screen.dart';
 import '../../features/mood/presentation/mood_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/prayer/presentation/prayer_screen.dart';
+import '../../features/quran/presentation/quran_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/social/presentation/leaderboard_screen.dart';
 import '../../features/sleep/presentation/sleep_screen.dart';
@@ -31,6 +32,9 @@ abstract final class KunimRoutes {
 
   /// The prayer screen, opened from the home tab (strip, module tile)...
   static const String prayer = '$home/$_prayer';
+
+  /// The Qur'an: its index and, from there, the mushaf reader.
+  static const String quran = '$home/$_quran';
 
   /// ...and from settings, so the back button returns where the user was.
   static const String settingsPrayer = '$settings/$_prayer';
@@ -55,6 +59,7 @@ abstract final class KunimRoutes {
   static const String leaderboard = '$stats/$_leaderboard';
 
   static const String _prayer = 'prayer';
+  static const String _quran = 'quran';
   static const String _mood = 'mood';
   static const String _health = 'health';
   static const String _sleep = 'sleep';
@@ -89,6 +94,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: KunimRoutes._prayer,
                     builder: (context, state) => const PrayerScreen(),
+                  ),
+                  GoRoute(
+                    path: KunimRoutes._quran,
+                    builder: (context, state) => const QuranScreen(),
                   ),
                   GoRoute(
                     path: KunimRoutes._mood,

@@ -1130,5 +1130,21 @@
   "homeWidgetsDoneOf": "{done}/{total} done",
   "@homeWidgetsDoneOf": {
     "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
-  }
+  },
+  "quranTitle": "The Holy Qur'an",
+  "quranSurahs": "Surahs",
+  "quranJuzs": "Juz",
+  "quranContinue": "Continue reading",
+  "quranStart": "Start reading",
+  "quranPageNumber": "Page {page}",
+  "@quranPageNumber": {"placeholders": {"page": {"type": "int"}}},
+  "quranJuzNumber": "Juz {juz}",
+  "@quranJuzNumber": {"placeholders": {"juz": {"type": "int"}}},
+  "quranAyahCount": "{count, plural, one{{count} ayah} other{{count} ayahs}}",
+  "quranMeccan": "Meccan",
+  "quranMedinan": "Medinan",
+  "quranGoToPage": "Go to a page",
+  "quranPageOf": "Between 1 and {total}",
+  "@quranPageOf": {"placeholders": {"total": {"type": "int"}}},
+  "quranGo": "Go"
 }

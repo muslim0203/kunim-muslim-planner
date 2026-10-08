@@ -28,6 +28,10 @@ dependencies:
   drift: ^2.18.0
   drift_flutter: ^0.2.0
   sqlcipher_flutter_libs: ^0.7.0+eol
+  # Used directly, not just through drift: the bundled mushaf
+  # (assets/db/quran.sqlite) is opened read-only with plain SQL, and
+  # test/db/migration_test.dart hand-builds a pre-migration database.
+  sqlite3: ^2.9.0
 
   # Immutable models / DTOs
   freezed_annotation: ^3.1.0
@@ -93,10 +97,6 @@ dev_dependencies:
   drift_dev: ^2.18.0
   freezed: ^3.2.3
   json_serializable: ^6.8.0
-  # Used directly (not just transitively via drift) by
-  # test/db/migration_test.dart to hand-build a pre-migration database.
-  sqlite3: ^2.9.0
-
   custom_lint: ^0.8.1
   riverpod_lint: ^3.1.0
   flutter_lints: ^6.0.0
@@ -106,13 +106,15 @@ flutter:
   generate: true
   uses-material-design: true
 
-  # `assets/` only holds a `.gitkeep` placeholder in Phase 0 (no real asset
-  # files exist yet — e.g. assets/db/quran.sqlite and assets/cities.json
-  # land in Phase 3). Declaring the directory now means later phases can
-  # drop files straight into it without touching this file again.
+  # Directories are declared, not just single files, so a later phase can
+  # drop an asset in without touching this file again. Flutter does not
+  # recurse into subdirectories, which is why each one is named.
   assets:
     - assets/
     - assets/images/
+    # The mushaf: the Tanzil Uthmani text with the 604-page Madinah
+    # structure, built by packages/content_tools/build_quran_db.py.
+    - assets/db/quran.sqlite
 
   fonts:
     - family: Manrope

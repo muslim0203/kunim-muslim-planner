@@ -66,11 +66,8 @@ String? habitKindRoute(HabitKind kind) {
     HabitKind.sleep => KunimRoutes.sleep,
     HabitKind.sport || HabitKind.water => KunimRoutes.health,
     HabitKind.study => KunimRoutes.goals,
-    HabitKind.custom ||
-    HabitKind.book ||
-    HabitKind.quran ||
-    HabitKind.zikr =>
-      null,
+    HabitKind.quran => KunimRoutes.quran,
+    HabitKind.custom || HabitKind.book || HabitKind.zikr => null,
   };
 }
 

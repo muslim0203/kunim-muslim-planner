@@ -43,6 +43,7 @@ List<KunimModule> kunimModules(AppLocalizations l10n) => [
         meta: l10n.moduleQuranMeta,
         icon: Icons.menu_book_rounded,
         color: KunimModuleColors.quran,
+        route: KunimRoutes.quran,
       ),
       KunimModule(
         title: l10n.moduleMood,
