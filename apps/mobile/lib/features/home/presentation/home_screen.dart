@@ -123,7 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _TodayProgress(tasks: tasks),
+              _TodayProgress(tasks: tasks, habits: habits),
               const SizedBox(height: KunimSpacing.lg),
               _SectionHeader(
                 title: l10n.homeModules,
@@ -444,17 +444,26 @@ class _PrayerCell extends StatelessWidget {
 }
 
 class _TodayProgress extends StatelessWidget {
-  const _TodayProgress({required this.tasks});
+  const _TodayProgress({required this.tasks, required this.habits});
 
   final AsyncValue<List<Task>> tasks;
+
+  /// Today's widgets. The headline card used to count tasks ALONE, so with a
+  /// widget due and no task it announced "nothing planned for today" directly
+  /// above a grid reading "0/1 done" -- two counters on one screen disagreeing
+  /// about the same day. The card speaks for the whole day, so it counts
+  /// everything the day asked for.
+  final AsyncValue<List<HabitToday>> habits;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final items = tasks.value ?? const <Task>[];
-    final total = items.length;
-    final completed = items.where((task) => task.isCompleted).length;
+    final taskItems = tasks.value ?? const <Task>[];
+    final habitItems = habits.value ?? const <HabitToday>[];
+    final total = taskItems.length + habitItems.length;
+    final completed = taskItems.where((task) => task.isCompleted).length +
+        habitItems.where((habit) => habit.isDone).length;
     final progress = total == 0 ? 0.0 : completed / total;
 
     return Material(

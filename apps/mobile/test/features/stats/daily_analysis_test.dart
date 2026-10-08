@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kunim/app/l10n/gen/app_localizations.dart';
+import 'package:kunim/app/theme/tokens.dart';
 import 'package:kunim/core/db/app_database.dart';
 import 'package:kunim/core/sync/sync_triggers.dart';
 import 'package:kunim/features/habits/data/habit_log_repository.dart';
@@ -116,6 +117,50 @@ void main() {
 
     expect(inSheet(l10n.statsDayFree), findsOneWidget);
     expect(inSheet(l10n.statsDayMissedTitle), findsNothing);
+    await unmount(tester);
+  });
+
+  /// The colour painted inside a day square.
+  Color squareColour(WidgetTester tester, Finder square) {
+    final container = tester.widget<Container>(
+      find.descendant(of: square, matching: find.byType(Container)).first,
+    );
+    return (container.decoration! as BoxDecoration).color!;
+  }
+
+  testWidgets('a day still being lived is never painted as missed', (
+    tester,
+  ) async {
+    // A widget due today and nothing logged yet: `done == 0`, which used to
+    // colour the square with the error colour. The day has hours left in it,
+    // and these indicators exist to help someone decide, not to call a
+    // failure early (CLAUDE.md, TZ section 78).
+    await HabitRepository(db, onLocalWrite: () {}).createHabit(title: 'Sport');
+
+    await pumpStats(tester);
+    final theme = Theme.of(tester.element(find.byType(DailyAnalysisCard)));
+
+    final colour = squareColour(tester, todaySquare());
+    expect(
+      colour,
+      isNot(theme.colorScheme.error),
+      reason: 'today has not been missed; the day is not over',
+    );
+    expect(colour, KunimColors.gold, reason: 'a day in progress reads amber');
+    await unmount(tester);
+  });
+
+  testWidgets('finishing the day turns today green', (tester) async {
+    final habitId = await HabitRepository(db, onLocalWrite: () {}).createHabit(
+      title: 'Sport',
+    );
+    await HabitLogRepository(db, onLocalWrite: () {})
+        .logCompletion(habitId: habitId, day: LocalDay.now());
+
+    await pumpStats(tester);
+    final theme = Theme.of(tester.element(find.byType(DailyAnalysisCard)));
+
+    expect(squareColour(tester, todaySquare()), theme.colorScheme.primary);
     await unmount(tester);
   });
 }
