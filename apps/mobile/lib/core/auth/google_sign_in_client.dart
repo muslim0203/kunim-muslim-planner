@@ -9,15 +9,20 @@
 ///   --dart-define=KUNIM_GOOGLE_SERVER_CLIENT_ID=<web client id> \
 ///   --dart-define=KUNIM_GOOGLE_IOS_CLIENT_ID=<ios client id>
 /// ```
-/// Without a server client id the app hides the Google button.
+/// The server client id defaults to KUNIM's own; building with an empty one
+/// hides the Google button.
 library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+/// The KUNIM *web* OAuth client. An OAuth client id is public (it ships in
+/// every build), so it is the default rather than a secret.
 const String kunimGoogleServerClientId = String.fromEnvironment(
   'KUNIM_GOOGLE_SERVER_CLIENT_ID',
+  defaultValue:
+      '864078413890-el04gc5octqltk6cbtqiqfj85uhflita.apps.googleusercontent.com',
 );
 const String kunimGoogleIosClientId = String.fromEnvironment(
   'KUNIM_GOOGLE_IOS_CLIENT_ID',

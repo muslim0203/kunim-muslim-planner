@@ -56,12 +56,7 @@ jobs:
           KUNIM_ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           KUNIM_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KUNIM_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          # An OAuth client id is public, so a repository variable rather than
-          # a secret. Unset, the build simply has no Google button.
-          KUNIM_GOOGLE_SERVER_CLIENT_ID: ${{ vars.KUNIM_GOOGLE_SERVER_CLIENT_ID }}
-        run: >-
-          flutter build appbundle --release
-          --dart-define=KUNIM_GOOGLE_SERVER_CLIENT_ID="$KUNIM_GOOGLE_SERVER_CLIENT_ID"
+        run: flutter build appbundle --release
 
       # The signer would otherwise leave the key on the runner's disk for the
       # rest of the job, including any step added later.

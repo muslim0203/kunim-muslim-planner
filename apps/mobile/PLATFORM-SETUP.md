@@ -58,15 +58,15 @@ and reconcile — in particular:
   weeks and gates Phase 6 iOS Digital Wellbeing, not this phase's build).
 
 ## Google sign-in (`core/auth/google_sign_in_client.dart`)
-The button only appears when the build has a server client id. One-time
+The button appears whenever the build has a server client id. One-time
 setup in Google Cloud Console (APIs & Services -> Credentials, after the
 OAuth consent screen is configured):
 
 1. **Web application** client -> its id is the *server client id*. Pass it
    to the app and list it on the API:
-   - app: `--dart-define=KUNIM_GOOGLE_SERVER_CLIENT_ID=<web client id>`
-     (release builds read the `KUNIM_GOOGLE_SERVER_CLIENT_ID` repository
-     variable, see `.github/workflows/release-mobile.yml`);
+   - app: already the default of `kunimGoogleServerClientId`
+     (`864078413890-el04gc5octqltk6cbtqiqfj85uhflita.apps.googleusercontent.com`);
+     override with `--dart-define=KUNIM_GOOGLE_SERVER_CLIENT_ID=...`;
    - API: `GOOGLE_CLIENT_IDS=<web client id>[,<ios client id>]`.
 2. **Android** client, package `com.kunim.app`, with the SHA-1 of every
    signing key in use (debug keystore, upload key, and Play App Signing key
