@@ -14,8 +14,17 @@ import 'package:kunim/features/habits/domain/habit_reminder_plan.dart';
 import 'package:kunim/features/habits/domain/local_day.dart';
 import 'package:kunim/features/notifications/application/habit_reminder_scheduler.dart';
 
-/// 28 September 2026, 06:00 on the device's own clock.
-final _morning = DateTime(2026, 9, 28, 6);
+/// 06:00 today, on the device's own clock. Built from the real date on
+/// purpose: `allHabitsWithTodayProvider` reads `LocalDay.now()` itself, so a
+/// hard-coded day would file today's log under a different date and the
+/// "already done" case would stop meaning anything the day after it was
+/// written.
+final _today = DateTime.now();
+final _morning = DateTime(_today.year, _today.month, _today.day, 6);
+
+/// [days] days from today at [hour]:[minute], local time.
+DateTime _at(int days, int hour, int minute) =>
+    DateTime(_today.year, _today.month, _today.day + days, hour, minute);
 
 void main() {
   // The scheduler listens for app resume through the widgets binding.
@@ -81,7 +90,7 @@ void main() {
     final first = notifier.scheduled.first;
     expect(first.title, 'Kitob o‘qish');
     expect(first.body, l10n.reminderHabitBody('7:30'));
-    expect(first.at.toLocal(), DateTime(2026, 9, 28, 7, 30));
+    expect(first.at.toLocal(), _at(0, 7, 30));
   });
 
   test('a widget without a time is left alone', () async {
@@ -107,10 +116,7 @@ void main() {
     await reschedule();
 
     expect(notifier.scheduled, hasLength(HabitReminderPlan.days - 1));
-    expect(
-      notifier.scheduled.first.at.toLocal(),
-      DateTime(2026, 9, 29, 7, 30),
-    );
+    expect(notifier.scheduled.first.at.toLocal(), _at(1, 7, 30));
   });
 
   test('an archived widget stops reminding', () async {
