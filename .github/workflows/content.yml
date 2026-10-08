@@ -1,12 +1,24 @@
-# Content tools validator
-# This workflow becomes the Qur'an/hadith import checksum validator in phase 3.
 name: Content
 
+# The content_tools CLI landed with the Qur'an module, so this workflow now
+# actually checks it. It used to echo a placeholder, which is worse than no
+# job: the trigger fired, the run went green, and nothing had been verified.
 on:
   pull_request:
     paths:
       - 'packages/content_tools/**'
       - 'docs/content-policy.md'
+      - 'apps/mobile/assets/db/**'
+      - '.github/workflows/content.yml'
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'packages/content_tools/**'
+      - 'docs/content-policy.md'
+      - 'apps/mobile/assets/db/**'
+      - '.github/workflows/content.yml'
   workflow_dispatch:
 
 jobs:
@@ -17,5 +29,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Content tools placeholder
-        run: echo "content_tools CLI 3-bosqichda qo'shiladi"
+
+      # The builders are standard-library only on purpose (see
+      # build_quran_db.py), so the only dependencies here are the dev tools.
+      - run: pip install pytest ruff
+
+      - name: Lint
+        run: |
+          ruff check packages/content_tools
+          ruff format --check packages/content_tools
+
+      - name: Tests
+        run: pytest packages/content_tools/tests -q
+
+      # The shipped mushaf must be complete and must carry its terms. A build
+      # that does not add up to 114/6236/604/30, or that lost its attribution,
+      # is a broken download rather than a Qur'an -- and this is the last
+      # point before it reaches a device.
+      - name: Verify the bundled Qur'an database
+        run: python packages/content_tools/verify_quran_db.py apps/mobile/assets/db/quran.sqlite
