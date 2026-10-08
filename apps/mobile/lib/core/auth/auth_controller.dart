@@ -17,6 +17,7 @@ import '../db/app_database.dart';
 import '../sync/outbox.dart';
 import '../sync/sync_engine.dart';
 import 'auth_api.dart';
+import 'google_sign_in_client.dart';
 import 'local_account_store.dart';
 import 'refresh_token_store.dart';
 
@@ -55,6 +56,7 @@ class AuthController extends Notifier<AuthState> {
   static const Duration _expiryMargin = Duration(seconds: 30);
 
   AuthApi get _api => ref.read(authApiProvider);
+  GoogleSignInClient get _google => ref.read(googleSignInClientProvider);
   RefreshTokenStore get _tokens => ref.read(refreshTokenStoreProvider);
   LocalAccountStore get _account =>
       LocalAccountStore(ref.read(appDatabaseProvider));
@@ -96,6 +98,41 @@ class AuthController extends Notifier<AuthState> {
       password: password,
       deviceId: deviceId,
     );
+    await _adopt(tokens);
+  }
+
+  /// Signs in with Google; the first time, this also creates the account.
+  /// Returns false when the user closed Google's account picker.
+  ///
+  /// Throws [GoogleSignInClientException] when Google sign-in fails on the
+  /// device, and [AuthApiException] when the server refuses or is
+  /// unreachable.
+  Future<bool> signInWithGoogle({required String locale}) async {
+    final String idToken;
+    try {
+      idToken = await _google.idToken();
+    } on GoogleSignInClientException catch (error) {
+      if (error.failure == GoogleSignInFailure.canceled) return false;
+      rethrow;
+    }
+    final deviceId = await _syncState.getOrCreateDeviceId();
+    final AuthTokens tokens;
+    try {
+      tokens = await _api.googleSignIn(
+        idToken: idToken,
+        deviceId: deviceId,
+        locale: locale,
+      );
+    } on AuthApiException {
+      // Let the next attempt show the account picker again.
+      await _google.signOut();
+      rethrow;
+    }
+    await _adopt(tokens);
+    return true;
+  }
+
+  Future<void> _adopt(AuthTokens tokens) async {
     final user = await _api.me(tokens.accessToken);
     await _tokens.write(tokens.refreshToken);
     await _account.adopt(userId: user.id, email: user.email);
@@ -126,6 +163,7 @@ class AuthController extends Notifier<AuthState> {
         // Best effort: the token expires on its own.
       }
     }
+    await _google.signOut();
     await _clearSession();
     if (ref.mounted) state = const AuthSignedOut();
   }
@@ -140,6 +178,35 @@ class AuthController extends Notifier<AuthState> {
     final token = await accessToken();
     if (token == null) throw const AuthApiException(AuthErrorKind.network);
     await _api.deleteAccount(accessToken: token, password: password);
+    await _afterDeletion();
+  }
+
+  /// [deleteAccount] for an account signed into with Google: Google's
+  /// account picker confirms it instead of a password. Returns false when
+  /// the user closed the picker.
+  ///
+  /// Throws [GoogleSignInClientException] or [AuthApiException]; another
+  /// Google account than the linked one is
+  /// [AuthErrorKind.invalidCredentials].
+  Future<bool> deleteAccountWithGoogle() async {
+    final token = await accessToken();
+    if (token == null) throw const AuthApiException(AuthErrorKind.network);
+    // Forget the remembered Google account so the picker really asks.
+    await _google.signOut();
+    final String idToken;
+    try {
+      idToken = await _google.idToken();
+    } on GoogleSignInClientException catch (error) {
+      if (error.failure == GoogleSignInFailure.canceled) return false;
+      rethrow;
+    }
+    await _api.deleteAccount(accessToken: token, googleIdToken: idToken);
+    await _google.signOut();
+    await _afterDeletion();
+    return true;
+  }
+
+  Future<void> _afterDeletion() async {
     await _clearSession();
     await _syncState.setCursor(0);
     if (ref.mounted) state = const AuthSignedOut();

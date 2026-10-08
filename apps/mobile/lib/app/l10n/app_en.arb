@@ -991,6 +991,26 @@
   "accountDeleteBody": "Your account is closed right away and all your data on the server is permanently deleted after 7 days. The data on this phone stays. Enter your password to confirm.",
   "accountDeleteConfirm": "Delete",
   "accountDeleteWrongPassword": "Incorrect password",
+  "authOr": "or",
+  "@authOr": {
+    "description": "Divider text between the email form and the Google sign-in button."
+  },
+  "authErrorGoogle": "Google sign-in didn't work. Try again.",
+  "@authErrorGoogle": {
+    "description": "Shown when signing in with Google fails on the device or is refused by the server."
+  },
+  "accountDeleteGoogleHint": "Signed in with Google? Confirm with your Google account instead.",
+  "@accountDeleteGoogleHint": {
+    "description": "Hint in the delete-account dialog for accounts that sign in with Google."
+  },
+  "accountDeleteWithGoogle": "Confirm with Google",
+  "@accountDeleteWithGoogle": {
+    "description": "Button in the delete-account dialog that confirms the deletion with Google."
+  },
+  "accountDeleteWrongGoogleAccount": "This Google account is not linked to your account",
+  "@accountDeleteWrongGoogleAccount": {
+    "description": "Shown when the Google account chosen to confirm deletion is not the linked one."
+  },
   "accountDeleted": "Account deleted",
   "habitKindCustom": "Other",
   "habitKindBook": "Reading a book",

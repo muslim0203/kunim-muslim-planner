@@ -7,6 +7,7 @@ Route summary::
 
     POST /auth/register    201  RegisterResponse   (neutral, never reveals existence)
     POST /auth/login       200  TokenPair
+    POST /auth/google      200  TokenPair          (sign up or sign in with Google)
     POST /auth/refresh     200  TokenPair          (rotates; detects reuse)
     POST /auth/logout      204  -                  (revokes the presented token)
     POST /auth/logout-all  204  -                  (revokes every token, all devices)
@@ -23,9 +24,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings, get_settings
 from app.core.deps import CurrentUser
 from app.db.session import get_session
+from app.integrations.google_signin import GoogleTokenVerifier, get_google_verifier
 from app.modules.auth.ratelimit import auth_rate_limit
 from app.modules.auth.schemas import (
     ForgotPasswordRequest,
+    GoogleSignInRequest,
     LoginRequest,
     LogoutRequest,
     RefreshRequest,
@@ -84,6 +87,31 @@ async def login(payload: LoginRequest, service: AuthServiceDep) -> TokenPair:
         email=payload.email,
         password=payload.password,
         device_id=payload.device_id,
+    )
+
+
+@router.post(
+    "/google",
+    response_model=TokenPair,
+    summary="Sign up or sign in with a Google ID token",
+    description=(
+        "Verifies the ID token against Google's keys and the configured client "
+        "ids, then signs into the linked account, links an account with the "
+        "same verified address, or creates one. 401 for a token that does not "
+        "verify; 503 when Google sign-in is not configured or Google's keys "
+        "cannot be fetched."
+    ),
+)
+async def google_sign_in(
+    payload: GoogleSignInRequest,
+    service: AuthServiceDep,
+    verifier: Annotated[GoogleTokenVerifier, Depends(get_google_verifier)],
+) -> TokenPair:
+    return await service.google_sign_in(
+        id_token=payload.id_token,
+        device_id=payload.device_id,
+        locale=payload.locale,
+        verifier=verifier,
     )
 
 

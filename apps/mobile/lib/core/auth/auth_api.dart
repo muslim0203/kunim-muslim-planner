@@ -75,6 +75,15 @@ abstract interface class AuthApi {
     required String deviceId,
   });
 
+  /// Signs in with a Google ID token, creating the account on first use.
+  /// A token the server cannot verify is [AuthErrorKind.invalidCredentials];
+  /// Google sign-in switched off on the server is [AuthErrorKind.server].
+  Future<AuthTokens> googleSignIn({
+    required String idToken,
+    required String deviceId,
+    required String locale,
+  });
+
   Future<AuthTokens> refresh({
     required String refreshToken,
     required String deviceId,
@@ -84,11 +93,13 @@ abstract interface class AuthApi {
 
   Future<AuthUser> me(String accessToken);
 
-  /// Closes the account, confirmed with its password. A wrong password is
-  /// [AuthErrorKind.invalidCredentials].
+  /// Closes the account, confirmed with exactly one of its password or a
+  /// fresh Google ID token for the linked Google account. A wrong password
+  /// or another Google account is [AuthErrorKind.invalidCredentials].
   Future<void> deleteAccount({
     required String accessToken,
-    required String password,
+    String? password,
+    String? googleIdToken,
   });
 
   /// Asks the server to email a reset code. It answers the same way
@@ -143,6 +154,21 @@ class DioAuthApi implements AuthApi {
   }
 
   @override
+  Future<AuthTokens> googleSignIn({
+    required String idToken,
+    required String deviceId,
+    required String locale,
+  }) async {
+    final data = await _send(
+      () => _dio.post<Map<String, dynamic>>(
+        '/auth/google',
+        data: {'id_token': idToken, 'device_id': deviceId, 'locale': locale},
+      ),
+    );
+    return AuthTokens.fromJson(data!);
+  }
+
+  @override
   Future<AuthTokens> refresh({
     required String refreshToken,
     required String deviceId,
@@ -180,12 +206,16 @@ class DioAuthApi implements AuthApi {
   @override
   Future<void> deleteAccount({
     required String accessToken,
-    required String password,
+    String? password,
+    String? googleIdToken,
   }) async {
     await _send(
       () => _dio.delete<Object?>(
         '/users/me',
-        data: {'password': password},
+        data: {
+          if (password != null) 'password': password,
+          if (googleIdToken != null) 'google_id_token': googleIdToken,
+        },
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       ),
     );

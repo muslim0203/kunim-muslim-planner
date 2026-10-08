@@ -1,4 +1,5 @@
 import 'package:kunim/core/auth/auth_api.dart';
+import 'package:kunim/core/auth/google_sign_in_client.dart';
 import 'package:kunim/core/auth/refresh_token_store.dart';
 
 class MemoryRefreshTokenStore implements RefreshTokenStore {
@@ -27,6 +28,7 @@ class FakeAuthApi implements AuthApi {
 
   AuthErrorKind? registerError;
   AuthErrorKind? loginError;
+  AuthErrorKind? googleError;
   AuthErrorKind? refreshError;
   AuthErrorKind? deleteError;
   AuthErrorKind? forgotError;
@@ -34,6 +36,10 @@ class FakeAuthApi implements AuthApi {
 
   int registerCalls = 0;
   int loginCalls = 0;
+  int googleCalls = 0;
+  String? lastGoogleIdToken;
+  String? lastGoogleLocale;
+  String? lastDeleteGoogleIdToken;
   int refreshCalls = 0;
   int logoutCalls = 0;
   int deleteCalls = 0;
@@ -85,6 +91,20 @@ class FakeAuthApi implements AuthApi {
   }
 
   @override
+  Future<AuthTokens> googleSignIn({
+    required String idToken,
+    required String deviceId,
+    required String locale,
+  }) async {
+    googleCalls++;
+    lastGoogleIdToken = idToken;
+    lastGoogleLocale = locale;
+    lastDeviceId = deviceId;
+    if (googleError != null) throw AuthApiException(googleError!);
+    return _nextTokens();
+  }
+
+  @override
   Future<AuthTokens> refresh({
     required String refreshToken,
     required String deviceId,
@@ -107,11 +127,13 @@ class FakeAuthApi implements AuthApi {
   @override
   Future<void> deleteAccount({
     required String accessToken,
-    required String password,
+    String? password,
+    String? googleIdToken,
   }) async {
     deleteCalls++;
     lastDeleteAccessToken = accessToken;
     lastDeletePassword = password;
+    lastDeleteGoogleIdToken = googleIdToken;
     if (deleteError != null) throw AuthApiException(deleteError!);
   }
 
@@ -138,4 +160,27 @@ class FakeAuthApi implements AuthApi {
     lastResetPassword = newPassword;
     if (resetError != null) throw AuthApiException(resetError!);
   }
+}
+
+/// Hands out [token] or fails with [failure]; counts sign-outs.
+class FakeGoogleSignInClient implements GoogleSignInClient {
+  FakeGoogleSignInClient({this.token = 'google-id-token', this.failure});
+
+  @override
+  bool isAvailable = true;
+
+  String token;
+  GoogleSignInFailure? failure;
+  int idTokenCalls = 0;
+  int signOutCalls = 0;
+
+  @override
+  Future<String> idToken() async {
+    idTokenCalls++;
+    if (failure != null) throw GoogleSignInClientException(failure!);
+    return token;
+  }
+
+  @override
+  Future<void> signOut() async => signOutCalls++;
 }

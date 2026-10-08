@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kunim/app/l10n/gen/app_localizations.dart';
 import 'package:kunim/core/auth/auth_api.dart';
+import 'package:kunim/core/auth/google_sign_in_client.dart';
 import 'package:kunim/core/auth/refresh_token_store.dart';
 import 'package:kunim/core/db/app_database.dart';
 import 'package:kunim/core/sync/sync_api.dart';
@@ -23,11 +24,15 @@ void main() {
   late AppDatabase db;
   late FakeAuthApi api;
   late MemoryRefreshTokenStore tokens;
+  late FakeGoogleSignInClient google;
 
   setUp(() {
     db = AppDatabase.withExecutor(NativeDatabase.memory());
     api = FakeAuthApi();
     tokens = MemoryRefreshTokenStore();
+    // Unavailable unless a test turns it on, as in a build without a
+    // Google client id.
+    google = FakeGoogleSignInClient()..isAvailable = false;
   });
   tearDown(() => db.close());
 
@@ -40,6 +45,7 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           authApiProvider.overrideWithValue(api),
+          googleSignInClientProvider.overrideWithValue(google),
           refreshTokenStoreProvider.overrideWithValue(tokens),
           syncApiProvider.overrideWithValue(FakeSyncServer()),
         ],
@@ -196,6 +202,44 @@ void main() {
       findsOneWidget,
     );
     expect(tokens.value, isNull);
+    await unmount(tester);
+  });
+
+  testWidgets('without a Google client id there is no Google button',
+      (tester) async {
+    await pumpAccount(tester);
+
+    expect(find.byKey(const Key('google-sign-in')), findsNothing);
+    await unmount(tester);
+  });
+
+  testWidgets('continuing with Google signs in', (tester) async {
+    google.isAvailable = true;
+    final l10n = await pumpAccount(tester);
+
+    await tester.ensureVisible(find.byKey(const Key('google-sign-in')));
+    await tester.tap(find.byKey(const Key('google-sign-in')));
+    await _pumpFrames(tester, 20);
+
+    expect(api.lastGoogleIdToken, 'google-id-token');
+    expect(api.lastGoogleLocale, isNotEmpty);
+    expect(find.text(l10n.accountSignedIn), findsOneWidget);
+    expect(tokens.value, 'r1');
+    await unmount(tester);
+  });
+
+  testWidgets('a failed Google sign-in is reported', (tester) async {
+    google
+      ..isAvailable = true
+      ..failure = GoogleSignInFailure.failed;
+    final l10n = await pumpAccount(tester);
+
+    await tester.ensureVisible(find.byKey(const Key('google-sign-in')));
+    await tester.tap(find.byKey(const Key('google-sign-in')));
+    await _pumpFrames(tester);
+
+    expect(find.text(l10n.authErrorGoogle), findsOneWidget);
+    expect(find.text(l10n.accountSignedIn), findsNothing);
     await unmount(tester);
   });
 }
