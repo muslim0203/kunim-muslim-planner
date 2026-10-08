@@ -99,9 +99,13 @@ void main() {
       title: 'Kitob o‘qish',
       reminderMinutes: 450,
     );
+    // "Done today" comes from `allHabitsWithTodayProvider`, which reads the
+    // device's real date (`LocalDay.now()`), not the plan's clock above. The
+    // log therefore goes on the real today; pinning it to `_morning` made
+    // this test pass only on 28 September 2026.
     await HabitLogRepository(db, onLocalWrite: () {}).logCompletion(
       habitId: id,
-      day: LocalDay.fromLocalDateTime(_morning),
+      day: LocalDay.now(),
     );
 
     await reschedule();
