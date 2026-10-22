@@ -59,9 +59,7 @@ class OnboardingAnswersStore {
   }
 
   Future<void> _put(String key, String value) {
-    return db
-        .into(db.keyValue)
-        .insertOnConflictUpdate(
+    return db.into(db.keyValue).insertOnConflictUpdate(
           KeyValueCompanion.insert(key: key, value: value),
         );
   }
