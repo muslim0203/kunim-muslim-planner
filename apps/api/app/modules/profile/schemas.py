@@ -39,6 +39,20 @@ BirthYear = Annotated[int, Field(ge=1900, le=2100)]
 # Range is deliberately wide enough for a child and a very tall adult.
 HeightCm = Annotated[int, Field(ge=50, le=260)]
 
+# What the account was asked once, at sign-up, so the app can suggest a day
+# rather than hand over an empty grid. Shapes, not vocabularies: the client
+# ships new occupations and interests before the server hears of them, and an
+# allow-list here would reject a newer app's answer instead of carrying it --
+# the same reasoning as `habits.kind` (`app.modules.habits.sync_entities`).
+Slug = Annotated[str, Field(min_length=1, max_length=40, pattern=r"^[a-z][a-z0-9_]*$")]
+Occupation = Slug
+# Capped so one account cannot post an unbounded list; well above what the
+# onboarding screen offers.
+SlugList = Annotated[list[Slug], Field(max_length=24)]
+# Minutes a day the user says they can give. A suggestion that ignores this
+# is why plans get abandoned in the first week.
+DailyMinutes = Annotated[int, Field(ge=5, le=600)]
+
 
 def _validate_locale(value: str) -> str:
     # Raised as `PydanticCustomError`, not a bare `ValueError`: pydantic puts
@@ -88,6 +102,10 @@ class ProfileOut(BaseModel):
     avatar_url: str | None
     nickname: str | None
     leaderboard_opt_in: bool
+    occupation: str | None
+    interests: list[str]
+    focus_areas: list[str]
+    daily_minutes: int | None
     created_at: datetime
 
 
@@ -111,6 +129,10 @@ class ProfileUpdate(BaseModel):
     avatar_url: AvatarUrl | None = None
     nickname: Nickname | None = None
     leaderboard_opt_in: bool | None = None
+    occupation: Occupation | None = None
+    interests: SlugList | None = None
+    focus_areas: SlugList | None = None
+    daily_minutes: DailyMinutes | None = None
     # TODO(storage): avatar upload (multipart -> object storage) is out of
     # scope for Phase 1 -- no object storage is configured yet. Clients pass
     # a URL they already host; nothing here validates reachability.
@@ -129,7 +151,9 @@ class ProfileUpdate(BaseModel):
     @classmethod
     def _reject_null_for_required_fields(cls, data: object) -> object:
         if isinstance(data, dict):
-            for key in ("locale", "timezone"):
+            # `interests` and `focus_areas` back non-nullable list columns:
+            # an empty list clears them, an explicit null is a mistake.
+            for key in ("locale", "timezone", "interests", "focus_areas"):
                 if key in data and data[key] is None:
                     raise PydanticCustomError(
                         "null_not_allowed", "'{key}' cannot be null", {"key": key}

@@ -5,11 +5,16 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import Boolean, DateTime, Enum, Integer, String, text
+from sqlalchemy import JSON, Boolean, DateTime, Enum, Integer, String, text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 from app.db.mixins import SoftDelete, Timestamps, UUIDPk
+
+# JSONB on PostgreSQL, plain JSON elsewhere (SQLite in tests) -- the same
+# pattern as `app.modules.habits.models`.
+_JSONType = JSON().with_variant(postgresql.JSONB(), "postgresql")
 
 
 class UserRole(StrEnum):
@@ -61,6 +66,22 @@ class User(UUIDPk, Timestamps, SoftDelete, Base):
     # storage configured). This column only stores a URL the client already
     # hosts elsewhere; nothing here uploads or validates reachability.
     avatar_url: Mapped[str | None] = mapped_column(String(2048), nullable=True, default=None)
+
+    # --- Asked once, when the account is created (`app/modules/profile/`),
+    # and used to suggest which widgets and tasks a day should hold. Slugs
+    # rather than database enums, and lists rather than one column each: the
+    # client ships new occupations and interests before the server hears of
+    # them, and a vocabulary pinned here would reject a newer app's answer
+    # instead of carrying it. The API bounds their shape, nothing more.
+    occupation: Mapped[str | None] = mapped_column(String(40), nullable=True, default=None)
+    interests: Mapped[list] = mapped_column(_JSONType, nullable=False, default=list)
+    # The life areas the user said they want to strengthen. What the app
+    # measures later may disagree -- that is the point of the analysis -- so
+    # this stays what they asked for, never a score.
+    focus_areas: Mapped[list] = mapped_column(_JSONType, nullable=False, default=list)
+    # Minutes a day they can realistically give. A suggestion that ignores
+    # this is the reason plans get abandoned in the first week.
+    daily_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
 
     # --- Added with the leaderboard (`app/modules/social/`).
     # `nickname` is the name shown to other users, unique so two people
