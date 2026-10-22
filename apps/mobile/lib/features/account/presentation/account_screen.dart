@@ -16,6 +16,7 @@ import '../../../core/settings/app_settings.dart';
 import '../../../core/sync/sync_engine.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
 import '../../profile/presentation/profile_screen.dart';
+import '../../onboarding/presentation/onboarding_screen.dart';
 import 'delete_account_dialog.dart';
 import 'password_reset_sheet.dart';
 
@@ -424,6 +425,10 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
           password: password,
           locale: ref.read(appSettingsProvider).language.code,
         );
+        // A new account starts on an empty home screen. The questions turn
+        // that into a day the user recognises; they can skip them and the
+        // account is no worse off.
+        if (mounted) await showOnboarding(context);
       } else {
         await controller.signIn(email: email, password: password);
       }

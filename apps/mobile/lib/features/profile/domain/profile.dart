@@ -17,6 +17,10 @@ class Profile {
     this.heightCm,
     this.avatarUrl,
     this.gender,
+    this.occupation,
+    this.interests = const [],
+    this.focusAreas = const [],
+    this.dailyMinutes,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,10 @@ class Profile {
       heightCm: (json['height_cm'] as num?)?.toInt(),
       avatarUrl: json['avatar_url'] as String?,
       gender: json['gender'] as String?,
+      occupation: json['occupation'] as String?,
+      interests: _slugs(json['interests']),
+      focusAreas: _slugs(json['focus_areas']),
+      dailyMinutes: (json['daily_minutes'] as num?)?.toInt(),
     );
   }
 
@@ -49,6 +57,20 @@ class Profile {
   final int? heightCm;
   final String? avatarUrl;
   final String? gender;
+
+  /// What the account said it does, as a slug the suggestion rules key off
+  /// (`features/onboarding/domain`). Null until the question is answered.
+  final String? occupation;
+
+  /// Interests and the life areas the user wants to strengthen, as slugs.
+  /// A slug this build does not know is kept, not dropped: the answer is the
+  /// user's, and a newer app may have offered it.
+  final List<String> interests;
+  final List<String> focusAreas;
+
+  /// Minutes a day the user said they can give. A plan that ignores this is
+  /// the one abandoned in the first week.
+  final int? dailyMinutes;
 
   /// Age in whole years, as of [today].
   ///
@@ -97,6 +119,10 @@ class Profile {
     int? heightCm,
     String? avatarUrl,
     String? gender,
+    String? occupation,
+    List<String>? interests,
+    List<String>? focusAreas,
+    int? dailyMinutes,
   }) {
     return Profile(
       id: id,
@@ -107,8 +133,21 @@ class Profile {
       heightCm: heightCm ?? this.heightCm,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       gender: gender ?? this.gender,
+      occupation: occupation ?? this.occupation,
+      interests: interests ?? this.interests,
+      focusAreas: focusAreas ?? this.focusAreas,
+      dailyMinutes: dailyMinutes ?? this.dailyMinutes,
     );
   }
+}
+
+/// Slugs from the wire, with anything that is not a plain string dropped.
+List<String> _slugs(Object? value) {
+  if (value is! List) return const [];
+  return [
+    for (final item in value)
+      if (item is String && item.isNotEmpty) item,
+  ];
 }
 
 extension on String {

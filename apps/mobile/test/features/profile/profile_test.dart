@@ -44,6 +44,10 @@ class _FakeApi implements ProfileApi {
     bool clearNickname = false,
     bool clearBirthYear = false,
     bool clearHeight = false,
+    String? occupation,
+    List<String>? interests,
+    List<String>? focusAreas,
+    int? dailyMinutes,
   }) async {
     if (throws != null) throw ProfileApiException(throws!);
     lastUpdate = {
@@ -52,6 +56,10 @@ class _FakeApi implements ProfileApi {
       'birth_year': birthYear,
       'height_cm': heightCm,
       'clear_height': clearHeight,
+      'occupation': occupation,
+      'interests': interests,
+      'focus_areas': focusAreas,
+      'daily_minutes': dailyMinutes,
     };
     return _profile;
   }

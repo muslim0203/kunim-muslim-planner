@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../app/l10n/gen/app_localizations.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
+import '../../insights/presentation/insights_view.dart';
 
-/// Preview of the AI assistant. The assistant is not connected yet, so every
-/// control here is visibly inactive and labelled as coming soon.
+/// The analysis, and a preview of the assistant that will one day narrate it.
+///
+/// What is on this screen today is computed on the device from what the user
+/// recorded — which areas are holding, which are slipping, and the one thing
+/// to do about each. The assistant itself is not connected yet, so the part
+/// below the analysis stays visibly inactive rather than pretending.
 class AiScreen extends StatelessWidget {
   const AiScreen({super.key});
 
@@ -25,6 +30,8 @@ class AiScreen extends StatelessWidget {
                 title: l10n.aiGreeting,
                 subtitle: l10n.aiSubtitle,
               ),
+              const SizedBox(height: KunimSpacing.lg),
+              const InsightsView(),
               const SizedBox(height: KunimSpacing.xl),
               Container(
                 constraints: const BoxConstraints(minHeight: 168),

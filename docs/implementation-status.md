@@ -1,3 +1,36 @@
+## Sign-up questions and the analysis — 2026-10-22
+
+- **API:** `users` gained `occupation`, `interests`, `focus_areas` and
+  `daily_minutes` (migration `0017_profile_interests`), read and written
+  through `/users/me`. Lists are JSON and the vocabulary is a shape, not an
+  allow-list: a newer client ships an answer this server has not heard of,
+  and carrying it is the point (the same reasoning as `habits.kind`).
+- **Onboarding:** four questions after an account is created — occupation,
+  interests, the areas to strengthen, and the minutes a day holds. Every
+  step is skippable; an unanswered form suggests nothing.
+- **Suggestions are rules, not a model** (`features/onboarding/domain/`):
+  a named weak area outranks an interest, an interest outranks what the
+  occupation implies, and the day's budget is spent in two passes — the
+  smallest honest version of everything the user named first, then growth
+  towards the kind's own target, then what the occupation implies. Nothing
+  is created until the user keeps it on the review screen.
+- **Analysis** (`features/insights/`): per life area, over 14 days, how many
+  planned days were done, which way it is going, and one actionable piece
+  of advice (lower the target / move the hour / start again / add a widget).
+  Computed on the device from habit logs and prayer marks; a day nobody
+  planned is never counted as missed, and a day with no prayer marks at all
+  is left out rather than called a miss. Shown on the AI tab above the
+  assistant preview, which stays visibly inactive.
+- **The answers live on the device too** (`key_value`), which is what the
+  analysis reads: a local screen must not wait on a network call for the
+  user's own answers. The account copy is for a second device.
+- Verified here: API 633 passed, ruff clean; mobile `dart analyze` clean,
+  l10n 4 locales x 569 keys; new tests — 13 API, 12 suggestion rules,
+  4 onboarding flow, 10 analysis rules, 5 analysis screen.
+- **Not an LLM yet.** The plan's `app/ai/` (provider adapter, proposals,
+  safety) is still unbuilt; these rules are what the AI tab shows until it
+  exists, and they keep working when it does.
+
 ## Google sign-in — 2026-10-08
 
 - API: `POST /auth/google` verifies a Google ID token (RS256 against Google's

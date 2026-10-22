@@ -117,5 +117,13 @@ void main() {
     expect(tester.widget<TextField>(find.byType(TextField)).enabled, isFalse);
     expect(find.byType(ComingSoonBadge), findsOneWidget);
     expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+
+    // The screen now carries the analysis, which reads Drift streams.
+    // Closing them schedules zero-duration timers, so the tree is unmounted
+    // and pumped here rather than left standing at teardown.
+    await tester.pumpWidget(const SizedBox.shrink());
+    for (var i = 0; i < 3; i++) {
+      await tester.pump(Duration.zero);
+    }
   });
 }

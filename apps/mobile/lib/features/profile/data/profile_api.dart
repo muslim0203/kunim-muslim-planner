@@ -60,6 +60,10 @@ class ProfileApi {
     bool clearNickname = false,
     bool clearBirthYear = false,
     bool clearHeight = false,
+    String? occupation,
+    List<String>? interests,
+    List<String>? focusAreas,
+    int? dailyMinutes,
   }) async {
     final body = <String, dynamic>{
       if (clearDisplayName) 'display_name': null,
@@ -70,6 +74,12 @@ class ProfileApi {
       if (!clearBirthYear && birthYear != null) 'birth_year': birthYear,
       if (clearHeight) 'height_cm': null,
       if (!clearHeight && heightCm != null) 'height_cm': heightCm,
+      // The onboarding answers. An empty list is a real value here (it
+      // clears the answer), so these are sent whenever they are given.
+      if (occupation != null) 'occupation': occupation,
+      if (interests != null) 'interests': interests,
+      if (focusAreas != null) 'focus_areas': focusAreas,
+      if (dailyMinutes != null) 'daily_minutes': dailyMinutes,
     };
 
     final data = await _send(

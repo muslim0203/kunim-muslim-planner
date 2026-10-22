@@ -5,6 +5,9 @@ Thumbs.db
 .vscode/
 *.iml
 
+# --- Downloaded content sources (rebuilt on demand, never committed) ---
+packages/content_tools/.sources/
+
 # --- Secrets ---
 .env
 .env.*
