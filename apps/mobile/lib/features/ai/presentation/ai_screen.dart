@@ -41,7 +41,19 @@ class AiScreen extends StatelessWidget {
               const SizedBox(height: KunimSpacing.xl),
               const InsightsView(),
               const SizedBox(height: KunimSpacing.xl),
-              Text(l10n.aiQuickHelp, style: theme.textTheme.titleLarge),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.aiQuickHelp,
+                      style: theme.textTheme.titleLarge,
+                    ),
+                  ),
+                  // The analysis above answers for real now; the chat does
+                  // not. The badge is what tells the user which is which.
+                  const ComingSoonBadge(),
+                ],
+              ),
               const SizedBox(height: KunimSpacing.xs),
               Text(
                 l10n.aiComingSoonNote,
