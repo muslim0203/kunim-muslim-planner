@@ -129,18 +129,49 @@ const int dailyPrayerCount = 5;
 /// guess.
 FocusArea? areaOfKind(HabitKind kind) {
   return switch (kind) {
-    HabitKind.quran => FocusArea.quran,
-    HabitKind.zikr || HabitKind.dua || HabitKind.fasting => FocusArea.prayer,
+    HabitKind.quran ||
+    HabitKind.quranListen ||
+    HabitKind.tafsir =>
+      FocusArea.quran,
+    HabitKind.zikr ||
+    HabitKind.salawat ||
+    HabitKind.istighfar ||
+    HabitKind.dua ||
+    HabitKind.tahajjud ||
+    HabitKind.mosque ||
+    HabitKind.fasting =>
+      FocusArea.prayer,
     HabitKind.sport ||
     HabitKind.running ||
     HabitKind.walk ||
+    HabitKind.cycling ||
+    HabitKind.stretch ||
+    HabitKind.sunlight ||
     HabitKind.water ||
-    HabitKind.diet =>
+    HabitKind.diet ||
+    HabitKind.vitamins ||
+    HabitKind.weightCheck =>
       FocusArea.health,
-    HabitKind.family || HabitKind.charity => FocusArea.family,
-    HabitKind.study || HabitKind.book || HabitKind.language => FocusArea.study,
-    HabitKind.sleep || HabitKind.earlyRise => FocusArea.sleep,
-    HabitKind.mood || HabitKind.journal => FocusArea.mood,
+    HabitKind.family ||
+    HabitKind.charity ||
+    HabitKind.parents ||
+    HabitKind.children ||
+    HabitKind.guest =>
+      FocusArea.family,
+    HabitKind.study ||
+    HabitKind.book ||
+    HabitKind.language ||
+    HabitKind.focus ||
+    HabitKind.course ||
+    HabitKind.memorize =>
+      FocusArea.study,
+    HabitKind.sleep || HabitKind.nap || HabitKind.earlyRise => FocusArea.sleep,
+    HabitKind.mood ||
+    HabitKind.journal ||
+    HabitKind.gratitude ||
+    HabitKind.breathing ||
+    HabitKind.noPhone =>
+      FocusArea.mood,
     HabitKind.custom => null,
   };
 }

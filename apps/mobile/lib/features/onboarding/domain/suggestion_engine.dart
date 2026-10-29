@@ -200,11 +200,32 @@ abstract final class SuggestionEngine {
       HabitKind.sport ||
       HabitKind.running ||
       HabitKind.walk ||
+      HabitKind.cycling ||
+      HabitKind.stretch ||
+      HabitKind.sunlight ||
       HabitKind.language ||
+      HabitKind.focus ||
+      HabitKind.course ||
+      HabitKind.memorize ||
+      HabitKind.quranListen ||
+      HabitKind.breathing ||
+      HabitKind.noPhone ||
+      HabitKind.children ||
       HabitKind.family =>
         target,
-      HabitKind.zikr => (target / 33).ceil(),
+      HabitKind.zikr ||
+      HabitKind.salawat ||
+      HabitKind.istighfar =>
+        (target / 33).ceil(),
+      HabitKind.tafsir => target * 2,
+      HabitKind.tahajjud => 20,
+      HabitKind.mosque => target * 10,
+      HabitKind.parents => 10,
+      HabitKind.guest => 30,
+      HabitKind.gratitude => 3,
       HabitKind.mood || HabitKind.journal => 2,
+      // A measurement, not an activity: no slice of the day.
+      HabitKind.vitamins || HabitKind.weightCheck || HabitKind.nap => 0,
       HabitKind.dua => 3,
       HabitKind.charity => 5,
       // Drinking water, eating well, fasting, going to bed and getting up
@@ -227,25 +248,48 @@ abstract final class SuggestionEngine {
     if (minutesFor(kind, smallest) > minutes) return null;
 
     return switch (kind) {
-      HabitKind.book => (minutes ~/ 2).clamp(smallest, kind.dailyTarget),
-      HabitKind.zikr => ((minutes * 33) ~/ 1).clamp(smallest, kind.dailyTarget),
+      HabitKind.book ||
+      HabitKind.tafsir =>
+        (minutes ~/ 2).clamp(smallest, kind.dailyTarget),
+      HabitKind.zikr ||
+      HabitKind.salawat ||
+      HabitKind.istighfar =>
+        ((minutes * 33) ~/ 1).clamp(smallest, kind.dailyTarget),
       HabitKind.quran ||
+      HabitKind.quranListen ||
       HabitKind.study ||
       HabitKind.sport ||
       HabitKind.running ||
       HabitKind.walk ||
+      HabitKind.cycling ||
+      HabitKind.stretch ||
+      HabitKind.sunlight ||
       HabitKind.language ||
+      HabitKind.focus ||
+      HabitKind.course ||
+      HabitKind.memorize ||
+      HabitKind.breathing ||
+      HabitKind.noPhone ||
+      HabitKind.children ||
       HabitKind.family ||
       HabitKind.custom =>
         minutes.clamp(smallest, kind.dailyTarget),
       HabitKind.mood ||
       HabitKind.journal ||
+      HabitKind.gratitude ||
       HabitKind.dua ||
+      HabitKind.tahajjud ||
+      HabitKind.mosque ||
       HabitKind.charity ||
+      HabitKind.parents ||
+      HabitKind.guest ||
       HabitKind.water ||
       HabitKind.diet ||
+      HabitKind.vitamins ||
+      HabitKind.weightCheck ||
       HabitKind.fasting ||
       HabitKind.sleep ||
+      HabitKind.nap ||
       HabitKind.earlyRise =>
         smallest,
     };
@@ -253,23 +297,39 @@ abstract final class SuggestionEngine {
 
   static int? _smallestTarget(HabitKind kind) {
     return switch (kind) {
-      HabitKind.book => 2,
+      HabitKind.book || HabitKind.tafsir => 2,
       HabitKind.quran => 1,
+      HabitKind.quranListen || HabitKind.breathing => 5,
+      HabitKind.gratitude => 1,
+      HabitKind.mosque => 1,
       HabitKind.study ||
       HabitKind.sport ||
       HabitKind.running ||
       HabitKind.walk ||
+      HabitKind.cycling ||
       HabitKind.language ||
+      HabitKind.focus ||
+      HabitKind.course ||
+      HabitKind.memorize ||
+      HabitKind.noPhone ||
+      HabitKind.children ||
       HabitKind.family =>
         10,
-      HabitKind.zikr => 33,
+      HabitKind.stretch || HabitKind.sunlight => 5,
+      HabitKind.zikr || HabitKind.salawat || HabitKind.istighfar => 33,
       HabitKind.mood ||
       HabitKind.journal ||
       HabitKind.dua ||
+      HabitKind.tahajjud ||
       HabitKind.charity ||
+      HabitKind.parents ||
+      HabitKind.guest ||
       HabitKind.diet ||
+      HabitKind.vitamins ||
+      HabitKind.weightCheck ||
       HabitKind.fasting ||
       HabitKind.sleep ||
+      HabitKind.nap ||
       HabitKind.earlyRise =>
         1,
       HabitKind.water => 6,
@@ -281,21 +341,45 @@ abstract final class SuggestionEngine {
   /// A starting point the user can move, not a prescription.
   static int? defaultTimeOf(HabitKind kind) {
     return switch (kind) {
+      HabitKind.tahajjud => 3 * 60 + 30, // the last third of the night
       HabitKind.earlyRise => 5 * 60, // the alarm the day hangs on
       HabitKind.zikr => 6 * 60, // after the dawn prayer
+      HabitKind.istighfar => 6 * 60 + 15,
+      HabitKind.salawat => 17 * 60, // the hour before Maghrib
+      HabitKind.mosque => 12 * 60,
+      HabitKind.quranListen => 8 * 60,
+      HabitKind.tafsir => 20 * 60 + 30,
       HabitKind.quran => 6 * 60 + 30,
       HabitKind.sport || HabitKind.running => 7 * 60 + 30,
+      HabitKind.stretch => 7 * 60,
+      HabitKind.cycling => 17 * 60 + 30,
       HabitKind.walk => 18 * 60,
+      HabitKind.sunlight => 11 * 60,
+      HabitKind.weightCheck => 7 * 60 + 15,
+      HabitKind.nap => 14 * 60,
       HabitKind.family || HabitKind.charity => 19 * 60,
+      HabitKind.children => 18 * 60 + 30,
+      HabitKind.parents => 19 * 60 + 30,
+      HabitKind.guest => 19 * 60,
+      HabitKind.focus => 9 * 60,
+      HabitKind.course => 20 * 60 + 30,
+      HabitKind.memorize => 6 * 60 + 45,
+      HabitKind.noPhone => 21 * 60,
       HabitKind.study || HabitKind.language => 20 * 60,
       HabitKind.book => 21 * 60,
       HabitKind.mood || HabitKind.journal => 21 * 60 + 30,
+      HabitKind.gratitude => 21 * 60 + 45,
+      HabitKind.breathing => 22 * 60,
       HabitKind.sleep => 22 * 60 + 30,
       HabitKind.dua => 12 * 60,
       HabitKind.custom => 12 * 60,
       // All day long, or fixed by the day itself: a reminder would be
       // noise.
-      HabitKind.water || HabitKind.diet || HabitKind.fasting => null,
+      HabitKind.water ||
+      HabitKind.diet ||
+      HabitKind.vitamins ||
+      HabitKind.fasting =>
+        null,
     };
   }
 
