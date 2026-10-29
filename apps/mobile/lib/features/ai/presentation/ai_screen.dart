@@ -4,13 +4,16 @@ import '../../../app/l10n/gen/app_localizations.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
 import '../../insights/presentation/insights_view.dart';
+import 'ai_analysis_card.dart';
 
-/// The analysis, and a preview of the assistant that will one day narrate it.
+/// The assistant, and the analysis it talks about.
 ///
-/// What is on this screen today is computed on the device from what the user
-/// recorded — which areas are holding, which are slipping, and the one thing
-/// to do about each. The assistant itself is not connected yet, so the part
-/// below the analysis stays visibly inactive rather than pretending.
+/// Two layers, in this order. The card at the top asks the server's analyst
+/// what the numbers add up to and what one widget would help; the cards
+/// under it are the same picture worked out on the device, which is what the
+/// user sees when there is no connection, no key on the server, or no
+/// answer. The chat below is still not connected, so it stays visibly
+/// inactive rather than pretending.
 class AiScreen extends StatelessWidget {
   const AiScreen({super.key});
 
@@ -31,58 +34,12 @@ class AiScreen extends StatelessWidget {
                 subtitle: l10n.aiSubtitle,
               ),
               const SizedBox(height: KunimSpacing.lg),
-              const InsightsView(),
+              // The assistant first, the device's own analysis under it:
+              // the card says the cards below still stand when it cannot
+              // answer, so they have to be there to see.
+              const AiAnalysisCard(),
               const SizedBox(height: KunimSpacing.xl),
-              Container(
-                constraints: const BoxConstraints(minHeight: 168),
-                // Clip so the decorative arcs stay inside the rounded card.
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(KunimRadii.extraLarge),
-                  gradient: const LinearGradient(
-                    colors: [KunimColors.jade, KunimColors.ink],
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    const Positioned.fill(
-                      child: CustomPaint(painter: HeritageArcPainter()),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(KunimSpacing.xl),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(
-                                Icons.auto_awesome,
-                                color: KunimColors.goldSoft,
-                                size: 32,
-                              ),
-                              Spacer(),
-                              ComingSoonBadge(),
-                            ],
-                          ),
-                          const SizedBox(height: KunimSpacing.xl),
-                          Text(
-                            l10n.aiTodayQuestion,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: KunimSpacing.sm),
-                          Text(
-                            l10n.aiTodayCopy,
-                            style: const TextStyle(color: KunimColors.jadeSoft),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const InsightsView(),
               const SizedBox(height: KunimSpacing.xl),
               Text(l10n.aiQuickHelp, style: theme.textTheme.titleLarge),
               const SizedBox(height: KunimSpacing.xs),

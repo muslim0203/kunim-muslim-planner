@@ -1431,5 +1431,22 @@
   "insightsAdviceStartAgain": "It stopped — mark one today",
   "insightsAdviceAddWidget": "Add a widget for this area",
   "insightsOpenWidget": "Open the widget",
-  "insightsOpenPrayers": "Open the prayers"
+  "insightsOpenPrayers": "Open the prayers",
+  "aiAnalyseAction": "Analyse my days",
+  "aiAnalyseAgain": "Analyse again",
+  "aiAnalyseHint": "Reads what you recorded over the last {days} days and says which part of your day is slipping and what one widget would help.",
+  "@aiAnalyseHint": {"placeholders": {"days": {"type": "int"}}},
+  "aiAnalyseWait": "Reading your numbers.",
+  "aiAnalysing": "Thinking…",
+  "aiAnalysisFootnote": "Built from the numbers on this phone. It never quotes scripture and never gives a religious ruling.",
+  "aiProposalsTitle": "SUGGESTED WIDGETS",
+  "aiProposalAccept": "Add",
+  "aiProposalReject": "Not this",
+  "aiProposalAdded": "Added to your home screen: {count}",
+  "@aiProposalAdded": {"placeholders": {"count": {"type": "int"}}},
+  "aiErrorNetwork": "No connection. The analysis below is this phone's own — it still works.",
+  "aiErrorUnavailable": "The assistant could not answer just now. The analysis below still stands.",
+  "aiErrorQuota": "Today's analyses are used up. Try again tomorrow.",
+  "aiErrorNotEnoughData": "Not enough recorded yet. Mark your widgets for a few days and try again.",
+  "aiErrorRetry": "Try again"
 }

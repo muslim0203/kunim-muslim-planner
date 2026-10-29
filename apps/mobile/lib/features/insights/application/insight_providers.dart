@@ -71,6 +71,7 @@ final areaObservationsProvider = Provider<List<AreaObservation>>((ref) {
         title: habit.title,
         habitId: habit.id,
         reminderMinutes: habit.reminderMinutes,
+        dailyTarget: habit.targetCount,
         everMetTarget: everMet,
         days: days,
       ),
@@ -139,13 +140,23 @@ FocusArea? areaOfKind(HabitKind kind) {
   };
 }
 
-/// The areas the user said they want to strengthen, as this device
-/// remembers them. Read from the device and not from the account on
-/// purpose: an analysis that works offline cannot wait on a network call
-/// for the user's own answers.
+/// The sign-up answers as this device remembers them.
+///
+/// Read from the device and not from the account on purpose: an analysis
+/// that works offline cannot wait on a network call for the user's own
+/// answers. Null until the store has loaded.
+///
+/// Exposed here, in the analysis's own layer, so that anything built on top
+/// of the analysis — the AI request in `features/ai`, for instance — reads
+/// the answers through this rather than reaching into the onboarding
+/// feature's `data/` layer.
+final insightAnswersProvider = Provider<OnboardingAnswers?>((ref) {
+  return ref.watch(savedOnboardingAnswersProvider).value;
+});
+
+/// The areas the user said they want to strengthen.
 final wantedAreasProvider = Provider<List<FocusArea>>((ref) {
-  final answers = ref.watch(savedOnboardingAnswersProvider).value;
-  return answers == null ? const [] : answers.focusAreas.toList();
+  return ref.watch(insightAnswersProvider)?.focusAreas.toList() ?? const [];
 });
 
 /// The analysis itself, weakest area first.

@@ -55,6 +55,7 @@ class AreaObservation {
     required this.days,
     this.habitId,
     this.reminderMinutes,
+    this.dailyTarget,
     this.everMetTarget = true,
   });
 
@@ -69,6 +70,11 @@ class AreaObservation {
   /// which have their own screen.
   final String? habitId;
   final int? reminderMinutes;
+
+  /// The daily amount the widget asks for. Sent to the analyst so it can
+  /// talk about the amount instead of guessing at it. Null for the prayers,
+  /// which have no amount to lower.
+  final int? dailyTarget;
 
   /// Whether the day's amount was ever reached. False says the target is too
   /// big far more often than it says the user is unwilling.

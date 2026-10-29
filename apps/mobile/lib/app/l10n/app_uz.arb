@@ -575,5 +575,20 @@
   "insightsAdviceStartAgain": "To‘xtab qolgan — bugun bittasini belgilang",
   "insightsAdviceAddWidget": "Bu yo‘nalish uchun vidjet qo‘shing",
   "insightsOpenWidget": "Vidjetni ochish",
-  "insightsOpenPrayers": "Namozlarni ochish"
+  "insightsOpenPrayers": "Namozlarni ochish",
+  "aiAnalyseAction": "Kunlarimni tahlil qil",
+  "aiAnalyseAgain": "Yana tahlil qil",
+  "aiAnalyseHint": "Oxirgi {days} kunda belgilaganlaringizni o‘qib, kunning qaysi qismi oqsayotganini va qaysi bitta vidjet yordam berishini aytadi.",
+  "aiAnalyseWait": "Raqamlaringiz o‘qilmoqda.",
+  "aiAnalysing": "O‘ylayapti…",
+  "aiAnalysisFootnote": "Shu telefondagi raqamlar asosida. Oyat yoki hadis keltirmaydi, diniy hukm chiqarmaydi.",
+  "aiProposalsTitle": "TAKLIF QILINGAN VIDJETLAR",
+  "aiProposalAccept": "Qo‘shish",
+  "aiProposalReject": "Kerak emas",
+  "aiProposalAdded": "Bosh sahifaga qo‘shildi: {count}",
+  "aiErrorNetwork": "Aloqa yo‘q. Pastdagi tahlil telefoningizning o‘zi hisoblagani — u ishlayapti.",
+  "aiErrorUnavailable": "Yordamchi hozir javob bera olmadi. Pastdagi tahlil o‘z kuchida.",
+  "aiErrorQuota": "Bugungi tahlillar tugadi. Ertaga yana urinib ko‘ring.",
+  "aiErrorNotEnoughData": "Tahlil uchun ma‘lumot hali kam. Bir necha kun vidjetlarni belgilab, keyin urinib ko‘ring.",
+  "aiErrorRetry": "Qayta urinish"
 }
