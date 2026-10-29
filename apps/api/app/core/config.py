@@ -65,6 +65,25 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     EMAIL_FROM: str = "KUNIM <onboarding@resend.dev>"
 
+    # The LLM provider (`app.ai`). Without a key the AI endpoints answer 503
+    # and the app keeps the rule-based analysis it computes on the phone --
+    # the same "visible rather than silent" shape as `RESEND_API_KEY`. The
+    # key is only ever read from the environment: never a request body, never
+    # a column, never the repository.
+    ANTHROPIC_API_KEY: str = ""
+    # The analyst and recommender tier of plan section 5. Sonnet rather than
+    # Opus because this route runs on every insights screen and the phase's
+    # budget is < $0.05 per active user per day; the agent asks for `low`
+    # effort on top of that.
+    AI_MODEL_ANALYST: str = "claude-sonnet-5-5"
+    # Paid analyses per user per UTC day. Small for two reasons: the
+    # analysis describes a 14-day window, so a second one the same hour has
+    # nothing new to say -- and the money. Measured 2026-10-29, a cold call
+    # (one that writes the prompt cache, which most are) costs $0.0090, so
+    # three is $0.027 a day and leaves room under the plan's $0.05 ceiling
+    # for the chat agent and RAG that the same ceiling has to cover.
+    AI_DAILY_ANALYSIS_LIMIT: int = Field(default=3, ge=0)
+
     # OAuth client ids whose Google ID tokens `/auth/google` accepts: the web
     # client id the app passes as `serverClientId` (Android puts that in the
     # token's `aud`), plus the iOS client id. Empty disables Google sign-in.

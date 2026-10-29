@@ -33,6 +33,10 @@ dependencies = [
     "tzdata",
     # AES-256-GCM for `EncryptedText` note columns (app/db/types.py).
     "cryptography>=50.0.1",
+    # The LLM provider (app/ai/providers/anthropic_adapter.py). Imported
+    # lazily, and with no ANTHROPIC_API_KEY the package is never touched --
+    # the AI endpoints answer 503 and the app keeps its offline analysis.
+    "anthropic>=2.3",
 ]
 
 [project.optional-dependencies]
