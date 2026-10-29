@@ -59,10 +59,7 @@ class AiAnalysisState {
     return total > 0 && accepted.length + rejected.length >= total;
   }
 
-  AiAnalysisState withDecision({
-    Set<int>? accepted,
-    Set<int>? rejected,
-  }) {
+  AiAnalysisState withDecision({Set<int>? accepted, Set<int>? rejected}) {
     return AiAnalysisState(
       proposal: proposal,
       accepted: accepted ?? this.accepted,
