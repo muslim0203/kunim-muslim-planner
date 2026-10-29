@@ -81,7 +81,7 @@ class AiWidgetProposal {
       kind: kind,
       title: title,
       dailyTarget: target.clamp(1, 100000),
-      reminderMinutes: reminder == null ? null : reminder.clamp(0, 1439),
+      reminderMinutes: reminder?.clamp(0, 1439),
       reason: (json['reason'] as String?)?.trim() ?? '',
     );
   }
