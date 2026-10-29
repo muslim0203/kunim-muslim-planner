@@ -212,11 +212,20 @@ class _TaskEditorSheetState extends ConsumerState<_TaskEditorSheet> {
     super.dispose();
   }
 
+  /// Why the last save attempt did nothing, shown under the title field.
+  String? _titleError;
+
   bool get _isEditing => widget.task != null;
 
   Future<void> _save() async {
     final title = _title.text.trim();
-    if (title.isEmpty) return;
+    // A task is its title, so there is nothing to save without one — but
+    // a Save button that simply does nothing reads as a broken button.
+    if (title.isEmpty) {
+      setState(() => _titleError = AppLocalizations.of(context).taskTitleEmpty);
+      return;
+    }
+    if (_titleError != null) setState(() => _titleError = null);
     final notes = _notes.text.trim();
     final controller = ref.read(taskMutationControllerProvider.notifier);
 
@@ -292,7 +301,10 @@ class _TaskEditorSheetState extends ConsumerState<_TaskEditorSheet> {
               controller: _title,
               autofocus: !_isEditing,
               textInputAction: TextInputAction.next,
-              decoration: InputDecoration(labelText: l10n.taskTitleLabel),
+              decoration: InputDecoration(
+                labelText: l10n.taskTitleLabel,
+                errorText: _titleError,
+              ),
             ),
             const SizedBox(height: KunimSpacing.md),
             TextField(

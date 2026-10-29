@@ -62,6 +62,13 @@ void main() {
     );
   }
 
+  /// Tears the tree down so the Drift stream behind the widget-reminders
+  /// list stops its polling timer before the test ends.
+  Future<void> unmount(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _pumpFrames(tester, 3);
+  }
+
   Future<void> saveCity() => PrayerSettingsStore(db).save(
         PrayerSettings.defaults.copyWith(city: PrayerCity.tashkent),
       );
@@ -73,6 +80,7 @@ void main() {
 
     expect(find.text(l10n.notifNeedCityTitle), findsOneWidget);
     expect(find.byType(SwitchListTile), findsNothing);
+    await unmount(tester);
   });
 
   testWidgets('turning reminders on asks for permission and saves', (
@@ -96,6 +104,7 @@ void main() {
     final saved = await PrayerReminderStore(db).load();
     expect(saved.prayers, isNot(contains(PrayerKind.fajr)));
     expect(saved.prayers, contains(PrayerKind.isha));
+    await unmount(tester);
   });
 
   testWidgets('a denied permission leaves reminders off and says why', (
@@ -110,6 +119,7 @@ void main() {
     expect(find.text(l10n.notifPermissionDenied), findsOneWidget);
     expect((await PrayerReminderStore(db).load()).enabled, isFalse);
     expect(find.text(l10n.notifWhichPrayers), findsNothing);
+    await unmount(tester);
   });
 
   testWidgets('without exact alarms it warns and opens the system setting', (
@@ -131,5 +141,6 @@ void main() {
     await _pumpFrames(tester);
 
     expect(notifier.exactSettingsOpened, 1);
+    await unmount(tester);
   });
 }

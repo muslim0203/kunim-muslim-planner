@@ -12,11 +12,20 @@ enum HabitKind {
   quran('quran', dailyTarget: 5, hasTotal: true),
   study('study', dailyTarget: 20, hasTotal: true),
   zikr('zikr', dailyTarget: 100),
+  dua('dua', dailyTarget: 1),
+  fasting('fasting', dailyTarget: 1),
+  charity('charity', dailyTarget: 1),
   sport('sport', dailyTarget: 30),
+  running('running', dailyTarget: 30),
+  walk('walk', dailyTarget: 30),
   water('water', dailyTarget: 8),
+  diet('diet', dailyTarget: 1),
+  language('language', dailyTarget: 20),
   family('family', dailyTarget: 30),
   mood('mood', dailyTarget: 1),
-  sleep('sleep', dailyTarget: 1);
+  journal('journal', dailyTarget: 1),
+  sleep('sleep', dailyTarget: 1),
+  earlyRise('early_rise', dailyTarget: 1);
 
   const HabitKind(
     this.code, {

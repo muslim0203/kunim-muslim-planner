@@ -13,6 +13,11 @@ import '../../../app/theme/tokens.dart';
 import '../../../core/notifications/local_notifier.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/kunim_widgets.dart';
+import '../../../core/db/app_database.dart';
+import '../../habits/application/habits_today_provider.dart';
+import '../../habits/domain/habit_kind.dart';
+import '../../habits/presentation/habit_editor.dart';
+import '../../habits/presentation/habit_kind_labels.dart';
 import '../../prayer/application/prayer_providers.dart';
 import '../../prayer/domain/daily_prayer_times.dart';
 import '../../prayer/presentation/prayer_labels.dart';
@@ -124,6 +129,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               ),
             ],
           ],
+          // Widget reminders are scheduled from each widget's own hour, with
+          // no switch anywhere — so this screen used to say "reminders are
+          // off" while a dozen of them were armed. They are listed here, with
+          // the hour they fire at, and open the widget that owns them.
+          const SizedBox(height: KunimSpacing.xl),
+          _WidgetReminders(
+            onEdit: (habit) => showHabitEditor(context, habit: habit),
+          ),
         ],
       );
     } else if (prayerAsync.hasError || remindersAsync.hasError) {
@@ -324,6 +337,71 @@ class _ChoiceRow extends StatelessWidget {
           const Icon(Icons.chevron_right_rounded),
         ],
       ),
+    );
+  }
+}
+
+/// The widgets that carry a reminder hour.
+///
+/// Read-only here on purpose: the hour belongs to the widget, so this lists
+/// what is armed and hands editing back to the widget's own editor rather
+/// than becoming a second place that sets the same field.
+class _WidgetReminders extends ConsumerWidget {
+  const _WidgetReminders({required this.onEdit});
+
+  final void Function(Habit habit) onEdit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final habits = ref.watch(habitsForTodayProvider).value ?? const [];
+    final withTime = [
+      for (final habit in habits)
+        if (habit.habit.reminderMinutes != null) habit,
+    ]..sort(
+        (a, b) => a.habit.reminderMinutes!.compareTo(b.habit.reminderMinutes!),
+      );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.notifWidgetsTitle, style: theme.textTheme.titleMedium),
+        const SizedBox(height: KunimSpacing.xs),
+        Text(
+          withTime.isEmpty ? l10n.notifWidgetsNone : l10n.notifWidgetsNote,
+          style: theme.textTheme.bodySmall?.copyWith(color: muted),
+        ),
+        if (withTime.isNotEmpty) ...[
+          const SizedBox(height: KunimSpacing.md),
+          HeritageCard(
+            padding: const EdgeInsets.symmetric(vertical: KunimSpacing.xs),
+            child: Column(
+              children: [
+                for (final habit in withTime)
+                  ListTile(
+                    leading: Icon(
+                      habitKindIcon(HabitKind.fromCode(habit.habit.kind)),
+                      color: habitKindColor(
+                        HabitKind.fromCode(habit.habit.kind),
+                      ),
+                    ),
+                    title: Text(habit.habit.title),
+                    trailing: Text(
+                      MaterialLocalizations.of(context).formatTimeOfDay(
+                        habitTimeOfDay(habit.habit.reminderMinutes)!,
+                        alwaysUse24HourFormat: true,
+                      ),
+                      style: theme.textTheme.labelLarge,
+                    ),
+                    onTap: () => onEdit(habit.habit),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

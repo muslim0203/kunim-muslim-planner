@@ -63,6 +63,14 @@ class ScoreCard extends ConsumerWidget {
                 l10n.statsPointsWeek(board.lastWeek),
                 style: theme.textTheme.bodySmall,
               ),
+              // The bar and "to the next level" below are measured against
+              // the lifetime total, not the two figures above it. Without
+              // the total on screen the card looked like it was saying 0
+              // points today and 490 to go from zero.
+              Text(
+                l10n.statsPointsTotal(board.total),
+                style: theme.textTheme.bodySmall,
+              ),
               if (board.streak > 0)
                 Text(
                   l10n.habitStreakDays(board.streak),

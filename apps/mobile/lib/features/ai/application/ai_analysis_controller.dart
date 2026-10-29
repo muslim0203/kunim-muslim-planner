@@ -34,6 +34,7 @@ class AiAnalysisState {
     this.rejected = const {},
     this.isLoading = false,
     this.error,
+    this.countsDigest,
   });
 
   /// Null until an analysis has come back.
@@ -50,6 +51,17 @@ class AiAnalysisState {
   /// card is unaffected either way.
   final AiErrorKind? error;
 
+  /// The counts the shown analysis was measured from
+  /// (`AnalysisFacts.countsDigest`). Compared against the live facts to tell
+  /// whether the summary still describes the same day; null when nothing has
+  /// been asked for yet.
+  final String? countsDigest;
+
+  /// Whether [digest] of the current facts still matches the analysis on
+  /// screen. A stale analysis is kept — it was paid for — and labelled.
+  bool isStaleAgainst(String digest) =>
+      countsDigest != null && countsDigest != digest;
+
   bool get hasAnalysis => proposal != null;
 
   /// Whether every proposed widget has been decided on, so the list can
@@ -64,6 +76,7 @@ class AiAnalysisState {
       proposal: proposal,
       accepted: accepted ?? this.accepted,
       rejected: rejected ?? this.rejected,
+      countsDigest: countsDigest,
     );
   }
 }
@@ -101,7 +114,10 @@ class AiAnalysisController extends Notifier<AiAnalysisState> {
     state = const AiAnalysisState(isLoading: true);
     try {
       final proposal = await ref.read(aiApiProvider).requestAnalysis(facts);
-      state = AiAnalysisState(proposal: proposal);
+      state = AiAnalysisState(
+        proposal: proposal,
+        countsDigest: facts.countsDigest,
+      );
     } on AiApiException catch (failure) {
       state = AiAnalysisState(error: failure.kind);
     }
