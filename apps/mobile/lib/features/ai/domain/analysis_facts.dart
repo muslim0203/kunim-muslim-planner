@@ -97,6 +97,18 @@ class AnalysisFacts {
   /// lets the screen say "not enough recorded yet" without a round trip.
   bool get hasSomethingToAnalyse => areas.isNotEmpty || focusAreas.isNotEmpty;
 
+  /// The counts this analysis would be about, as one comparable string.
+  ///
+  /// An analysis is a paid call, so it is kept after the numbers behind it
+  /// move — but then the summary quotes one set of figures while the cards
+  /// under it show another. Comparing this against the live facts tells the
+  /// screen to say the summary is from an earlier moment instead of letting
+  /// the two contradict each other in silence.
+  String get countsDigest => [
+        for (final area in areas)
+          '${area.area.slug}:${area.doneDays}/${area.plannedDays}',
+      ].join('|');
+
   Map<String, dynamic> toJson() => {
         'window_days': windowDays,
         'locale': locale,

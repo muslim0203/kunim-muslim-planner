@@ -160,7 +160,7 @@ class _HabitRow extends ConsumerWidget {
                   tooltip:
                       habit.isDone ? l10n.habitUndoToday : l10n.habitLogToday,
                   isSelected: habit.isDone,
-                  onPressed: () => toggleHabitToday(ref, habit),
+                  onPressed: () => cycleHabitToday(ref, habit),
                   icon: const Icon(Icons.radio_button_unchecked_rounded),
                   selectedIcon: const Icon(Icons.check_circle_rounded),
                   color: theme.colorScheme.primary,

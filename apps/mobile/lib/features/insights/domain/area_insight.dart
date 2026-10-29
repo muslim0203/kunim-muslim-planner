@@ -79,6 +79,11 @@ class AreaObservation {
   /// Whether the day's amount was ever reached. False says the target is too
   /// big far more often than it says the user is unwilling.
   final bool everMetTarget;
+
+  /// Whether today's amount is already complete. Read from [days] rather
+  /// than the clock, so the answer cannot disagree with the window the rest
+  /// of this insight was measured over.
+  bool get doneToday => days.isNotEmpty && days.last == true;
 }
 
 class AreaInsight {
@@ -268,6 +273,13 @@ abstract final class AreaAnalysis {
     // Never once reached means the amount is wrong, not the person.
     if (weakest != null && !weakest.everMetTarget) {
       return AreaAdvice.lowerTarget;
+    }
+    // Already done today. The fourteen-day rate can still be low enough to
+    // call the area slipping, but "it has stalled, mark one today" is then
+    // simply false — the user did it minutes ago. Nothing to advise beyond
+    // carrying on.
+    if (weakest != null && weakest.doneToday) {
+      return AreaAdvice.keepGoing;
     }
     // It has an hour and that hour is not working.
     if (weakest?.reminderMinutes != null && trend < 0) {

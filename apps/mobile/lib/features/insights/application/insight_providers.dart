@@ -130,12 +130,17 @@ const int dailyPrayerCount = 5;
 FocusArea? areaOfKind(HabitKind kind) {
   return switch (kind) {
     HabitKind.quran => FocusArea.quran,
-    HabitKind.zikr => FocusArea.prayer,
-    HabitKind.sport || HabitKind.water => FocusArea.health,
-    HabitKind.family => FocusArea.family,
-    HabitKind.study || HabitKind.book => FocusArea.study,
-    HabitKind.sleep => FocusArea.sleep,
-    HabitKind.mood => FocusArea.mood,
+    HabitKind.zikr || HabitKind.dua || HabitKind.fasting => FocusArea.prayer,
+    HabitKind.sport ||
+    HabitKind.running ||
+    HabitKind.walk ||
+    HabitKind.water ||
+    HabitKind.diet =>
+      FocusArea.health,
+    HabitKind.family || HabitKind.charity => FocusArea.family,
+    HabitKind.study || HabitKind.book || HabitKind.language => FocusArea.study,
+    HabitKind.sleep || HabitKind.earlyRise => FocusArea.sleep,
+    HabitKind.mood || HabitKind.journal => FocusArea.mood,
     HabitKind.custom => null,
   };
 }

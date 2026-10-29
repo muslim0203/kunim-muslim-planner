@@ -249,6 +249,10 @@
     "description": "Label for the button that creates a new task."
   },
   "taskTitleLabel": "Title",
+  "taskTitleEmpty": "Give the task a title",
+  "@taskTitleEmpty": {
+    "description": "Validation shown when Save is tapped with an empty title."
+  },
   "@taskTitleLabel": {
     "description": "Label for the task title input field."
   },
@@ -784,7 +788,7 @@
   "cityTermez": "Termez",
   "cityUrgench": "Urgench",
   "notifPrayerOn": "Prayer reminders are on",
-  "notifPrayerOff": "Reminders are off",
+  "notifPrayerOff": "Prayer reminders are off",
   "notifScreenIntro": "Reminders are scheduled on your phone, no internet needed.",
   "notifPrayerTitle": "Prayer reminders",
   "notifPrayerSubtitle": "Get a notification for each prayer",
@@ -806,6 +810,9 @@
   "notifExactBody": "To get them on time, allow “Alarms & reminders”.",
   "notifExactAction": "Allow",
   "notifWindowNote": "Reminders are scheduled for the next 7 days. Open the app now and then: each time it refreshes the schedule.",
+  "notifWidgetsTitle": "Widget reminders",
+  "notifWidgetsNote": "Each widget reminds you at its own hour. Pick one to change its time.",
+  "notifWidgetsNone": "No widget has an hour set.",
   "reminderChannelPrayer": "Prayer times",
   "reminderChannelPrayerDescription": "Reminds you when a prayer time begins or shortly before",
   "reminderPrayerNowTitle": "It is time for {prayer}",
@@ -1090,6 +1097,18 @@
   "habitIncrease": "Increase",
   "habitArchiveConfirmTitle": "Delete this habit?",
   "habitArchiveConfirmBody": "The habit will be removed from your list.",
+  "habitClearedToday": "Today's check-in was removed",
+  "@habitClearedToday": {
+    "description": "Snackbar shown when a tap cleared a widget's day."
+  },
+  "habitUndo": "Undo",
+  "@habitUndo": {
+    "description": "Snackbar action that puts a cleared count back."
+  },
+  "habitRemoveOne": "Remove one",
+  "@habitRemoveOne": {
+    "description": "Widget options action: one unit off today's count."
+  },
   "habitUndoToday": "Undo today's check-in",
   "habitWeekdaysRequired": "Pick at least one day",
   "prayerMarkHint": "Tap a prayer whose time has begun to mark it.",
@@ -1136,6 +1155,15 @@
   "habitKindQuran": "Memorising Qur'an",
   "habitKindStudy": "Study",
   "habitKindZikr": "Dhikr",
+  "habitKindDua": "Dua",
+  "habitKindFasting": "Fasting",
+  "habitKindCharity": "Charity",
+  "habitKindRunning": "Running",
+  "habitKindWalk": "Walking",
+  "habitKindDiet": "Diet",
+  "habitKindLanguage": "Language study",
+  "habitKindJournal": "Journal",
+  "habitKindEarlyRise": "Early rise",
   "habitKindSport": "Exercise",
   "habitKindWater": "Water",
   "habitUnitPages": "{count, plural, one{{count} page} other{{count} pages}}",
@@ -1201,6 +1229,15 @@
     }
   },
   "statsPointsWeek": "{count, plural, one{{count} point this week} other{{count} points this week}}",
+  "statsPointsTotal": "{count, plural, one{{count} point in total} other{{count} points in total}}",
+  "@statsPointsTotal": {
+    "description": "Lifetime points, so the level bar beneath has an anchor.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@statsPointsWeek": {
     "placeholders": {
       "count": {
@@ -1439,6 +1476,10 @@
   "aiAnalyseWait": "Reading your numbers.",
   "aiAnalysing": "Thinking…",
   "aiAnalysisFootnote": "Built from the numbers on this phone. It never quotes scripture and never gives a religious ruling.",
+  "aiAnalysisOutdated": "This summary is from earlier numbers — re-analyse to refresh it",
+  "@aiAnalysisOutdated": {
+    "description": "Shown when habit logs changed after the analysis came back."
+  },
   "aiProposalsTitle": "SUGGESTED WIDGETS",
   "aiProposalAccept": "Add",
   "aiProposalReject": "Not this",

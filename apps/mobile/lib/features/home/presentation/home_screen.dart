@@ -123,7 +123,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _TodayProgress(tasks: tasks, habits: habits),
+              _TodayProgress(
+                tasks: tasks,
+                pinned: topThree,
+                habits: habits,
+              ),
               const SizedBox(height: KunimSpacing.lg),
               _SectionHeader(
                 title: l10n.homeModules,
@@ -444,9 +448,23 @@ class _PrayerCell extends StatelessWidget {
 }
 
 class _TodayProgress extends StatelessWidget {
-  const _TodayProgress({required this.tasks, required this.habits});
+  const _TodayProgress({
+    required this.tasks,
+    required this.pinned,
+    required this.habits,
+  });
 
+  /// Tasks due today or overdue (`isInTodayList`).
   final AsyncValue<List<Task>> tasks;
+
+  /// The manual Top-3, which this screen shows right below the card.
+  ///
+  /// Counted as well, and de-duplicated against [tasks], because pinning is
+  /// due-date-agnostic while `isInTodayList` refuses a task with no due
+  /// date: without this the card said "3 tadan 1 tasi bajarildi" directly
+  /// above an unticked task it was not counting. Whatever the day puts in
+  /// front of the user is what the day is measured on.
+  final AsyncValue<List<Task>> pinned;
 
   /// Today's widgets. The headline card used to count tasks ALONE, so with a
   /// widget due and no task it announced "nothing planned for today" directly
@@ -459,8 +477,13 @@ class _TodayProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final taskItems = tasks.value ?? const <Task>[];
     final habitItems = habits.value ?? const <HabitToday>[];
+
+    final taskItems = <String, Task>{
+      for (final task in tasks.value ?? const <Task>[]) task.id: task,
+      for (final task in pinned.value ?? const <Task>[]) task.id: task,
+    }.values.toList();
+
     final total = taskItems.length + habitItems.length;
     final completed = taskItems.where((task) => task.isCompleted).length +
         habitItems.where((habit) => habit.isDone).length;

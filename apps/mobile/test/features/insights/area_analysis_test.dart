@@ -108,6 +108,22 @@ void main() {
     expect(health.advice, AreaAdvice.startAgain);
   });
 
+  test('a day already done today is never told it has stalled', () {
+    // Low enough over fourteen days to count as slipping, but today is
+    // finished. "To'xtab qolgan — bugun bittasini belgilang" was being shown
+    // minutes after the user ticked it off.
+    final insights = AreaAnalysis.compute(
+      observations: [
+        observation(outcomes: days(missed: 13, then: days(done: 1))),
+      ],
+    );
+
+    final health = only(insights, FocusArea.health);
+    expect(health.state, AreaState.slipping);
+    expect(health.advice, isNot(AreaAdvice.startAgain));
+    expect(health.advice, AreaAdvice.keepGoing);
+  });
+
   test('holding up but falling fast gets a nudge, not a verdict', () {
     final insights = AreaAnalysis.compute(
       observations: [

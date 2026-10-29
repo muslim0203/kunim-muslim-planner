@@ -81,9 +81,22 @@ class WidgetOptionsSheet extends ConsumerWidget {
             ),
             onTap: () {
               Navigator.of(context).pop();
-              toggleHabitToday(ref, habit);
+              cycleHabitToday(ref, habit);
             },
           ),
+          // The only way down. The tap cycle moves forward only, so a
+          // miscount part-way through a counted widget could otherwise be
+          // fixed only by finishing it and throwing the whole day away.
+          if (!habit.isDone && habit.loggedCount > 0)
+            ListTile(
+              leading: const Icon(Icons.exposure_minus_1_rounded),
+              title: Text(l10n.habitRemoveOne),
+              subtitle: Text('${habit.loggedCount}/${habit.habit.targetCount}'),
+              onTap: () {
+                Navigator.of(context).pop();
+                decrementHabitToday(ref, habit);
+              },
+            ),
           ListTile(
             leading: const Icon(Icons.tune_rounded),
             title: Text(l10n.habitEdit),

@@ -88,6 +88,17 @@ void main() {
 
   Future<List<HabitLog>> logs() => db.select(db.habitLogs).get();
 
+  /// Logs that still count. Clearing a day soft-deletes its row (the sync
+  /// design keeps tombstones), so the raw table is the wrong thing to
+  /// assert a cleared day against.
+  Future<List<HabitLog>> liveLogs() async {
+    final all = await logs();
+    return [
+      for (final log in all)
+        if (log.deletedAt == null) log,
+    ];
+  }
+
   testWidgets('a widget shows today’s progress and the time of its task', (
     tester,
   ) async {
@@ -125,6 +136,87 @@ void main() {
     final saved = await logs();
     expect(saved, hasLength(1));
     expect(saved.single.count, 1);
+    await unmount(tester);
+  });
+
+  testWidgets('a counted widget goes partial on one tap, done on the next', (
+    tester,
+  ) async {
+    // The old card added exactly one unit per tap: thirty taps to confirm a
+    // thirty-minute run, and a thirty-first silently threw all of them away.
+    await seedWidget(title: 'Sport', kind: HabitKind.sport, target: 30);
+    await pumpGrid(tester);
+
+    await tester.tap(find.text('Sport'));
+    await _pumpFrames(tester);
+    expect((await logs()).single.count, 1, reason: 'started, not finished');
+    expect(find.text('1/30'), findsOneWidget);
+
+    await tester.tap(find.text('Sport'));
+    await _pumpFrames(tester);
+    expect((await logs()).single.count, 30, reason: 'the second tap finishes');
+    expect(find.text('30/30'), findsOneWidget);
+    await unmount(tester);
+  });
+
+  testWidgets('a widget whose amount is one is done on the first tap', (
+    tester,
+  ) async {
+    await seedWidget(title: 'Zikr', kind: HabitKind.zikr, target: 1);
+    await pumpGrid(tester);
+
+    await tester.tap(find.text('Zikr'));
+    await _pumpFrames(tester);
+
+    expect((await logs()).single.count, 1);
+    await unmount(tester);
+  });
+
+  testWidgets('clearing a finished widget says so and can be undone', (
+    tester,
+  ) async {
+    await seedWidget(title: 'Sport', kind: HabitKind.sport, target: 30);
+    final l10n = await pumpGrid(tester);
+
+    await tester.tap(find.text('Sport'));
+    await _pumpFrames(tester);
+    await tester.tap(find.text('Sport'));
+    await _pumpFrames(tester);
+    expect((await logs()).single.count, 30);
+
+    // The third tap is the destructive one, so it is the one that announces
+    // itself and offers the work back.
+    await tester.tap(find.text('Sport'));
+    await _pumpFrames(tester);
+    expect(await liveLogs(), isEmpty);
+    expect(find.text(l10n.habitClearedToday), findsOneWidget);
+
+    await tester.tap(find.text(l10n.habitUndo));
+    await _pumpFrames(tester);
+    expect(
+      (await liveLogs()).single.count,
+      30,
+      reason: 'undo puts the whole count back',
+    );
+    await unmount(tester);
+  });
+
+  testWidgets('a part-finished widget can be corrected down by one', (
+    tester,
+  ) async {
+    await seedWidget(title: 'Sport', kind: HabitKind.sport, target: 30);
+    final l10n = await pumpGrid(tester);
+
+    await tester.tap(find.text('Sport'));
+    await _pumpFrames(tester);
+    expect((await logs()).single.count, 1);
+
+    await tester.longPress(find.text('Sport'));
+    await _pumpFrames(tester);
+    await tester.tap(find.text(l10n.habitRemoveOne));
+    await _pumpFrames(tester);
+
+    expect((await logs()).single.count, 0);
     await unmount(tester);
   });
 

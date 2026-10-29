@@ -172,7 +172,7 @@ class WidgetTile extends ConsumerWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => toggleHabitToday(ref, habit),
+        onTap: () => _tap(context, ref, l10n),
         onLongPress: () => showWidgetOptions(context, habit),
         child: Padding(
           padding: const EdgeInsets.all(HomeWidgetGrid.tilePadding),
@@ -232,6 +232,33 @@ class WidgetTile extends ConsumerWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Runs the tap cycle and, when it cleared the day, offers it back.
+  ///
+  /// Clearing is the one step that destroys work, so it is the one step
+  /// that says so and can be undone — the card gives no other way back to
+  /// a count it has just thrown away.
+  Future<void> _tap(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final before = habit.loggedCount;
+    final result = await cycleHabitToday(ref, habit);
+    if (result != HabitTapResult.cleared) return;
+
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.habitClearedToday),
+        action: SnackBarAction(
+          label: l10n.habitUndo,
+          onPressed: () => restoreHabitCount(ref, habit, before),
         ),
       ),
     );

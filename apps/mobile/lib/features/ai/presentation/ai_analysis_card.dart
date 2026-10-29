@@ -23,6 +23,7 @@ import '../../onboarding/presentation/onboarding_labels.dart';
 import '../application/ai_analysis_controller.dart';
 import '../data/ai_api.dart';
 import '../domain/ai_analysis.dart';
+import '../domain/analysis_facts.dart';
 
 class AiAnalysisCard extends ConsumerWidget {
   const AiAnalysisCard({super.key});
@@ -253,6 +254,27 @@ class AiAnalysisCard extends ConsumerWidget {
           ],
         ),
       ],
+      // The summary quotes the counts it was measured from. Once a widget
+      // is ticked those counts move, and the cards under this one recompute
+      // while the paid summary cannot — so say which moment it describes
+      // rather than letting the two disagree in silence.
+      if (_isStale(ref, data)) ...[
+        const SizedBox(height: KunimSpacing.md),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.history_rounded,
+                size: 18, color: KunimColors.goldSoft),
+            const SizedBox(width: KunimSpacing.sm),
+            Expanded(
+              child: Text(
+                l10n.aiAnalysisOutdated,
+                style: const TextStyle(color: KunimColors.goldSoft),
+              ),
+            ),
+          ],
+        ),
+      ],
       const SizedBox(height: KunimSpacing.lg),
       // Says what the answer is and is not. The server enforces the second
       // half of this sentence (`app/ai/safety/religious_guard.py`); saying it
@@ -267,6 +289,22 @@ class AiAnalysisCard extends ConsumerWidget {
         onPressed: () => _ask(context, ref),
       ),
     ];
+  }
+
+  /// Whether the counts behind the shown summary have moved since it came
+  /// back. Rebuilt from the same providers the facts were assembled from,
+  /// so no extra bookkeeping has to be kept in step.
+  bool _isStale(WidgetRef ref, AiAnalysisState data) {
+    final facts = AnalysisFacts.from(
+      insights: ref.watch(areaInsightsProvider),
+      observations: ref.watch(areaObservationsProvider),
+      windowDays: insightWindowDays,
+      // Only `countsDigest` is read from this, and the locale plays no part
+      // in it.
+      locale: '',
+      answers: ref.watch(insightAnswersProvider),
+    );
+    return data.isStaleAgainst(facts.countsDigest);
   }
 
   void _ask(BuildContext context, WidgetRef ref) {

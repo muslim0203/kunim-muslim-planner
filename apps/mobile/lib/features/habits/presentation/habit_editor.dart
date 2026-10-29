@@ -34,14 +34,70 @@ TimeOfDay? habitTimeOfDay(int? minutes) {
   return TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
 }
 
-/// Today's one-tap action: adds one to today's count until the target is
-/// reached; on a habit already done today it clears today's check-in.
-Future<void> toggleHabitToday(WidgetRef ref, HabitToday habit) {
+/// What one tap on a widget card did, so the caller can say so.
+enum HabitTapResult {
+  /// Something was done today, but not the whole amount.
+  startedPartial,
+
+  /// Today's amount is complete.
+  markedDone,
+
+  /// Today's check-in was removed.
+  cleared,
+}
+
+/// Today's one-tap action: nothing → started → done → cleared.
+///
+/// It used to add exactly one unit per tap, which asked for thirty taps to
+/// finish a thirty-minute run and let the thirty-first silently throw all of
+/// them away. A day has only three states anyone reads — nothing, something,
+/// finished — so a tap moves between those instead. A widget whose amount is
+/// one has no middle state: the first tap finishes it.
+///
+/// Clearing stays last and is undoable ([restoreHabitCount]), so the
+/// destructive step is a deliberate one rather than the tap after "done".
+Future<HabitTapResult> cycleHabitToday(WidgetRef ref, HabitToday habit) async {
   final controller = ref.read(habitMutationControllerProvider.notifier);
+  final target = habit.habit.targetCount;
+
   if (habit.isDone) {
-    return controller.removeLog(habitId: habit.habit.id, day: habit.day);
+    await controller.removeLog(habitId: habit.habit.id, day: habit.day);
+    return HabitTapResult.cleared;
   }
-  return controller.adjustCount(habitId: habit.habit.id, day: habit.day);
+  if (habit.loggedCount > 0 || target <= 1) {
+    await controller.adjustCount(
+      habitId: habit.habit.id,
+      day: habit.day,
+      delta: target - habit.loggedCount,
+    );
+    return HabitTapResult.markedDone;
+  }
+  await controller.adjustCount(habitId: habit.habit.id, day: habit.day);
+  return HabitTapResult.startedPartial;
+}
+
+/// Puts back the count a [HabitTapResult.cleared] tap removed.
+Future<void> restoreHabitCount(
+  WidgetRef ref,
+  HabitToday habit,
+  int count,
+) {
+  return ref.read(habitMutationControllerProvider.notifier).adjustCount(
+        habitId: habit.habit.id,
+        day: habit.day,
+        delta: count,
+      );
+}
+
+/// One unit off today's count, for a miscount on a widget that is still
+/// part-way through. There is no other way down: the tap cycle only moves
+/// forward, and clearing throws the whole day away.
+Future<void> decrementHabitToday(WidgetRef ref, HabitToday habit) {
+  return ref.read(habitMutationControllerProvider.notifier).adjustCount(
+        habitId: habit.habit.id,
+        day: habit.day,
+        delta: -1,
+      );
 }
 
 String habitWeekdayShort(AppLocalizations l10n, int weekday) {
