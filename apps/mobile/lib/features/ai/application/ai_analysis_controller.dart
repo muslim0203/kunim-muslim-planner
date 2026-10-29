@@ -175,17 +175,17 @@ class AiAnalysisController extends Notifier<AiAnalysisState> {
 
     try {
       await ref.read(aiApiProvider).record(
-            proposal.id,
-            outcome,
-            appliedDiff: {
-              'accepted_kinds': [
-                for (final index in current.accepted) widgets[index].kind.code,
-              ],
-              'rejected_kinds': [
-                for (final index in current.rejected) widgets[index].kind.code,
-              ],
-            },
-          );
+        proposal.id,
+        outcome,
+        appliedDiff: {
+          'accepted_kinds': [
+            for (final index in current.accepted) widgets[index].kind.code,
+          ],
+          'rejected_kinds': [
+            for (final index in current.rejected) widgets[index].kind.code,
+          ],
+        },
+      );
     } on AiApiException {
       // Deliberately swallowed: see the library comment. The user's widget is
       // already written, and a failed note must not look like a failed save.
