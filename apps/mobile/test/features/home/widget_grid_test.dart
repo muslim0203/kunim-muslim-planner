@@ -269,6 +269,28 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('every widget kind is reachable from the catalogue', (
+    tester,
+  ) async {
+    // A kind added to `HabitKind` but left out of a catalogue group is
+    // unreachable: it exists, it has a name and an icon, and no user can
+    // ever pick it. The sheet is a SingleChildScrollView, so every tile is
+    // built whether or not it is on screen.
+    final l10n = await pumpGrid(tester);
+
+    await tester.tap(find.text(l10n.homeWidgetAdd));
+    await _pumpFrames(tester);
+
+    for (final kind in HabitKind.values) {
+      expect(
+        find.text(habitKindName(l10n, kind)),
+        findsWidgets,
+        reason: 'no catalogue tile for ${kind.code}',
+      );
+    }
+    await unmount(tester);
+  });
+
   testWidgets('the editor shows a widget’s time and can clear it', (
     tester,
   ) async {
