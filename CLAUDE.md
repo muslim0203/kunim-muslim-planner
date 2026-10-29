@@ -53,5 +53,21 @@ Python 3.11.8 ✅ · Node 20 ✅ · Java 17 ✅ · Git ✅
 Flutter ❌ o'rnatilmagan · Android SDK ❌ · Docker ❌ · PostgreSQL/Redis ❌
 → Flutter va Docker'ga bog'liq tekshiruvlar shu mashinada bajarilmaydi; `docs/implementation-status.md` da "tekshirilmagan" deb belgilanadi.
 
+## Environment update — 2026-10-29
+Flutter **o'rnatilgan**: `D:/Dasturlarim/flutter` (3.47.4 stable, Dart 3.13.3) —
+lekin **PATH'da yo'q**, shuning uchun `which flutter` hech narsa topmaydi va
+"o'rnatilmagan" degan xulosa xato bo'ladi. Android SDK: `D:/Dasturlarim/android-sdk`
+(`platform-tools/adb.exe`, `emulator/emulator.exe`, AVD `Pixel_4`).
+
+Ishlatish uchun:
+```
+export PATH="/d/Dasturlarim/flutter/bin:/d/Dasturlarim/android-sdk/platform-tools:$PATH"
+export ANDROID_HOME="D:/Dasturlarim/android-sdk"
+```
+Shu bilan `flutter pub get`, `dart run build_runner build`, `flutter gen-l10n`,
+`flutter analyze`, `flutter test`, `flutter build apk --debug` shu mashinada
+bajariladi. Yuqoridagi 2026-09-12 qatoridagi "Flutter ❌ · Android SDK ❌"
+tarixiy — unga tayanib "tekshirilmadi" deb belgilanmaydi.
+
 ## Environment update — 2026-09-12
 Docker Desktop and WSL2 are now installed; development Compose and PostgreSQL/Redis smoke checks passed. The earlier Docker-unavailable note is historical. See docs/implementation-status.md for current evidence.

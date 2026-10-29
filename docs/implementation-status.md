@@ -72,11 +72,14 @@ unrelated).
 - 15 new ARB keys in all four locales; `node tool/check_l10n.mjs` passes
   (4 x 584 keys). 14 new tests in `test/features/ai/ai_analysis_test.dart`,
   none of which touch the network.
-- **Not verified on this machine:** Flutter is still not installed here, so
-  `flutter gen-l10n`, `dart format`, `flutter analyze` and `flutter test`
-  could not be run. The generated l10n getters the new card uses
-  (`aiAnalyseAction`, `aiErrorQuota`, ...) exist only after `make gen`, and
-  CI (`.github/workflows/mobile.yml`) is the first real check of all four.
+- **Verified, after a correction.** Flutter *is* on this machine --
+  `D:/Dasturlarim/flutter`, just not on `PATH`, which is why `which flutter`
+  said otherwise and three commits went out unchecked. CI caught each one in
+  turn: `dart format` (twice -- the second run used the formatter itself, in
+  a `dart:stable` container, rather than a guess), then
+  `prefer_null_aware_operators`, then a pre-existing widget test. Mobile CI
+  is green at 458 tests, the 14 new ones among them. `CLAUDE.md` now records
+  where the SDK lives so the next session does not repeat this.
 - **Still open:** no live provider call yet (the key is the user's to
   place); no screen for past proposals, though `AiApi.proposals()` is there
   for one; the deploy still needs migrations 0017 and 0018 and an
